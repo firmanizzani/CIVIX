@@ -33,6 +33,7 @@ export default function CreateReportPage() {
   const navigate = useNavigate();
   const [judul, setJudul] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
+  const [namaJalan, setNamaJalan] = useState('');
   const [kategori, setKategori] = useState('');
   const [anonim, setAnonim] = useState(false);
   const [photos, setPhotos] = useState<File[]>([]);
@@ -73,6 +74,11 @@ export default function CreateReportPage() {
     e.preventDefault();
     setError('');
 
+    if (!namaJalan.trim()) {
+      setError('Masukkan nama jalan atau alamat lokasi');
+      return;
+    }
+
     if (!position) {
       setError('Pilih lokasi kejadian di peta');
       return;
@@ -86,6 +92,7 @@ export default function CreateReportPage() {
     const formData = new FormData();
     formData.append('judul', judul);
     formData.append('deskripsi', deskripsi);
+    formData.append('namaJalan', namaJalan.trim());
     formData.append('kategori', kategori);
     formData.append('latitude', position[0].toString());
     formData.append('longitude', position[1].toString());
@@ -131,6 +138,22 @@ export default function CreateReportPage() {
                   maxLength={150}
                   required
                 />
+              </div>
+
+              <div>
+                <label className="label">Nama Jalan / Alamat Lokasi *</label>
+                <input
+                  type="text"
+                  value={namaJalan}
+                  onChange={(e) => setNamaJalan(e.target.value)}
+                  placeholder="Contoh: Jl. Jenderal Sudirman No. 45 (depan Halte FX)"
+                  className="input"
+                  maxLength={200}
+                  required
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Tuliskan nama jalan, patokan, atau nomor gedung terdekat agar petugas mudah menemukan lokasi.
+                </p>
               </div>
 
               <div>

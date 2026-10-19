@@ -1,0 +1,1 @@
+ALTER TABLE "reports" ADD COLUMN "nama_jalan" varchar(200);

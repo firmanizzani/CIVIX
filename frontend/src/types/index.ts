@@ -68,6 +68,7 @@ export interface Report {
   regionId: number | null;
   judul: string;
   deskripsi: string;
+  namaJalan: string | null;
   kategori: KategoriLaporan;
   latitude: string;
   longitude: string;
@@ -87,6 +88,7 @@ export interface MapPoint {
   id: string;
   kodeTiket: string;
   judul: string;
+  namaJalan: string | null;
   kategori: KategoriLaporan;
   status: StatusLaporan;
   latitude: string;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -103,34 +103,60 @@ export default function MapPage() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               maxZoom={19}
             />
-            {filteredPoints.map((point) => (
-              <CircleMarker
-                key={point.id}
-                center={[Number(point.latitude), Number(point.longitude)]}
-                radius={9}
-                pathOptions={{
-                  color: 'white',
-                  weight: 2,
-                  fillColor: getColor(point.status),
-                  fillOpacity: 0.9,
-                }}
-              >
-                <Popup>
-                  <div className="p-1 min-w-[180px]">
-                    <span className="mono text-[10px] text-slate-400">{point.kodeTiket}</span>
-                    <h3 className="font-bold text-sm text-civix-navy mt-0.5">{point.judul}</h3>
-                    <p className="text-xs text-civix-blue mt-1">{KATEGORI_LABEL[point.kategori]}</p>
-                    <p className="text-xs font-semibold text-slate-700 mt-0.5">{STATUS_LABEL[point.status]}</p>
-                    <Link
-                      to={`/reports/${point.id}`}
-                      className="btn-primary mt-3 block text-center text-xs py-1"
-                    >
-                      Buka Laporan
-                    </Link>
-                  </div>
-                </Popup>
-              </CircleMarker>
-            ))}
+            {filteredPoints.map((point) => {
+              const isRed = point.status === 'diterima' || point.status === 'diverifikasi';
+              const coords: [number, number] = [Number(point.latitude), Number(point.longitude)];
+              return (
+                <React.Fragment key={point.id}>
+                  {/* Glowing pulsing halo effect for red urgent markers */}
+                  {isRed && (
+                    <CircleMarker
+                      center={coords}
+                      radius={18}
+                      interactive={false}
+                      pathOptions={{
+                        color: '#ef4444',
+                        weight: 1.5,
+                        fillColor: '#dc2626',
+                        fillOpacity: 0.25,
+                        className: 'marker-pulse-halo',
+                      }}
+                    />
+                  )}
+                  <CircleMarker
+                    center={coords}
+                    radius={isRed ? 10 : 8}
+                    pathOptions={{
+                      color: 'white',
+                      weight: 2,
+                      fillColor: getColor(point.status),
+                      fillOpacity: 0.95,
+                      className: isRed ? 'marker-pulse-red' : '',
+                    }}
+                  >
+                    <Popup>
+                      <div className="p-1 min-w-[200px]">
+                        <span className="mono text-[10px] text-slate-400">{point.kodeTiket}</span>
+                        <h3 className="font-bold text-sm text-civix-forest mt-0.5">{point.judul}</h3>
+                        {point.namaJalan && (
+                          <p className="text-xs text-slate-600 mt-1 flex items-start gap-1">
+                            <span className="font-semibold text-civix-forest">Lokasi:</span> {point.namaJalan}
+                          </p>
+                        )}
+                        <p className="text-xs text-civix-primary mt-1 font-medium">{KATEGORI_LABEL[point.kategori]}</p>
+                        <p className="text-xs font-semibold text-slate-700 mt-0.5">{STATUS_LABEL[point.status]}</p>
+                        <Link
+                          to={`/reports/${point.id}`}
+                          className="btn-primary mt-3 block text-center text-xs py-1"
+                        >
+                          Buka Laporan
+                        </Link>
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+                </React.Fragment>
+              );
+            })}
           </MapContainer>
         </div>
       </div>

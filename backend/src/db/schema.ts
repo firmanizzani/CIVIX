@@ -45,6 +45,7 @@ export const reports = pgTable(
     regionId: integer('region_id').references(() => regions.id, { onDelete: 'set null' }),
     judul: varchar('judul', { length: 150 }).notNull(),
     deskripsi: text('deskripsi').notNull(),
+    namaJalan: varchar('nama_jalan', { length: 200 }),
     kategori: kategoriLaporanEnum('kategori').notNull(),
     latitude: numeric('latitude', { precision: 9, scale: 6 }).notNull(),
     longitude: numeric('longitude', { precision: 9, scale: 6 }).notNull(),

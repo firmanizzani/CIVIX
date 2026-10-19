@@ -86,6 +86,12 @@ export default function ReportDetailPage() {
               </div>
 
               <h1 className="text-2xl font-extrabold text-civix-navy sm:text-3xl">{report.judul}</h1>
+              {report.namaJalan && (
+                <div className="mt-2 flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                  <MapPin size={16} className="text-civix-primary shrink-0" />
+                  <span>{report.namaJalan}</span>
+                </div>
+              )}
               <p className="mt-4 whitespace-pre-line text-slate-700 leading-relaxed">{report.deskripsi}</p>
 
               <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-500">

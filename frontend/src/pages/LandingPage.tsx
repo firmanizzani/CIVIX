@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
@@ -136,33 +137,54 @@ function LandingPage() {
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         maxZoom={19}
                       />
-                      {mapPoints.slice(0, 15).map((point) => (
-                        <CircleMarker
-                          key={point.id}
-                          center={[Number(point.latitude), Number(point.longitude)]}
-                          radius={7}
-                          pathOptions={{
-                            color: 'white',
-                            weight: 2,
-                            fillColor: getStatusColor(point.status),
-                            fillOpacity: 0.95,
-                          }}
-                        >
-                          <Popup>
-                            <div className="min-w-[160px]">
-                              <p className="font-semibold text-civix-forest">{point.judul}</p>
-                              <p className="text-xs text-civix-muted">{KATEGORI_LABEL[point.kategori]}</p>
-                              <p className="mt-1 text-xs font-medium text-civix-primary">{STATUS_LABEL[point.status]}</p>
-                              <Link
-                                to={`/reports/${point.id}`}
-                                className="mt-2 inline-block text-xs font-semibold text-civix-primary hover:underline"
-                              >
-                                Lihat detail
-                              </Link>
-                            </div>
-                          </Popup>
-                        </CircleMarker>
-                      ))}
+                      {mapPoints.slice(0, 15).map((point) => {
+                        const isRed = point.status === 'diterima' || point.status === 'diverifikasi';
+                        const coords: [number, number] = [Number(point.latitude), Number(point.longitude)];
+                        return (
+                          <React.Fragment key={point.id}>
+                            {isRed && (
+                              <CircleMarker
+                                center={coords}
+                                radius={15}
+                                interactive={false}
+                                pathOptions={{
+                                  color: '#ef4444',
+                                  weight: 1.5,
+                                  fillColor: '#dc2626',
+                                  fillOpacity: 0.25,
+                                  className: 'marker-pulse-halo',
+                                }}
+                              />
+                            )}
+                            <CircleMarker
+                              center={coords}
+                              radius={isRed ? 9 : 7}
+                              pathOptions={{
+                                color: 'white',
+                                weight: 2,
+                                fillColor: getStatusColor(point.status),
+                                fillOpacity: 0.95,
+                                className: isRed ? 'marker-pulse-red' : '',
+                              }}
+                            >
+                              <Popup>
+                                <div className="min-w-[180px]">
+                                  <p className="font-semibold text-civix-forest">{point.judul}</p>
+                                  {point.namaJalan && <p className="mt-1 text-xs text-slate-600">{point.namaJalan}</p>}
+                                  <p className="mt-1 text-xs text-civix-muted">{KATEGORI_LABEL[point.kategori]}</p>
+                                  <p className="mt-1 text-xs font-medium text-civix-primary">{STATUS_LABEL[point.status]}</p>
+                                  <Link
+                                    to={`/reports/${point.id}`}
+                                    className="mt-2 inline-block text-xs font-semibold text-civix-primary hover:underline"
+                                  >
+                                    Lihat detail
+                                  </Link>
+                                </div>
+                              </Popup>
+                            </CircleMarker>
+                          </React.Fragment>
+                        );
+                      })}
                     </MapContainer>
                   )}
                   <div className="absolute bottom-3 left-3 z-[1000] rounded-lg border border-civix-border bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">

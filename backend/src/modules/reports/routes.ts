@@ -78,18 +78,16 @@ router.get('/', async (req, res: Response) => {
 // GET /reports/map - Titik peta (merah, kuning, hijau 7 hari)
 router.get('/map', async (_req, res: Response) => {
   try {
-    // Hijau hanya jika selesai_pada >= 7 hari lalu
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
     const activeReports = await db.query.reports.findMany({
       where: and(
         notInArray(reports.status, ['ditolak', 'duplikat']),
-        sql`(${reports.status} != 'selesai' OR (${reports.status} = 'selesai' AND ${reports.selesaiPada} >= ${sevenDaysAgo}))`
+        sql`(${reports.status} != 'selesai' OR (${reports.status} = 'selesai' AND ${reports.selesaiPada} >= NOW() - INTERVAL '7 days'))`
       ),
       columns: {
         id: true,
         kodeTiket: true,
         judul: true,
+        namaJalan: true,
         kategori: true,
         status: true,
         latitude: true,
@@ -132,9 +130,17 @@ router.get('/track/:kodeTiket', async (req, res: Response) => {
 // POST /reports - Buat laporan (Warga)
 router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequest, res: Response) => {
   try {
-    const { judul, deskripsi, kategori, latitude, longitude, anonim, regionId } = req.body;
+    const { judul, deskripsi, namaJalan, kategori, latitude, longitude, anonim, regionId } = req.body;
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
+
+    if (!judul?.trim() || !deskripsi?.trim() || !namaJalan?.trim() || !kategori || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return res.status(400).json({ error: 'Judul, deskripsi, nama jalan, kategori, dan lokasi wajib diisi dengan benar' });
+    }
+
+    if (namaJalan.trim().length > 200) {
+      return res.status(400).json({ error: 'Nama jalan maksimal 200 karakter' });
+    }
 
     if (!isWithinDKIJakarta(lat, lng)) {
       return res.status(400).json({
@@ -156,8 +162,9 @@ router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequ
         kodeTiket,
         userId: req.user!.id,
         regionId: regionId ? Number(regionId) : null,
-        judul,
-        deskripsi,
+        judul: judul.trim(),
+        deskripsi: deskripsi.trim(),
+        namaJalan: namaJalan.trim(),
         kategori,
         latitude: lat.toString(),
         longitude: lng.toString(),

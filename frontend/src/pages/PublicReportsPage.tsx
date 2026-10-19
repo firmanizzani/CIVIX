@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL, KategoriLaporan, StatusLaporan } from '@/types';
 import { formatDate } from '@/lib/utils';
-import { Search, Filter, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Search, Filter, AlertTriangle, ArrowRight, MapPin } from 'lucide-react';
 
 export default function PublicReportsPage() {
   const [kategori, setKategori] = useState<string>('');
@@ -96,6 +96,12 @@ export default function PublicReportsPage() {
                     <span className="mono text-xs text-slate-500">{report.kodeTiket}</span>
                   </div>
                   <h3 className="line-clamp-2 font-bold text-civix-navy group-hover:text-civix-orange">{report.judul}</h3>
+                  {report.namaJalan && (
+                    <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-600">
+                      <MapPin size={13} className="mt-0.5 shrink-0 text-civix-primary" />
+                      <span className="line-clamp-1">{report.namaJalan}</span>
+                    </p>
+                  )}
                   <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
                     <span>{formatDate(report.dibuatPada)}</span>
                     <span className="font-semibold">{STATUS_LABEL[report.status]}</span>

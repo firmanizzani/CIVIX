@@ -15,6 +15,13 @@
       "when": 1792407637041,
       "tag": "0001_wet_susan_delgado",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792409781778,
+      "tag": "0002_strong_master_mold",
+      "breakpoints": true
     }
   ]
 }
