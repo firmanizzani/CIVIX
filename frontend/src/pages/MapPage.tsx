@@ -1,0 +1,139 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import apiClient from '@/lib/api';
+import { MapPoint, STATUS_LABEL, KATEGORI_LABEL, STATUS_MAP_COLOR, KategoriLaporan, StatusLaporan } from '@/types';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Filter, Layers, Info } from 'lucide-react';
+
+const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
+
+const getColor = (status: StatusLaporan) => {
+  switch (STATUS_MAP_COLOR[status]) {
+    case 'merah':
+      return '#dc2626';
+    case 'kuning':
+      return '#d97706';
+    case 'hijau':
+      return '#16a34a';
+    default:
+      return '#64748b';
+  }
+};
+
+export default function MapPage() {
+  const [selectedKategori, setSelectedKategori] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
+
+  const { data: points = [], isLoading } = useQuery<MapPoint[]>({
+    queryKey: ['map-points-full'],
+    queryFn: async () => (await apiClient.get('/reports/map')).data,
+  });
+
+  const filteredPoints = points.filter((p) => {
+    if (selectedKategori && p.kategori !== selectedKategori) return false;
+    if (selectedStatus && p.status !== selectedStatus) return false;
+    return true;
+  });
+
+  return (
+    <div className="flex min-h-screen flex-col bg-white">
+      <Navbar />
+
+      <div className="relative flex flex-1 flex-col">
+        {/* Floating Filter Controls */}
+        <div className="absolute top-4 left-4 z-[1000] flex flex-wrap gap-2 rounded-xl bg-white/95 p-3 shadow-lg backdrop-blur border border-slate-200">
+          <select
+            value={selectedKategori}
+            onChange={(e) => setSelectedKategori(e.target.value)}
+            className="input text-xs py-1.5 min-w-[140px]"
+          >
+            <option value="">Semua Kategori</option>
+            {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="input text-xs py-1.5 min-w-[140px]"
+          >
+            <option value="">Semua Status</option>
+            <option value="diterima">Menunggu Verifikasi</option>
+            <option value="diverifikasi">Terverifikasi</option>
+            <option value="ditugaskan">Ditugaskan</option>
+            <option value="dikerjakan">Sedang Dikerjakan</option>
+            <option value="selesai">Selesai</option>
+          </select>
+        </div>
+
+        {/* Legend */}
+        <div className="absolute bottom-6 right-4 z-[1000] rounded-xl bg-white/95 p-4 shadow-lg backdrop-blur border border-slate-200 max-w-xs">
+          <div className="mb-2 text-xs font-bold text-civix-navy flex items-center gap-1.5">
+            <Layers size={14} /> Legenda Status Laporan
+          </div>
+          <div className="space-y-1.5 text-xs text-slate-700">
+            <div className="flex items-center gap-2">
+              <span className="status-dot status-red" />
+              <span>Merah: Baru dilaporkan / terverifikasi</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="status-dot status-amber" />
+              <span>Kuning: Sedang ditangani instansi</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="status-dot status-green" />
+              <span>Hijau: Selesai (tampil 7 hari)</span>
+            </div>
+          </div>
+          <p className="mt-3 text-[10px] text-slate-400 border-t border-slate-100 pt-2">
+            Titik hijau otomatis hilang setelah 7 hari untuk menjaga keterbacaan peta.
+          </p>
+        </div>
+
+        {/* The Map */}
+        <div className="h-[calc(100vh-64px)] w-full">
+          <MapContainer center={DKI_CENTER} zoom={12} className="h-full w-full">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              maxZoom={19}
+            />
+            {filteredPoints.map((point) => (
+              <CircleMarker
+                key={point.id}
+                center={[Number(point.latitude), Number(point.longitude)]}
+                radius={9}
+                pathOptions={{
+                  color: 'white',
+                  weight: 2,
+                  fillColor: getColor(point.status),
+                  fillOpacity: 0.9,
+                }}
+              >
+                <Popup>
+                  <div className="p-1 min-w-[180px]">
+                    <span className="mono text-[10px] text-slate-400">{point.kodeTiket}</span>
+                    <h3 className="font-bold text-sm text-civix-navy mt-0.5">{point.judul}</h3>
+                    <p className="text-xs text-civix-blue mt-1">{KATEGORI_LABEL[point.kategori]}</p>
+                    <p className="text-xs font-semibold text-slate-700 mt-0.5">{STATUS_LABEL[point.status]}</p>
+                    <Link
+                      to={`/reports/${point.id}`}
+                      className="btn-primary mt-3 block text-center text-xs py-1"
+                    >
+                      Buka Laporan
+                    </Link>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            ))}
+          </MapContainer>
+        </div>
+      </div>
+    </div>
+  );
+}

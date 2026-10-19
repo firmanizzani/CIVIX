@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forest: #052e1b;
+  --deep: #14532d;
+  --primary: #15803d;
+  --emerald: #10b981;
+  --mint: #d1fae5;
+  --soft: #f0fdf4;
+  --neutral: #fafcfa;
+  --text: #17251d;
+  --muted: #647067;
+  --border: #e2eae4;
+
+  --status-red: #dc2626;
+  --status-amber: #d97706;
+  --status-green: #16a34a;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  body {
+    @apply bg-civix-neutral text-civix-text antialiased;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  ::selection {
+    background: var(--primary);
+    color: white;
+  }
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .container-civix {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-civix-deep to-civix-primary text-white shadow-sm hover:from-civix-primary hover:to-civix-emerald hover:shadow-md;
+  }
+  .btn-accent {
+    @apply btn bg-gradient-to-r from-civix-primary to-civix-emerald text-white shadow-sm hover:from-civix-emerald hover:to-civix-mint hover:text-civix-forest hover:shadow-md;
+  }
+  .btn-light {
+    @apply btn bg-white text-civix-forest shadow-sm hover:bg-civix-mint;
+  }
+  .btn-outline {
+    @apply btn border border-civix-border bg-white text-civix-text hover:border-civix-primary hover:bg-civix-soft hover:text-civix-deep;
+  }
+  .btn-ghost {
+    @apply btn text-civix-muted hover:bg-civix-soft hover:text-civix-deep;
+  }
+  .card {
+    @apply rounded-xl border border-civix-border bg-white;
+  }
+  .input {
+    @apply w-full rounded-lg border border-civix-border bg-white px-3 py-2.5 text-sm text-civix-text placeholder:text-civix-muted focus:border-civix-primary focus:outline-none focus:ring-2 focus:ring-civix-primary/15;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-civix-text;
+  }
+  .section-title {
+    @apply text-3xl font-extrabold tracking-tight text-civix-forest sm:text-4xl;
+  }
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.18em] text-civix-primary;
+  }
+  .mono {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+}
+
+/* Status color helpers (jangan hanya warna — selalu ada label teks) */
+.status-dot {
+  @apply inline-block h-2.5 w-2.5 rounded-full;
+}
+.status-red {
+  background: var(--status-red);
+}
+.status-amber {
+  background: var(--status-amber);
+}
+.status-green {
+  background: var(--status-green);
+}
+
+/* Leaflet z-index agar tidak menutupi navbar */
+.leaflet-container {
+  z-index: 0;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  @apply relative overflow-hidden rounded bg-civix-border/70;
+}
+.skeleton::after {
+  content: '';
+  @apply absolute inset-0 -translate-x-full animate-[shimmer_1.4s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Animations */
+.animate-in-up {
+  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-in-up-delay-1 {
+  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+.animate-in-up-delay-2 {
+  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Premium green gradients */
+.gradient-forest {
+  background-image: linear-gradient(135deg, #052e1b 0%, #14532d 55%, #15803d 100%);
+}
+.gradient-cta {
+  background-image: linear-gradient(120deg, #052e1b 0%, #14532d 45%, #15803d 85%, #10b981 100%);
+}
+.gradient-radial-glow::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.25), transparent 55%),
+    radial-gradient(circle at 15% 85%, rgba(21, 128, 61, 0.35), transparent 50%);
+  pointer-events: none;
+}
