@@ -132,8 +132,19 @@ export default function AdminReportsPage() {
                     <span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">{STATUS_LABEL[report.status]}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {report.status === 'diterima' && (
-                      <>
+                     {report.status === 'duplikat' && (
+                       <button
+                         onClick={() => {
+                           if (window.confirm('Pulihkan laporan ini ke antrean verifikasi?')) handleAction(report, 'restore');
+                         }}
+                         disabled={actionMutation.isPending}
+                         className="btn-primary text-xs"
+                       >
+                         <CheckCircle2 size={14} /> Pulihkan untuk Verifikasi
+                       </button>
+                     )}
+                     {report.status === 'diterima' && (
+                       <>
                         <button onClick={() => handleAction(report, 'verify')} disabled={actionMutation.isPending} className="btn bg-green-600 text-white hover:bg-green-700 text-xs"><CheckCircle2 size={14} /> Verifikasi</button>
                         <button onClick={() => handleAction(report, 'reject')} disabled={actionMutation.isPending} className="btn bg-red-600 text-white hover:bg-red-700 text-xs"><XCircle size={14} /> Tolak</button>
                         <button onClick={() => handleAction(report, 'duplicate')} disabled={actionMutation.isPending} className="btn-outline text-xs"><Copy size={14} /> Duplikat</button>

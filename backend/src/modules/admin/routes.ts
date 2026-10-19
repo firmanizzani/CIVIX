@@ -129,6 +129,29 @@ router.get('/agencies', async (_req, res: Response) => {
   }
 });
 
+// POST /admin/reports/:id/restore - Pulihkan laporan ke antrean verifikasi
+router.post('/reports/:id/restore', async (req: AuthRequest, res: Response) => {
+  try {
+    const report = await db.query.reports.findFirst({ where: eq(reports.id, req.params.id) });
+    if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
+    if (!['duplikat', 'diverifikasi'].includes(report.status)) {
+      return res.status(400).json({ error: 'Hanya laporan duplikat atau terverifikasi yang dapat dikembalikan ke antrean verifikasi' });
+    }
+
+    await db.update(reports).set({ status: 'diterima', assignedAgencyId: null }).where(eq(reports.id, report.id));
+    await db.insert(reportStatusLogs).values({
+      reportId: report.id,
+      diubahOleh: req.user!.id,
+      status: 'diterima',
+      catatan: 'Laporan dipulihkan oleh admin dan dikembalikan ke antrean verifikasi',
+    });
+
+    res.json({ success: true, message: 'Laporan dipulihkan ke antrean verifikasi' });
+  } catch (err) {
+    res.status(500).json({ error: 'Gagal memulihkan laporan' });
+  }
+});
+
 // POST /admin/reports/:id/assign - Tugaskan ke instansi
 router.post('/reports/:id/assign', async (req: AuthRequest, res: Response) => {
   try {
