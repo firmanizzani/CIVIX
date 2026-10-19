@@ -1,14 +1,23 @@
-import { useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { KATEGORI_LABEL } from '@/types';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Upload, X, MapPin, AlertCircle, CheckCircle2, Loader2, Image as ImageIcon } from 'lucide-react';
+import {
+  Upload,
+  X,
+  MapPin,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Search,
+  Crosshair,
+} from 'lucide-react';
 
 const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
 
@@ -20,10 +29,36 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-function LocationPicker({ position, setPosition }: { position: [number, number] | null; setPosition: (pos: [number, number]) => void }) {
+type GeocodingResult = {
+  place_id: number;
+  lat: string;
+  lon: string;
+  display_name: string;
+};
+
+const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
+const DKI_VIEWBOX = '106.68,-5.2,106.98,-6.38';
+
+function MapController({ position }: { position: [number, number] | null }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (position) map.flyTo(position, 16, { duration: 0.7 });
+  }, [map, position]);
+
+  return null;
+}
+
+function LocationPicker({
+  position,
+  onSelect,
+}: {
+  position: [number, number] | null;
+  onSelect: (pos: [number, number]) => void;
+}) {
   useMapEvents({
     click(e) {
-      setPosition([e.latlng.lat, e.latlng.lng]);
+      onSelect([e.latlng.lat, e.latlng.lng]);
     },
   });
   return position ? <Marker position={position} /> : null;
@@ -39,7 +74,91 @@ export default function CreateReportPage() {
   const [photos, setPhotos] = useState<File[]>([]);
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchAddressFromCoords = useCallback(async (lat: number, lng: number) => {
+    setIsReverseGeocoding(true);
+    try {
+      const url = `${NOMINATIM_BASE_URL}/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=id`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('Gagal reverse geocode');
+      const data = await res.json();
+      const addr = data.address || {};
+      const road = addr.road || addr.pedestrian || addr.street || addr.neighbourhood || addr.suburb || '';
+      const area = addr.suburb || addr.village || addr.city_district || addr.city || '';
+      const fullLabel = [road, area].filter(Boolean).join(', ') || data.display_name?.split(',').slice(0, 3).join(',') || '';
+      if (fullLabel) {
+        setNamaJalan(fullLabel);
+      }
+    } catch {
+      // Fallback jika API Nominatim gagal/rate-limited: jangan crash
+    } finally {
+      setIsReverseGeocoding(false);
+    }
+  }, []);
+
+  const handleMapClick = useCallback((pos: [number, number]) => {
+    setPosition(pos);
+    fetchAddressFromCoords(pos[0], pos[1]);
+  }, [fetchAddressFromCoords]);
+
+  const handleSearchAddress = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const q = (searchQuery || namaJalan).trim();
+    if (!q) return;
+
+    setIsSearching(true);
+    setSearchResults([]);
+    try {
+      const queryWithContext = q.toLowerCase().includes('jakarta') ? q : `${q}, Jakarta`;
+      const url = `${NOMINATIM_BASE_URL}/search?q=${encodeURIComponent(queryWithContext)}&format=json&limit=5&viewbox=${DKI_VIEWBOX}&bounded=1&addressdetails=1&accept-language=id`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('Gagal mencari alamat');
+      const data = await res.json();
+      setSearchResults(data || []);
+      if (data && data.length > 0) {
+        const top = data[0];
+        const newPos: [number, number] = [parseFloat(top.lat), parseFloat(top.lon)];
+        setPosition(newPos);
+        setNamaJalan(q);
+      }
+    } catch {
+      // Biarkan user tetap bisa input manual jika rate limited
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectSearchResult = (result: GeocodingResult) => {
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+    setPosition([lat, lon]);
+    const simplified = result.display_name.split(',').slice(0, 3).join(', ');
+    setNamaJalan(simplified);
+    setSearchResults([]);
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Browser Anda tidak mendukung geolokasi');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setPosition(coords);
+        fetchAddressFromCoords(coords[0], coords[1]);
+      },
+      () => {
+        alert('Tidak dapat mengakses lokasi Anda. Pastikan izin lokasi aktif.');
+      },
+      { timeout: 8000 }
+    );
+  };
 
   const createMutation = useMutation({
     mutationFn: async (formData: FormData) => (await apiClient.post('/reports', formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
@@ -141,22 +260,6 @@ export default function CreateReportPage() {
               </div>
 
               <div>
-                <label className="label">Nama Jalan / Alamat Lokasi *</label>
-                <input
-                  type="text"
-                  value={namaJalan}
-                  onChange={(e) => setNamaJalan(e.target.value)}
-                  placeholder="Contoh: Jl. Jenderal Sudirman No. 45 (depan Halte FX)"
-                  className="input"
-                  maxLength={200}
-                  required
-                />
-                <p className="mt-1 text-xs text-slate-500">
-                  Tuliskan nama jalan, patokan, atau nomor gedung terdekat agar petugas mudah menemukan lokasi.
-                </p>
-              </div>
-
-              <div>
                 <label className="label">Kategori Masalah *</label>
                 <select value={kategori} onChange={(e) => setKategori(e.target.value)} className="input" required>
                   <option value="">Pilih kategori</option>
@@ -218,12 +321,73 @@ export default function CreateReportPage() {
 
             <div className="card p-6">
               <label className="label flex items-center gap-2">
-                <MapPin size={16} /> Lokasi Kejadian * (klik pada peta)
+                <MapPin size={16} /> Lokasi Kejadian *
               </label>
-              <p className="mb-3 text-xs text-slate-500">
-                Klik pada peta untuk menandai lokasi permasalahan. Pastikan lokasi berada di dalam wilayah DKI Jakarta.
+              <p className="mb-4 text-xs leading-relaxed text-slate-500">
+                Ketik nama jalan untuk mencari lokasi, gunakan lokasi perangkat, atau klik peta. Nama alamat akan terisi otomatis saat memilih titik peta.
               </p>
-              <div className="overflow-hidden rounded-lg border-2 border-slate-200">
+
+              <div className="relative">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={namaJalan}
+                    onChange={(e) => {
+                      setNamaJalan(e.target.value);
+                      setSearchQuery(e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearchAddress();
+                      }
+                    }}
+                    placeholder="Cari jalan atau alamat, contoh: Jl. MH Thamrin"
+                    className="input"
+                    maxLength={200}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSearchAddress()}
+                    disabled={isSearching || !namaJalan.trim()}
+                    className="btn-primary shrink-0"
+                  >
+                    {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                    <span className="hidden sm:inline">Cari</span>
+                  </button>
+                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="absolute z-[1100] mt-2 w-full overflow-hidden rounded-lg border border-civix-border bg-white shadow-xl">
+                    <p className="border-b border-civix-border px-3 py-2 text-xs font-semibold text-civix-muted">Pilih lokasi hasil pencarian</p>
+                    {searchResults.map((result) => (
+                      <button
+                        key={result.place_id}
+                        type="button"
+                        onClick={() => handleSelectSearchResult(result)}
+                        className="flex w-full items-start gap-2 border-b border-civix-border px-3 py-3 text-left text-sm text-civix-text transition last:border-0 hover:bg-civix-soft"
+                      >
+                        <MapPin size={15} className="mt-0.5 shrink-0 text-civix-primary" />
+                        <span>{result.display_name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={handleUseCurrentLocation} className="btn-outline text-xs">
+                  <Crosshair size={15} /> Gunakan lokasi saya
+                </button>
+                {isReverseGeocoding && (
+                  <span className="flex items-center gap-1.5 text-xs text-civix-muted">
+                    <Loader2 size={14} className="animate-spin" /> Mencari nama jalan...
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-lg border-2 border-civix-border">
                 <div className="h-[400px]">
                   <MapContainer center={DKI_CENTER} zoom={12} className="h-full w-full">
                     <TileLayer
@@ -231,14 +395,16 @@ export default function CreateReportPage() {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       maxZoom={19}
                     />
-                    <LocationPicker position={position} setPosition={setPosition} />
+                    <MapController position={position} />
+                    <LocationPicker position={position} onSelect={handleMapClick} />
                   </MapContainer>
                 </div>
               </div>
               {position && (
-                <div className="mt-2 rounded bg-slate-50 p-3 text-xs">
-                  <p className="font-semibold text-slate-700">Koordinat dipilih:</p>
-                  <p className="mono text-slate-600">
+                <div className="mt-3 rounded-lg bg-civix-soft p-3 text-xs">
+                  <p className="font-semibold text-civix-forest">Lokasi dipilih:</p>
+                  <p className="mt-1 text-civix-text">{namaJalan || 'Nama jalan sedang dicari...'}</p>
+                  <p className="mono mt-1 text-civix-muted">
                     Lat: {position[0].toFixed(6)}, Lng: {position[1].toFixed(6)}
                   </p>
                 </div>
