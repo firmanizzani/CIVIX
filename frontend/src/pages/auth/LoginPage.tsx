@@ -107,9 +107,21 @@ export default function LoginPage() {
                 <span><span className="font-semibold text-civix-forest">Admin</span><span className="ml-2 text-civix-muted">admin@demo.com</span></span>
                 <span className="text-civix-primary">Isi</span>
               </button>
-              <button type="button" onClick={() => { setEmail('instansi@demo.com'); setPassword('demo1234'); }} className="flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left transition hover:bg-civix-mint">
-                <span><span className="font-semibold text-civix-forest">Instansi</span><span className="ml-2 text-civix-muted">instansi@demo.com</span></span>
-                <span className="text-civix-primary">Isi</span>
+              <button type="button" onClick={() => { setEmail('instansi@demo.com'); setPassword('demo1234'); }} className="flex w-full items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-left transition hover:bg-civix-mint">
+                <span><span className="block font-semibold text-civix-forest">Dinas Bina Marga Provinsi DKI Jakarta</span><span className="text-civix-muted">instansi@demo.com</span></span>
+                <span className="shrink-0 text-civix-primary">Isi</span>
+              </button>
+              <button type="button" onClick={() => { setEmail('air@demo.com'); setPassword('demo1234'); }} className="flex w-full items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-left transition hover:bg-civix-mint">
+                <span><span className="block font-semibold text-civix-forest">Dinas Sumber Daya Air Provinsi DKI Jakarta</span><span className="text-civix-muted">air@demo.com</span></span>
+                <span className="shrink-0 text-civix-primary">Isi</span>
+              </button>
+              <button type="button" onClick={() => { setEmail('lingkungan@demo.com'); setPassword('demo1234'); }} className="flex w-full items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-left transition hover:bg-civix-mint">
+                <span><span className="block font-semibold text-civix-forest">Dinas Lingkungan Hidup Provinsi DKI Jakarta</span><span className="text-civix-muted">lingkungan@demo.com</span></span>
+                <span className="shrink-0 text-civix-primary">Isi</span>
+              </button>
+              <button type="button" onClick={() => { setEmail('penerangan@demo.com'); setPassword('demo1234'); }} className="flex w-full items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-left transition hover:bg-civix-mint">
+                <span><span className="block font-semibold text-civix-forest">Unit Pelaksana Teknis Penerangan Jalan Umum Provinsi DKI Jakarta</span><span className="text-civix-muted">penerangan@demo.com</span></span>
+                <span className="shrink-0 text-civix-primary">Isi</span>
               </button>
             </div>
             <p className="mt-3 text-center text-[11px] text-civix-muted">Kata sandi semua akun: <span className="font-semibold">demo1234</span></p>

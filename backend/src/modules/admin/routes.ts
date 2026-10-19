@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
-import { reports, reportStatusLogs } from '../../db/schema.js';
-import { eq, desc, count } from 'drizzle-orm';
+import { reports, reportStatusLogs, agencies, reportAssignments } from '../../db/schema.js';
+import { eq, desc, count, asc } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 
 const router = Router();
@@ -119,20 +119,54 @@ router.post('/reports/:id/duplicate', async (req: AuthRequest, res: Response) =>
   }
 });
 
+// GET /admin/agencies - Daftar instansi untuk dropdown penugasan
+router.get('/agencies', async (_req, res: Response) => {
+  try {
+    const list = await db.query.agencies.findMany({ orderBy: [asc(agencies.nama)] });
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: 'Gagal memuat daftar instansi' });
+  }
+});
+
 // POST /admin/reports/:id/assign - Tugaskan ke instansi
 router.post('/reports/:id/assign', async (req: AuthRequest, res: Response) => {
   try {
-    const { instansiNama, catatan } = req.body;
-    await db.update(reports).set({ status: 'ditugaskan' }).where(eq(reports.id, req.params.id));
+    const { agencyId, catatan } = req.body;
+    if (!agencyId) return res.status(400).json({ error: 'Pilih instansi penerima tugas' });
+
+    const agency = await db.query.agencies.findFirst({ where: eq(agencies.id, agencyId) });
+    if (!agency) return res.status(404).json({ error: 'Instansi tidak ditemukan' });
+
+    const report = await db.query.reports.findFirst({ where: eq(reports.id, req.params.id) });
+    if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
+    if (report.status !== 'diverifikasi') {
+      return res.status(400).json({ error: `Hanya laporan berstatus terverifikasi yang dapat ditugaskan (status saat ini: ${report.status})` });
+    }
+
+    const assignment = await db
+      .insert(reportAssignments)
+      .values({
+        reportId: report.id,
+        agencyId: agency.id,
+        assignedBy: req.user!.id,
+        catatan: catatan || null,
+      })
+      .returning();
+
+    await db
+      .update(reports)
+      .set({ status: 'ditugaskan', assignedAgencyId: agency.id })
+      .where(eq(reports.id, report.id));
 
     await db.insert(reportStatusLogs).values({
-      reportId: req.params.id,
+      reportId: report.id,
       diubahOleh: req.user!.id,
       status: 'ditugaskan',
-      catatan: catatan || `Ditugaskan ke instansi: ${instansiNama || 'Dinas Terkait'}`,
+      catatan: `Ditugaskan ke ${agency.nama}`,
     });
 
-    res.json({ success: true, message: 'Laporan berhasil ditugaskan' });
+    res.json({ success: true, assignment, agency: { id: agency.id, nama: agency.nama }, message: `Laporan ditugaskan ke ${agency.nama}` });
   } catch (err) {
     res.status(500).json({ error: 'Gagal menugaskan laporan' });
   }

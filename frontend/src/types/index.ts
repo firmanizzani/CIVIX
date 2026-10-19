@@ -22,6 +22,8 @@ export interface User {
   nama: string;
   email: string;
   peran: Peran;
+  agencyId?: string | null;
+  agencyNama?: string | null;
 }
 
 export interface Region {
@@ -81,6 +83,7 @@ export interface Report {
   comments?: Comment[];
   upvotes?: Upvote[];
   region?: Region | null;
+  assignedAgency?: { id: string; nama: string } | null;
   user?: { nama: string; email?: string } | null;
 }
 
@@ -110,6 +113,7 @@ export interface AgencyDashboard {
   dikerjakan: number;
   selesai: number;
   recent: Report[];
+  agency?: { nama: string } | null;
 }
 
 export interface StatsOverview {

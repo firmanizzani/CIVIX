@@ -1,8 +1,8 @@
 import { Router, Response } from 'express';
 import multer from 'multer';
 import { db } from '../../db/index.js';
-import { reports, reportPhotos, reportStatusLogs } from '../../db/schema.js';
-import { eq, desc, count, inArray, and } from 'drizzle-orm';
+import { reports, reportPhotos, reportStatusLogs, agencies } from '../../db/schema.js';
+import { eq, desc, count, inArray, and, sql } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { uploadImageToStorage } from '../uploads/service.js';
 
@@ -20,25 +20,54 @@ router.use(requireRole(['instansi', 'admin']));
 
 const ALLOWED_PROGRESS: string[] = ['dikerjakan', 'selesai'];
 
+const getAgencyScope = (req: AuthRequest, res: Response): { agencyId: string } | null => {
+  if (req.user!.peran === 'admin') return { agencyId: '' };
+  const agencyId = req.user!.agencyId;
+  if (!agencyId) {
+    res.status(403).json({ error: 'Akun instansi belum terhubung dengan unit instansi manapun' });
+    return null;
+  }
+  return { agencyId };
+};
+
+const scopeCondition = (agencyId: string) =>
+  agencyId ? eq(reports.assignedAgencyId, agencyId) : sql`TRUE`;
+
+const assertOwnsReport = async (reportId: string, agencyId: string): Promise<boolean> => {
+  if (!agencyId) return true;
+  const report = await db.query.reports.findFirst({ where: eq(reports.id, reportId) });
+  return !!report && report.assignedAgencyId === agencyId;
+};
+
 // GET /agency/dashboard - Ringkasan instansi
-router.get('/dashboard', async (_req: AuthRequest, res: Response) => {
+router.get('/dashboard', async (req: AuthRequest, res: Response) => {
   try {
-    const ditugaskan = await db.select({ count: count() }).from(reports).where(eq(reports.status, 'ditugaskan'));
-    const dikerjakan = await db.select({ count: count() }).from(reports).where(eq(reports.status, 'dikerjakan'));
-    const selesai = await db.select({ count: count() }).from(reports).where(eq(reports.status, 'selesai'));
+    const scope = getAgencyScope(req, res);
+    if (!scope) return;
+    const cond = scopeCondition(scope.agencyId);
+
+    const ditugaskan = await db.select({ count: count() }).from(reports).where(and(eq(reports.status, 'ditugaskan'), cond));
+    const dikerjakan = await db.select({ count: count() }).from(reports).where(and(eq(reports.status, 'dikerjakan'), cond));
+    const selesai = await db.select({ count: count() }).from(reports).where(and(eq(reports.status, 'selesai'), cond));
 
     const recent = await db.query.reports.findMany({
-      where: inArray(reports.status, ['ditugaskan', 'dikerjakan']),
+      where: and(inArray(reports.status, ['ditugaskan', 'dikerjakan']), cond),
       limit: 10,
       orderBy: [desc(reports.dibuatPada)],
-      with: { photos: { limit: 1 }, region: true },
+      with: { photos: { limit: 1 }, region: true, assignedAgency: true },
     });
+
+    let agency: { nama: string } | null = null;
+    if (scope.agencyId) {
+      agency = await db.query.agencies.findFirst({ where: eq(agencies.id, scope.agencyId) });
+    }
 
     res.json({
       ditugaskan: ditugaskan[0]?.count || 0,
       dikerjakan: dikerjakan[0]?.count || 0,
       selesai: selesai[0]?.count || 0,
       recent,
+      agency: agency ? { nama: agency.nama } : null,
     });
   } catch (err) {
     res.status(500).json({ error: 'Gagal memuat dashboard instansi' });
@@ -48,10 +77,12 @@ router.get('/dashboard', async (_req: AuthRequest, res: Response) => {
 // GET /agency/assignments - Daftar tugas instansi
 router.get('/assignments', async (req: AuthRequest, res: Response) => {
   try {
+    const scope = getAgencyScope(req, res);
+    if (!scope) return;
     const { status, limit = 30, page = 1 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    let conditions = [inArray(reports.status, ['ditugaskan', 'dikerjakan', 'selesai'])];
+    let conditions = [inArray(reports.status, ['ditugaskan', 'dikerjakan', 'selesai']), scopeCondition(scope.agencyId)];
     if (status) conditions.push(eq(reports.status, status as any));
 
     const tasks = await db.query.reports.findMany({
@@ -59,7 +90,7 @@ router.get('/assignments', async (req: AuthRequest, res: Response) => {
       limit: Number(limit),
       offset,
       orderBy: [desc(reports.dibuatPada)],
-      with: { photos: { limit: 1 }, region: true, statusLogs: { orderBy: [desc(reportStatusLogs.waktu)], limit: 3 } },
+      with: { photos: { limit: 1 }, region: true, assignedAgency: true, statusLogs: { orderBy: [desc(reportStatusLogs.waktu)], limit: 3 } },
     });
 
     res.json(tasks);
@@ -71,11 +102,15 @@ router.get('/assignments', async (req: AuthRequest, res: Response) => {
 // GET /agency/assignments/:id - Detail tugas
 router.get('/assignments/:id', async (req: AuthRequest, res: Response) => {
   try {
+    const scope = getAgencyScope(req, res);
+    if (!scope) return;
+
     const task = await db.query.reports.findFirst({
-      where: eq(reports.id, req.params.id),
+      where: and(eq(reports.id, req.params.id), scopeCondition(scope.agencyId)),
       with: {
         photos: true,
         region: true,
+        assignedAgency: true,
         statusLogs: { orderBy: [desc(reportStatusLogs.waktu)] },
         user: { columns: { nama: true } },
       },
@@ -91,6 +126,12 @@ router.get('/assignments/:id', async (req: AuthRequest, res: Response) => {
 // POST /agency/assignments/:id/progress - Update progres (mulai atau dalam pengerjaan)
 router.post('/assignments/:id/progress', async (req: AuthRequest, res: Response) => {
   try {
+    const scope = getAgencyScope(req, res);
+    if (!scope) return;
+    if (!(await assertOwnsReport(req.params.id, scope.agencyId))) {
+      return res.status(403).json({ error: 'Tugas ini tidak ditugaskan ke instansi Anda' });
+    }
+
     const { status, catatan } = req.body;
     if (!ALLOWED_PROGRESS.includes(status)) {
       return res.status(400).json({ error: `Status harus salah satu dari: ${ALLOWED_PROGRESS.join(', ')}` });
@@ -120,6 +161,12 @@ router.post('/assignments/:id/progress', async (req: AuthRequest, res: Response)
 // POST /agency/assignments/:id/complete - Selesaikan laporan + wajib foto bukti
 router.post('/assignments/:id/complete', upload.array('bukti', 3), async (req: AuthRequest, res: Response) => {
   try {
+    const scope = getAgencyScope(req, res);
+    if (!scope) return;
+    if (!(await assertOwnsReport(req.params.id, scope.agencyId))) {
+      return res.status(403).json({ error: 'Tugas ini tidak ditugaskan ke instansi Anda' });
+    }
+
     const files = req.files as Express.Multer.File[];
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'Foto bukti perbaikan wajib diunggah minimal 1' });

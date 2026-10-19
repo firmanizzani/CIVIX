@@ -22,7 +22,7 @@ export default function AgencyDashboard() {
             <div className="rounded-xl bg-civix-navy p-3 text-white"><Building2 size={24} /></div>
             <div>
               <h1 className="text-3xl font-extrabold text-civix-navy">Dashboard Instansi</h1>
-              <p className="mt-1 text-slate-600">Kelola tugas penanganan laporan CIVIX.</p>
+              <p className="mt-1 text-slate-600">{data?.agency?.nama || 'Kelola tugas penanganan laporan CIVIX.'}</p>
             </div>
           </div>
           <Link to="/agency/assignments" className="btn-primary">Lihat Semua Tugas <ArrowRight size={16} /></Link>

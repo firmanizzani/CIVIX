@@ -22,6 +22,20 @@
       "when": 1792409781778,
       "tag": "0002_strong_master_mold",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792412416258,
+      "tag": "0003_chunky_arclight",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792412522203,
+      "tag": "0004_wooden_nightcrawler",
+      "breakpoints": true
     }
   ]
 }

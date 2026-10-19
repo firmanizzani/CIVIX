@@ -207,11 +207,14 @@ npm run dev
 
 ## Akun Demo (Setelah Seeding)
 
-| Role | Email | Password |
-|------|-------|----------|
-| Warga | warga@demo.com | demo1234 |
-| Admin | admin@demo.com | demo1234 |
-| Instansi | instansi@demo.com | demo1234 |
+| Role | Unit / Instansi | Email | Password |
+|------|---------------|-------|----------|
+| Warga | Warga Demo | warga@demo.com | demo1234 |
+| Admin | Admin CIVIX | admin@demo.com | demo1234 |
+| Instansi | Dinas Bina Marga Provinsi DKI Jakarta | instansi@demo.com | demo1234 |
+| Instansi | Dinas Sumber Daya Air Provinsi DKI Jakarta | air@demo.com | demo1234 |
+| Instansi | Dinas Lingkungan Hidup Provinsi DKI Jakarta | lingkungan@demo.com | demo1234 |
+| Instansi | Unit Pelaksana Teknis Penerangan Jalan Umum Provinsi DKI Jakarta | penerangan@demo.com | demo1234 |
 
 ---
 

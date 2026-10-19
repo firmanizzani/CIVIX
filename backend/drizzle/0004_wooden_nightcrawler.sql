@@ -1,0 +1,1 @@
+ALTER TABLE "regions" ADD CONSTRAINT "regions_nama_unique" UNIQUE("nama");

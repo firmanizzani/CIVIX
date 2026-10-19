@@ -21,18 +21,26 @@ export const statusLaporanEnum = pgEnum('status_laporan', [
 ]);
 export const jenisFotoEnum = pgEnum('jenis_foto', ['awal', 'bukti_perbaikan']);
 
+export const agencies = pgTable('agencies', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  nama: varchar('nama', { length: 150 }).notNull(),
+  deskripsi: text('deskripsi'),
+  dibuatPada: timestamp('dibuat_pada', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   nama: varchar('nama', { length: 100 }).notNull(),
   email: varchar('email', { length: 150 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   peran: peranUserEnum('peran').notNull().default('warga'),
+  agencyId: uuid('agency_id').references(() => agencies.id, { onDelete: 'set null' }),
   dibuatPada: timestamp('dibuat_pada', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const regions = pgTable('regions', {
   id: serial('id').primaryKey(),
-  nama: varchar('nama', { length: 100 }).notNull(),
+  nama: varchar('nama', { length: 100 }).notNull().unique(),
   tipe: varchar('tipe', { length: 30 }).notNull().default('kecamatan'),
 });
 
@@ -43,6 +51,7 @@ export const reports = pgTable(
     kodeTiket: varchar('kode_tiket', { length: 20 }).notNull().unique(),
     userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
     regionId: integer('region_id').references(() => regions.id, { onDelete: 'set null' }),
+    assignedAgencyId: uuid('assigned_agency_id').references(() => agencies.id, { onDelete: 'set null' }),
     judul: varchar('judul', { length: 150 }).notNull(),
     deskripsi: text('deskripsi').notNull(),
     namaJalan: varchar('nama_jalan', { length: 200 }),
@@ -124,13 +133,6 @@ export const upvotes = pgTable(
   })
 );
 
-export const agencies = pgTable('agencies', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  nama: varchar('nama', { length: 150 }).notNull(),
-  deskripsi: text('deskripsi'),
-  dibuatPada: timestamp('dibuat_pada', { withTimezone: true }).notNull().defaultNow(),
-});
-
 export const reportAssignments = pgTable(
   'report_assignments',
   {
@@ -151,7 +153,8 @@ export const reportAssignments = pgTable(
   })
 );
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
+  agency: one(agencies, { fields: [users.agencyId], references: [agencies.id] }),
   reports: many(reports),
   statusLogs: many(reportStatusLogs),
   comments: many(comments),
@@ -161,6 +164,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const reportsRelations = relations(reports, ({ one, many }) => ({
   user: one(users, { fields: [reports.userId], references: [users.id] }),
   region: one(regions, { fields: [reports.regionId], references: [regions.id] }),
+  assignedAgency: one(agencies, { fields: [reports.assignedAgencyId], references: [agencies.id] }),
   photos: many(reportPhotos),
   statusLogs: many(reportStatusLogs),
   comments: many(comments),

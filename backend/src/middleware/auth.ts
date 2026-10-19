@@ -3,14 +3,14 @@ import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/index.js';
 
 export interface AuthRequest extends Request<Record<string, string>> {
-  user?: { id: string; peran: string };
+  user?: { id: string; peran: string; agencyId?: string | null };
 }
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Token tidak ditemukan' });
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; peran: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; peran: string; agencyId?: string | null };
     req.user = decoded;
     next();
   } catch {

@@ -12,6 +12,9 @@ export default function AdminReportsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [actionError, setActionError] = useState('');
+  const [assignmentReportId, setAssignmentReportId] = useState<string | null>(null);
+  const [selectedAgencyId, setSelectedAgencyId] = useState('');
+  const [assignmentNote, setAssignmentNote] = useState('');
   const statusFilter = searchParams.get('status') || '';
   const queryClient = useQueryClient();
 
@@ -23,13 +26,21 @@ export default function AdminReportsPage() {
     },
   });
 
+  const { data: agencies = [] } = useQuery<{ id: string; nama: string; deskripsi: string | null }[]>({
+    queryKey: ['admin-agencies'],
+    queryFn: async () => (await apiClient.get('/admin/agencies')).data,
+  });
+
   const actionMutation = useMutation({
     mutationFn: async ({ id, action, data }: { id: string; action: string; data?: any }) =>
       (await apiClient.post(`/admin/reports/${id}/${action}`, data)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['agency-dashboard'] });
       setActionError('');
+      setAssignmentReportId(null);
+      setAssignmentNote('');
     },
     onError: (err: any) => setActionError(err.response?.data?.error || 'Aksi gagal'),
   });
@@ -43,12 +54,20 @@ export default function AdminReportsPage() {
       if (!window.confirm('Tandai laporan ini sebagai duplikat?')) return;
       actionMutation.mutate({ id: report.id, action });
     } else if (action === 'assign') {
-      const instansiNama = window.prompt('Nama instansi penerima:');
-      if (!instansiNama) return;
-      actionMutation.mutate({ id: report.id, action, data: { instansiNama } });
+      setAssignmentReportId(report.id);
+      setSelectedAgencyId(agencies[0]?.id || '');
     } else {
       actionMutation.mutate({ id: report.id, action });
     }
+  };
+
+  const handleConfirmAssign = () => {
+    if (!assignmentReportId || !selectedAgencyId) return;
+    actionMutation.mutate({
+      id: assignmentReportId,
+      action: 'assign',
+      data: { agencyId: selectedAgencyId, catatan: assignmentNote || undefined },
+    });
   };
 
   const filteredReports = reports.filter((r) =>
@@ -131,6 +150,50 @@ export default function AdminReportsPage() {
           )}
         </div>
       </div>
+
+      {assignmentReportId && (
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-civix-border bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-civix-forest">Tugaskan Laporan ke Instansi</h2>
+            <p className="mt-1 text-xs leading-relaxed text-civix-muted">
+              Pilih unit instansi yang akan menangani laporan. Tugas hanya akan terlihat oleh akun instansi terkait.
+            </p>
+            <label className="label mt-4">Instansi Penerima *</label>
+            <select
+              value={selectedAgencyId}
+              onChange={(e) => setSelectedAgencyId(e.target.value)}
+              className="input"
+              disabled={agencies.length === 0}
+            >
+              {agencies.length === 0 && <option>Memuat instansi...</option>}
+              {agencies.map((agency) => (
+                <option key={agency.id} value={agency.id}>
+                  {agency.nama}
+                </option>
+              ))}
+            </select>
+            <label className="label mt-3">Catatan Penugasan (opsional)</label>
+            <textarea
+              value={assignmentNote}
+              onChange={(e) => setAssignmentNote(e.target.value)}
+              placeholder="Contoh: Prioritasi lokasi ramai lalu lintas"
+              className="input min-h-[70px]"
+            />
+            <div className="mt-5 flex gap-3">
+              <button onClick={() => setAssignmentReportId(null)} className="btn-outline flex-1">
+                Batal
+              </button>
+              <button
+                onClick={handleConfirmAssign}
+                disabled={!selectedAgencyId || actionMutation.isPending}
+                className="btn-primary flex-1"
+              >
+                {actionMutation.isPending ? 'Memproses...' : 'Tugaskan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

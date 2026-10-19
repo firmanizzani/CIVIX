@@ -33,7 +33,11 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
       .values({ nama: body.nama, email: body.email, passwordHash, peran: 'warga' })
       .returning({ id: users.id, email: users.email, peran: users.peran });
 
-    const token = jwt.sign({ id: user[0].id, peran: user[0].peran }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+    const token = jwt.sign(
+      { id: user[0].id, peran: user[0].peran, agencyId: null },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRY }
+    );
     res.status(201).json({ token, user: user[0] });
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
@@ -44,14 +48,31 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
 router.post('/login', async (req: AuthRequest, res: Response) => {
   try {
     const body = LoginSchema.parse(req.body);
-    const user = await db.query.users.findFirst({ where: eq(users.email, body.email) });
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, body.email),
+      with: { agency: true },
+    });
     if (!user) return res.status(401).json({ error: 'Email atau password salah' });
 
     const valid = await bcrypt.compare(body.password, user.passwordHash);
     if (!valid) return res.status(401).json({ error: 'Email atau password salah' });
 
-    const token = jwt.sign({ id: user.id, peran: user.peran }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
-    res.json({ token, user: { id: user.id, nama: user.nama, email: user.email, peran: user.peran } });
+    const token = jwt.sign(
+      { id: user.id, peran: user.peran, agencyId: user.agencyId ?? null },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRY }
+    );
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        nama: user.nama,
+        email: user.email,
+        peran: user.peran,
+        agencyId: user.agencyId ?? null,
+        agencyNama: user.agency?.nama ?? null,
+      },
+    });
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     res.status(500).json({ error: 'Login gagal' });
@@ -60,9 +81,19 @@ router.post('/login', async (req: AuthRequest, res: Response) => {
 
 router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const user = await db.query.users.findFirst({ where: eq(users.id, req.user!.id) });
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.user!.id),
+      with: { agency: true },
+    });
     if (!user) return res.status(404).json({ error: 'User tidak ditemukan' });
-    res.json({ id: user.id, nama: user.nama, email: user.email, peran: user.peran });
+    res.json({
+      id: user.id,
+      nama: user.nama,
+      email: user.email,
+      peran: user.peran,
+      agencyId: user.agencyId ?? null,
+      agencyNama: user.agency?.nama ?? null,
+    });
   } catch (err) {
     res.status(500).json({ error: 'Gagal mengambil data user' });
   }

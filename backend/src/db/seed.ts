@@ -1,6 +1,7 @@
 import { db } from './index.js';
-import { users, regions, reports, reportPhotos, reportStatusLogs } from './schema.js';
+import { users, regions, reports, reportPhotos, reportStatusLogs, agencies, reportAssignments } from './schema.js';
 import bcrypt from 'bcrypt';
+import { and, eq } from 'drizzle-orm';
 
 async function seed() {
   console.log('🌱 Mulai seeding database...');
@@ -21,13 +22,28 @@ async function seed() {
     const allRegions = await db.query.regions.findMany();
     console.log(`   ✓ ${allRegions.length} regions`);
 
-    // 2. Users Demo
-    const passwordHash = await bcrypt.hash('demo1234', 12);
+    // 2. Agensi dan akun demo
+    const agencyCatalog = [
+      { nama: 'Dinas Bina Marga Provinsi DKI Jakarta', deskripsi: 'Penanganan jalan dan infrastruktur jalan.' },
+      { nama: 'Dinas Sumber Daya Air Provinsi DKI Jakarta', deskripsi: 'Penanganan drainase dan masalah sumber daya air.' },
+      { nama: 'Dinas Lingkungan Hidup Provinsi DKI Jakarta', deskripsi: 'Penanganan sampah dan kebersihan lingkungan.' },
+      { nama: 'Unit Pelaksana Teknis Penerangan Jalan Umum Provinsi DKI Jakarta', deskripsi: 'Penanganan lampu dan penerangan jalan umum.' },
+    ];
+    for (const agency of agencyCatalog) {
+      const existingAgency = await db.query.agencies.findFirst({ where: eq(agencies.nama, agency.nama) });
+      if (!existingAgency) await db.insert(agencies).values(agency);
+    }
+    const allAgencies = await db.query.agencies.findMany();
+    const agencyByName = (name: string) => allAgencies.find((agency) => agency.nama === name)!;
 
+    const passwordHash = await bcrypt.hash('demo1234', 12);
     const usersData = [
-      { nama: 'Warga Demo', email: 'warga@demo.com', passwordHash, peran: 'warga' as const },
-      { nama: 'Admin CIVIX', email: 'admin@demo.com', passwordHash, peran: 'admin' as const },
-      { nama: 'Dinas Bina Marga', email: 'instansi@demo.com', passwordHash, peran: 'instansi' as const },
+      { nama: 'Warga Demo', email: 'warga@demo.com', passwordHash, peran: 'warga' as const, agencyId: undefined },
+      { nama: 'Admin CIVIX', email: 'admin@demo.com', passwordHash, peran: 'admin' as const, agencyId: undefined },
+      { nama: 'Dinas Bina Marga Provinsi DKI Jakarta', email: 'instansi@demo.com', passwordHash, peran: 'instansi' as const, agencyId: agencyByName('Dinas Bina Marga Provinsi DKI Jakarta').id },
+      { nama: 'Dinas Sumber Daya Air Provinsi DKI Jakarta', email: 'air@demo.com', passwordHash, peran: 'instansi' as const, agencyId: agencyByName('Dinas Sumber Daya Air Provinsi DKI Jakarta').id },
+      { nama: 'Dinas Lingkungan Hidup Provinsi DKI Jakarta', email: 'lingkungan@demo.com', passwordHash, peran: 'instansi' as const, agencyId: agencyByName('Dinas Lingkungan Hidup Provinsi DKI Jakarta').id },
+      { nama: 'Unit Pelaksana Teknis Penerangan Jalan Umum Provinsi DKI Jakarta', email: 'penerangan@demo.com', passwordHash, peran: 'instansi' as const, agencyId: agencyByName('Unit Pelaksana Teknis Penerangan Jalan Umum Provinsi DKI Jakarta').id },
     ];
 
     console.log('   → Membuat users...');
@@ -39,6 +55,13 @@ async function seed() {
 
     if (!wargaUser || !adminUser) {
       throw new Error('User demo tidak ditemukan');
+    }
+
+    // Pastikan akun instansi yang sudah ada tetap terhubung ke agensi
+    for (const data of usersData) {
+      if (data.peran === 'instansi' && data.agencyId) {
+        await db.update(users).set({ agencyId: data.agencyId }).where(eq(users.email, data.email));
+      }
     }
 
     // 3. Demo Reports
@@ -129,6 +152,33 @@ async function seed() {
     const allReports = await db.query.reports.findMany();
     console.log(`   ✓ ${allReports.length} reports`);
 
+    const agencyForCategory: Record<string, string> = {
+      jalan_rusak: agencyByName('Dinas Bina Marga Provinsi DKI Jakarta').id,
+      drainase: agencyByName('Dinas Sumber Daya Air Provinsi DKI Jakarta').id,
+      sampah: agencyByName('Dinas Lingkungan Hidup Provinsi DKI Jakarta').id,
+      penerangan: agencyByName('Unit Pelaksana Teknis Penerangan Jalan Umum Provinsi DKI Jakarta').id,
+      fasilitas_umum: agencyByName('Dinas Bina Marga Provinsi DKI Jakarta').id,
+      lainnya: agencyByName('Dinas Bina Marga Provinsi DKI Jakarta').id,
+    };
+    for (const report of allReports) {
+      const agencyId = agencyForCategory[report.kategori];
+      const requiresAssignment = ['ditugaskan', 'dikerjakan', 'selesai'].includes(report.status);
+      await db.update(reports).set({ assignedAgencyId: requiresAssignment ? agencyId : null }).where(eq(reports.id, report.id));
+      if (requiresAssignment) {
+        const existingAssignment = await db.query.reportAssignments.findFirst({
+          where: and(eq(reportAssignments.reportId, report.id), eq(reportAssignments.agencyId, agencyId)),
+        });
+        if (!existingAssignment) {
+          await db.insert(reportAssignments).values({
+            reportId: report.id,
+            agencyId,
+            assignedBy: adminUser.id,
+            catatan: 'Penugasan data demonstrasi berdasarkan kategori laporan',
+          });
+        }
+      }
+    }
+
     // 4. Status Logs
     console.log('   → Membuat status logs...');
     for (const report of allReports) {
@@ -196,7 +246,10 @@ async function seed() {
     console.log('\n📌 Akun Demo:');
     console.log('   Warga     : warga@demo.com / demo1234');
     console.log('   Admin     : admin@demo.com / demo1234');
-    console.log('   Instansi  : instansi@demo.com / demo1234\n');
+    console.log('   Dinas Bina Marga Provinsi DKI Jakarta: instansi@demo.com / demo1234');
+    console.log('   Dinas Sumber Daya Air Provinsi DKI Jakarta: air@demo.com / demo1234');
+    console.log('   Dinas Lingkungan Hidup Provinsi DKI Jakarta: lingkungan@demo.com / demo1234');
+    console.log('   Unit Pelaksana Teknis Penerangan Jalan Umum Provinsi DKI Jakarta: penerangan@demo.com / demo1234\n');
 
     process.exit(0);
   } catch (err) {
