@@ -216,7 +216,7 @@ export default function CreateReportPage() {
     formData.append('latitude', position[0].toString());
     formData.append('longitude', position[1].toString());
     formData.append('anonim', anonim.toString());
-    formData.append('regionId', '1'); // Demo: default region
+    formData.append('regionId', 'region_001'); // Demo: default region
     for (const photo of photos) {
       formData.append('photos', photo);
     }

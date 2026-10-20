@@ -54,7 +54,7 @@ router.get('/', async (req, res: Response) => {
 
     if (kategori) conditions.push(eq(reports.kategori, kategori as any));
     if (status) conditions.push(eq(reports.status, status as any));
-    if (regionId) conditions.push(eq(reports.regionId, Number(regionId)));
+    if (regionId) conditions.push(eq(reports.regionId, String(regionId)));
 
     const result = await db.query.reports.findMany({
       where: and(...conditions),
@@ -161,7 +161,7 @@ router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequ
       .values({
         kodeTiket,
         userId: req.user!.id,
-        regionId: regionId ? Number(regionId) : null,
+        regionId: regionId ? String(regionId) : null,
         judul: judul.trim(),
         deskripsi: deskripsi.trim(),
         namaJalan: namaJalan.trim(),

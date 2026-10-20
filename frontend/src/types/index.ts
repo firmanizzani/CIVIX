@@ -27,7 +27,7 @@ export interface User {
 }
 
 export interface Region {
-  id: number;
+  id: string;
   nama: string;
   tipe: string;
 }
@@ -67,7 +67,7 @@ export interface Report {
   id: string;
   kodeTiket: string;
   userId: string | null;
-  regionId: number | null;
+  regionId: string | null;
   judul: string;
   deskripsi: string;
   namaJalan: string | null;
@@ -132,7 +132,7 @@ export interface TrendRow {
 }
 
 export interface RegionStat {
-  regionId: number;
+  regionId: string;
   wilayah: string;
   total: number;
   selesai: number;

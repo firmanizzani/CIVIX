@@ -8,7 +8,7 @@ import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate } from '@/lib/utils';
 import { Search, CheckCircle2, XCircle, Copy, Send, AlertCircle } from 'lucide-react';
 
-export default function AdminReportsPage() {
+export default function AdminReportsPage({ embedded = false }: { embedded?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [actionError, setActionError] = useState('');
@@ -75,17 +75,14 @@ export default function AdminReportsPage() {
     r.kodeTiket.toLowerCase().includes(search.toLowerCase())
   );
 
-  return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <Navbar />
-
-      <div className="container-civix flex-1 py-12">
+  const reportManagement = (
+    <>
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold text-civix-navy">Kelola Laporan</h1>
+            <h2 className="text-2xl font-extrabold text-civix-navy">Kelola Laporan</h2>
             <p className="mt-1 text-slate-600">Verifikasi, tolak, tandai duplikat, atau tugaskan laporan.</p>
           </div>
-          <Link to="/admin" className="btn-outline">Kembali ke dashboard</Link>
+          {!embedded && <Link to="/admin" className="btn-outline">Kembali ke dashboard</Link>}
         </div>
 
         {actionError && (
@@ -160,7 +157,6 @@ export default function AdminReportsPage() {
             </div>
           )}
         </div>
-      </div>
 
       {assignmentReportId && (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/50 p-4">
@@ -205,7 +201,19 @@ export default function AdminReportsPage() {
           </div>
         </div>
       )}
+    </>
+  );
 
+  if (embedded) {
+    return reportManagement;
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <Navbar />
+      <div className="container-civix flex-1 py-12">
+        {reportManagement}
+      </div>
       <Footer />
     </div>
   );

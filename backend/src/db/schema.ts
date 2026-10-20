@@ -1,5 +1,5 @@
-import { pgTable, uuid, varchar, text, timestamp, boolean, numeric, serial, integer, pgEnum, index, primaryKey } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { pgTable, varchar, text, timestamp, boolean, numeric, pgEnum, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
 
 export const peranUserEnum = pgEnum('peran_user', ['warga', 'admin', 'instansi']);
 export const kategoriLaporanEnum = pgEnum('kategori_laporan', [
@@ -22,24 +22,24 @@ export const statusLaporanEnum = pgEnum('status_laporan', [
 export const jenisFotoEnum = pgEnum('jenis_foto', ['awal', 'bukti_perbaikan']);
 
 export const agencies = pgTable('agencies', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: varchar('id', { length: 40 }).primaryKey().default(sql`'agency_' || lpad(nextval('seq_agency_id')::text, 3, '0')`),
   nama: varchar('nama', { length: 150 }).notNull(),
   deskripsi: text('deskripsi'),
   dibuatPada: timestamp('dibuat_pada', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const users = pgTable('users', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: varchar('id', { length: 40 }).primaryKey().default(sql`'user_' || lpad(nextval('seq_user_id')::text, 3, '0')`),
   nama: varchar('nama', { length: 100 }).notNull(),
   email: varchar('email', { length: 150 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   peran: peranUserEnum('peran').notNull().default('warga'),
-  agencyId: uuid('agency_id').references(() => agencies.id, { onDelete: 'set null' }),
+  agencyId: varchar('agency_id', { length: 40 }).references(() => agencies.id, { onDelete: 'set null' }),
   dibuatPada: timestamp('dibuat_pada', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const regions = pgTable('regions', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 40 }).primaryKey().default(sql`'region_' || lpad(nextval('seq_region_id')::text, 3, '0')`),
   nama: varchar('nama', { length: 100 }).notNull().unique(),
   tipe: varchar('tipe', { length: 30 }).notNull().default('kecamatan'),
 });
@@ -47,11 +47,11 @@ export const regions = pgTable('regions', {
 export const reports = pgTable(
   'reports',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: varchar('id', { length: 40 }).primaryKey().default(sql`'report_' || lpad(nextval('seq_reports_id')::text, 3, '0')`),
     kodeTiket: varchar('kode_tiket', { length: 20 }).notNull().unique(),
-    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
-    regionId: integer('region_id').references(() => regions.id, { onDelete: 'set null' }),
-    assignedAgencyId: uuid('assigned_agency_id').references(() => agencies.id, { onDelete: 'set null' }),
+    userId: varchar('user_id', { length: 40 }).references(() => users.id, { onDelete: 'set null' }),
+    regionId: varchar('region_id', { length: 40 }).references(() => regions.id, { onDelete: 'set null' }),
+    assignedAgencyId: varchar('assigned_agency_id', { length: 40 }).references(() => agencies.id, { onDelete: 'set null' }),
     judul: varchar('judul', { length: 150 }).notNull(),
     deskripsi: text('deskripsi').notNull(),
     namaJalan: varchar('nama_jalan', { length: 200 }),
@@ -73,8 +73,8 @@ export const reports = pgTable(
 );
 
 export const reportPhotos = pgTable('report_photos', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  reportId: uuid('report_id')
+  id: varchar('id', { length: 40 }).primaryKey().default(sql`'rphoto_' || lpad(nextval('seq_report_photos_id')::text, 3, '0')`),
+  reportId: varchar('report_id', { length: 40 })
     .notNull()
     .references(() => reports.id, { onDelete: 'cascade' }),
   url: text('url').notNull(),
@@ -85,11 +85,11 @@ export const reportPhotos = pgTable('report_photos', {
 export const reportStatusLogs = pgTable(
   'report_status_logs',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
-    reportId: uuid('report_id')
+    id: varchar('id', { length: 40 }).primaryKey().default(sql`'rlog_' || lpad(nextval('seq_report_status_logs_id')::text, 3, '0')`),
+    reportId: varchar('report_id', { length: 40 })
       .notNull()
       .references(() => reports.id, { onDelete: 'cascade' }),
-    diubahOleh: uuid('diubah_oleh').references(() => users.id, { onDelete: 'set null' }),
+    diubahOleh: varchar('diubah_oleh', { length: 40 }).references(() => users.id, { onDelete: 'set null' }),
     status: statusLaporanEnum('status').notNull(),
     catatan: text('catatan'),
     waktu: timestamp('waktu', { withTimezone: true }).notNull().defaultNow(),
@@ -102,11 +102,11 @@ export const reportStatusLogs = pgTable(
 export const comments = pgTable(
   'comments',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
-    reportId: uuid('report_id')
+    id: varchar('id', { length: 40 }).primaryKey().default(sql`'comment_' || lpad(nextval('seq_comments_id')::text, 3, '0')`),
+    reportId: varchar('report_id', { length: 40 })
       .notNull()
       .references(() => reports.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id')
+    userId: varchar('user_id', { length: 40 })
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     isi: text('isi').notNull(),
@@ -120,30 +120,31 @@ export const comments = pgTable(
 export const upvotes = pgTable(
   'upvotes',
   {
-    reportId: uuid('report_id')
+    id: varchar('id', { length: 40 }).primaryKey().default(sql`'upvote_' || lpad(nextval('seq_upvotes_id')::text, 3, '0')`),
+    reportId: varchar('report_id', { length: 40 })
       .notNull()
       .references(() => reports.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id')
+    userId: varchar('user_id', { length: 40 })
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     waktu: timestamp('waktu', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.reportId, table.userId] }),
+    reportUserUnique: uniqueIndex('upvotes_report_user_unique').on(table.reportId, table.userId),
   })
 );
 
 export const reportAssignments = pgTable(
   'report_assignments',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
-    reportId: uuid('report_id')
+    id: varchar('id', { length: 40 }).primaryKey().default(sql`'rasgn_' || lpad(nextval('seq_report_assignments_id')::text, 3, '0')`),
+    reportId: varchar('report_id', { length: 40 })
       .notNull()
       .references(() => reports.id, { onDelete: 'cascade' }),
-    agencyId: uuid('agency_id')
+    agencyId: varchar('agency_id', { length: 40 })
       .notNull()
       .references(() => agencies.id, { onDelete: 'cascade' }),
-    assignedBy: uuid('assigned_by').references(() => users.id, { onDelete: 'set null' }),
+    assignedBy: varchar('assigned_by', { length: 40 }).references(() => users.id, { onDelete: 'set null' }),
     catatan: text('catatan'),
     dibuatPada: timestamp('dibuat_pada', { withTimezone: true }).notNull().defaultNow(),
   },
