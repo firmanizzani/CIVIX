@@ -161,7 +161,7 @@ export default function CreateReportPage() {
   };
 
   const createMutation = useMutation({
-    mutationFn: async (formData: FormData) => (await apiClient.post('/reports', formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
+    mutationFn: async (formData: FormData) => (await apiClient.post('/reports', formData, { headers: { 'Content-Type': undefined } })).data,
     onSuccess: (data) => {
       navigate(`/reports/${data.id}`);
     },
