@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
 import { Play, CheckCircle2, Upload, X, Loader2, Wrench, Image as ImageIcon } from 'lucide-react';
 
 export default function AgencyAssignmentsPage() {
@@ -77,7 +77,10 @@ export default function AgencyAssignmentsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2"><span className="mono text-xs text-slate-400">{task.kodeTiket}</span><span className="text-xs text-civix-blue">{KATEGORI_LABEL[task.kategori]}</span></div>
                       <h2 className="mt-1 font-bold text-civix-navy">{task.judul}</h2>
-                      <p className="mt-1 text-xs text-slate-500">{formatDate(task.dibuatPada)} · {STATUS_LABEL[task.status]}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        <span>{formatDate(task.dibuatPada)}</span>
+                        <span className={`rounded-full px-2 py-0.5 font-semibold ${getStatusBadgeClasses(task.status)}`}>{STATUS_LABEL[task.status]}</span>
+                      </div>
                     </div>
                   </button>
                 ))}

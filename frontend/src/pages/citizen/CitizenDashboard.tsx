@@ -4,9 +4,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
-import { PlusCircle, FileText, Clock, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, FileText, Clock, CheckCircle2, AlertCircle, Loader2, UserRound } from 'lucide-react';
 
 export default function CitizenDashboard() {
   const { user } = useAuthStore();
@@ -28,9 +28,14 @@ export default function CitizenDashboard() {
 
       <div className="container-civix flex-1 py-12">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold text-civix-navy">Dashboard Warga</h1>
-            <p className="mt-1 text-slate-600">Selamat datang, {user?.nama}</p>
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-civix-navy p-3 text-white">
+              <UserRound size={24} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold text-civix-navy">Dashboard Warga</h1>
+              <p className="mt-1 text-slate-600">Selamat datang, {user?.nama}</p>
+            </div>
           </div>
           <Link to="/citizen/create-report" className="btn-primary">
             <PlusCircle size={18} /> Buat Laporan Baru
@@ -42,7 +47,7 @@ export default function CitizenDashboard() {
           {[
             { label: 'Total Laporan', value: total, icon: FileText, color: 'text-civix-navy bg-slate-100' },
             { label: 'Menunggu Verifikasi', value: pending, icon: Clock, color: 'text-amber-700 bg-amber-100' },
-            { label: 'Sedang Dikerjakan', value: inProgress, icon: AlertCircle, color: 'text-blue-700 bg-blue-100' },
+            { label: 'Sedang Dikerjakan', value: inProgress, icon: AlertCircle, color: 'text-orange-700 bg-orange-100' },
             { label: 'Selesai', value: completed, icon: CheckCircle2, color: 'text-green-700 bg-green-100' },
           ].map((stat, i) => (
             <div key={i} className="card p-5">
@@ -91,15 +96,7 @@ export default function CitizenDashboard() {
                     <h3 className="font-bold text-civix-navy">{report.judul}</h3>
                     <p className="mt-1 text-xs text-slate-500">{formatDate(report.dibuatPada)}</p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-                      report.status === 'selesai'
-                        ? 'bg-green-100 text-green-700'
-                        : ['ditugaskan', 'dikerjakan'].includes(report.status)
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
+                  <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${getStatusBadgeClasses(report.status)}`}>
                     {STATUS_LABEL[report.status]}
                   </span>
                 </Link>

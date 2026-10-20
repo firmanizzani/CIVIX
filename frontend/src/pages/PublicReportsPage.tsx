@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL, KategoriLaporan, StatusLaporan } from '@/types';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
 import { Search, Filter, AlertTriangle, ArrowRight, MapPin } from 'lucide-react';
 
 export default function PublicReportsPage() {
@@ -104,7 +104,7 @@ export default function PublicReportsPage() {
                   )}
                   <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
                     <span>{formatDate(report.dibuatPada)}</span>
-                    <span className="font-semibold">{STATUS_LABEL[report.status]}</span>
+                    <span className={`rounded-full px-2.5 py-1 font-semibold ${getStatusBadgeClasses(report.status)}`}>{STATUS_LABEL[report.status]}</span>
                   </div>
                 </div>
               </Link>

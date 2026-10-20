@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { StatusLaporan } from '@/types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -19,4 +20,25 @@ export function formatDateTime(dateStr: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+export function getStatusBadgeClasses(status: StatusLaporan): string {
+  switch (status) {
+    case 'diterima':
+      return 'bg-amber-100 text-amber-800 border border-amber-200';
+    case 'diverifikasi':
+      return 'bg-sky-100 text-sky-800 border border-sky-200';
+    case 'ditugaskan':
+      return 'bg-blue-100 text-blue-800 border border-blue-200';
+    case 'dikerjakan':
+      return 'bg-orange-100 text-orange-800 border border-orange-200';
+    case 'selesai':
+      return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+    case 'ditolak':
+      return 'bg-rose-100 text-rose-800 border border-rose-200';
+    case 'duplikat':
+      return 'bg-purple-100 text-purple-800 border border-purple-200';
+    default:
+      return 'bg-slate-100 text-slate-700 border border-slate-200';
+  }
 }

@@ -4,7 +4,7 @@ import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { AdminDashboard as AdminDashboardType } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
-import { Shield, FileText, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UserRoundCog, FileText, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import AdminReportsPage from '@/pages/admin/AdminReportsPage';
 
 export default function AdminDashboard() {
@@ -23,7 +23,7 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-civix-navy p-3 text-white">
-              <Shield size={24} />
+              <UserRoundCog size={24} />
             </div>
             <div>
               <h1 className="text-3xl font-extrabold text-civix-navy">Dashboard Admin</h1>

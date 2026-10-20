@@ -4,8 +4,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { AgencyDashboard as AgencyDashboardType, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
-import { formatDate } from '@/lib/utils';
-import { Building2, ClipboardList, Wrench, CheckCircle2, ArrowRight } from 'lucide-react';
+import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
+import { Building2, ClipboardList, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function AgencyDashboard() {
   const { data, isLoading } = useQuery<AgencyDashboardType>({
@@ -31,7 +31,7 @@ export default function AgencyDashboard() {
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           {[
             { label: 'Menunggu Ditangani', value: data?.ditugaskan ?? 0, icon: ClipboardList, color: 'text-amber-700 bg-amber-100' },
-            { label: 'Sedang Dikerjakan', value: data?.dikerjakan ?? 0, icon: Wrench, color: 'text-blue-700 bg-blue-100' },
+            { label: 'Sedang Dikerjakan', value: data?.dikerjakan ?? 0, icon: AlertCircle, color: 'text-orange-700 bg-orange-100' },
             { label: 'Selesai', value: data?.selesai ?? 0, icon: CheckCircle2, color: 'text-green-700 bg-green-100' },
           ].map((stat) => (
             <div key={stat.label} className="card p-5">
@@ -58,7 +58,7 @@ export default function AgencyDashboard() {
                     <h3 className="font-bold text-civix-navy">{task.judul}</h3>
                     <p className="mt-1 text-xs text-slate-500">{KATEGORI_LABEL[task.kategori]} · {formatDate(task.dibuatPada)}</p>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{STATUS_LABEL[task.status]}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusBadgeClasses(task.status)}`}>{STATUS_LABEL[task.status]}</span>
                 </Link>
               ))}
             </div>

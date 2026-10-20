@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
 import { Search, CheckCircle2, XCircle, Copy, Send, AlertCircle } from 'lucide-react';
 
 export default function AdminReportsPage({ embedded = false }: { embedded?: boolean }) {
@@ -126,7 +126,7 @@ export default function AdminReportsPage({ embedded = false }: { embedded?: bool
                     </div>
                     <Link to={`/reports/${report.id}`} className="font-bold text-civix-navy hover:text-civix-blue">{report.judul}</Link>
                     <p className="mt-1 line-clamp-1 text-xs text-slate-500">{report.deskripsi}</p>
-                    <span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">{STATUS_LABEL[report.status]}</span>
+                    <span className={`mt-2 inline-block rounded-full px-2.5 py-1 text-[11px] font-semibold ${getStatusBadgeClasses(report.status)}`}>{STATUS_LABEL[report.status]}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                      {report.status === 'duplikat' && (
