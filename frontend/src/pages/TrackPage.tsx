@@ -3,6 +3,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDateTime } from '@/lib/utils';
@@ -37,32 +38,36 @@ export default function TrackPage() {
 
       <div className="container-civix flex-1 py-12">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-8 text-center">
-            <div className="mb-4 inline-flex rounded-2xl bg-civix-navy p-4 text-white">
-              <Ticket size={28} />
+          <Reveal>
+            <div className="mb-8 text-center">
+              <div className="mb-4 inline-flex rounded-2xl bg-civix-navy p-4 text-white">
+                <Ticket size={28} />
+              </div>
+              <h1 className="text-3xl font-extrabold text-civix-navy">Lacak Laporan</h1>
+              <p className="mt-2 text-slate-600">
+                Masukkan kode tiket yang kamu terima saat mengirim laporan, misalnya{' '}
+                <span className="mono font-semibold text-civix-blue">LPR-2026-00123</span>
+              </p>
             </div>
-            <h1 className="text-3xl font-extrabold text-civix-navy">Lacak Laporan</h1>
-            <p className="mt-2 text-slate-600">
-              Masukkan kode tiket yang kamu terima saat mengirim laporan, misalnya{' '}
-              <span className="mono font-semibold text-civix-blue">LPR-2026-00123</span>
-            </p>
-          </div>
+          </Reveal>
 
-          <form onSubmit={submit} className="mb-10 flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="LPR-2026-XXXXX"
-                className="input mono h-12 pl-11 text-base uppercase"
-                aria-label="Kode tiket laporan"
-              />
-            </div>
-            <button type="submit" disabled={isLoading || !input.trim()} className="btn-primary h-12 px-8">
-              {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Lacak
-            </button>
-          </form>
+          <Reveal delay="delay-1">
+            <form onSubmit={submit} className="mb-10 flex flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="LPR-2026-XXXXX"
+                  className="input mono h-12 pl-11 text-base uppercase"
+                  aria-label="Kode tiket laporan"
+                />
+              </div>
+              <button type="submit" disabled={isLoading || !input.trim()} className="btn-primary h-12 px-8">
+                {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Lacak
+              </button>
+            </form>
+          </Reveal>
 
           {isError && kode && (
             <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-5 text-red-800">

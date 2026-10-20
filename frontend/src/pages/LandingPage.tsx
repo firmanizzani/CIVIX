@@ -20,6 +20,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
 import { MapPoint, StatsOverview, STATUS_LABEL, KATEGORI_LABEL, Report } from '@/types';
 import { formatDate } from '@/lib/utils';
@@ -228,7 +229,8 @@ function LandingPage() {
         </section>
 
         {/* Stats Bar */}
-        <section className="border-b border-civix-border bg-civix-neutral py-10">
+        <Reveal>
+          <section className="border-b border-civix-border bg-civix-neutral py-10">
           <div className="container-civix">
             <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
               {[
@@ -259,8 +261,10 @@ function LandingPage() {
             </div>
           </div>
         </section>
+        </Reveal>
 
         {/* Cara Kerja — Clean Timeline */}
+        <Reveal delay="default">
         <section className="border-b border-civix-border bg-white py-16 lg:py-20">
           <div className="container-civix">
             <div className="mb-12 grid gap-5 md:grid-cols-2 md:items-end">
@@ -319,8 +323,10 @@ function LandingPage() {
             </div>
           </div>
         </section>
+        </Reveal>
 
         {/* Recent Reports */}
+        <Reveal delay="delay-1">
         <section className="border-b border-civix-border bg-civix-soft py-16 lg:py-20">
           <div className="container-civix">
             <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -388,8 +394,10 @@ function LandingPage() {
             )}
           </div>
         </section>
+        </Reveal>
 
         {/* Transparansi & Tracking Preview */}
+        <Reveal delay="default">
         <section className="border-b border-civix-border bg-white py-16 lg:py-20">
           <div className="container-civix">
             <div className="grid overflow-hidden rounded-2xl border border-civix-border shadow-xl md:grid-cols-2" style={{background: 'linear-gradient(135deg, #0f4d2a 0%, #156637 50%, #16a34a 100%)'}}>
@@ -452,8 +460,10 @@ function LandingPage() {
             </div>
           </div>
         </section>
+        </Reveal>
 
         {/* Statistik Insight CTA */}
+        <Reveal delay="delay-1">
         <section className="border-b border-civix-border bg-civix-neutral py-14">
           <div className="container-civix">
             <div className="mx-auto max-w-2xl text-center">
@@ -471,8 +481,10 @@ function LandingPage() {
             </div>
           </div>
         </section>
+        </Reveal>
 
         {/* Final CTA — Gradient Forest */}
+        <Reveal delay="default">
         <section className="gradient-cta py-16 lg:py-20">
           <div className="container-civix">
             <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
@@ -501,6 +513,7 @@ function LandingPage() {
             </div>
           </div>
         </section>
+        </Reveal>
       </main>
 
       <Footer />

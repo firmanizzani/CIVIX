@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import PageTransition from '@/components/PageTransition';
 import LandingPage from '@/pages/LandingPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
@@ -18,14 +19,14 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/reports" element={<PublicReportsPage />} />
-      <Route path="/reports/:id" element={<ReportDetailPage />} />
-      <Route path="/map" element={<MapPage />} />
-      <Route path="/track" element={<TrackPage />} />
-      <Route path="/stats" element={<StatsPage />} />
+      <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
+      <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+      <Route path="/register" element={<PageTransition><RegisterPage /></PageTransition>} />
+      <Route path="/reports" element={<PageTransition><PublicReportsPage /></PageTransition>} />
+      <Route path="/reports/:id" element={<PageTransition><ReportDetailPage /></PageTransition>} />
+      <Route path="/map" element={<PageTransition><MapPage /></PageTransition>} />
+      <Route path="/track" element={<PageTransition><TrackPage /></PageTransition>} />
+      <Route path="/stats" element={<PageTransition><StatsPage /></PageTransition>} />
 
       <Route element={<ProtectedRoute allowedRoles={['warga']} />}>
         <Route path="/citizen" element={<CitizenDashboard />} />

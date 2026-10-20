@@ -7,6 +7,7 @@ import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
+import Reveal from '@/components/Reveal';
 import { ThumbsUp, MessageSquare, ArrowLeft, CheckCircle2, Clock, MapPin, AlertCircle, ShieldAlert } from 'lucide-react';
 
 export default function ReportDetailPage() {
@@ -68,14 +69,17 @@ export default function ReportDetailPage() {
       <Navbar />
 
       <div className="container-civix flex-1 py-12">
-        <Link to="/reports" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-civix-navy">
-          <ArrowLeft size={16} /> Kembali ke daftar
-        </Link>
+        <Reveal>
+          <Link to="/reports" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-civix-navy">
+            <ArrowLeft size={16} /> Kembali ke daftar
+          </Link>
+        </Reveal>
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Info */}
-          <div className="space-y-6 lg:col-span-2">
-            <div className="card p-6">
+          <div className="lg:col-span-2">
+            <Reveal>
+              <div className="card p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
                 <span className="mono rounded bg-slate-100 px-3 py-1 text-sm font-bold text-slate-700">
                   {report.kodeTiket}
@@ -118,10 +122,12 @@ export default function ReportDetailPage() {
                   <ThumbsUp size={16} /> Dukung ({report.upvotes?.length || 0})
                 </button>
               </div>
-            </div>
+              </div>
+            </Reveal>
 
             {/* Photos */}
-            <div className="card p-6">
+            <Reveal delay="delay-1">
+              <div className="card mt-6 p-6">
               <h2 className="mb-4 text-lg font-bold text-civix-navy">Foto Laporan Awal</h2>
               {awalPhotos.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -132,11 +138,13 @@ export default function ReportDetailPage() {
               ) : (
                 <p className="text-sm text-slate-500">Tidak ada foto terlampir.</p>
               )}
-            </div>
+              </div>
+            </Reveal>
 
             {/* Bukti Perbaikan (F7) */}
             {buktiPhotos.length > 0 && (
-              <div className="card border-green-200 bg-green-50/50 p-6">
+              <Reveal delay="delay-2">
+                <div className="card mt-6 border-green-200 bg-green-50/50 p-6">
                 <h2 className="mb-2 text-lg font-bold text-green-900 flex items-center gap-2">
                   <CheckCircle2 className="text-green-600" size={20} /> Bukti Penyelesaian Instansi
                 </h2>
@@ -146,11 +154,13 @@ export default function ReportDetailPage() {
                     <img key={photo.id} src={photo.url} alt="Bukti selesai" className="h-48 w-full rounded-lg object-cover border border-green-200" />
                   ))}
                 </div>
-              </div>
+                </div>
+              </Reveal>
             )}
 
             {/* Comments (F8) */}
-            <div className="card p-6">
+            <Reveal delay="delay-2">
+              <div className="card mt-6 p-6">
               <h2 className="mb-4 text-lg font-bold text-civix-navy flex items-center gap-2">
                 <MessageSquare size={18} /> Komentar ({report.comments?.length || 0})
               </h2>
@@ -195,7 +205,8 @@ export default function ReportDetailPage() {
                   ))
                 )}
               </div>
-            </div>
+              </div>
+            </Reveal>
           </div>
 
           {/* Timeline Status Sidebar */}

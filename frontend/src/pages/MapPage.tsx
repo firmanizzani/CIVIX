@@ -45,7 +45,7 @@ export default function MapPage() {
 
       <div className="relative flex flex-1 flex-col">
         {/* Floating Filter Controls */}
-        <div className="absolute top-4 left-4 z-[1000] flex flex-wrap gap-2 rounded-xl bg-white/95 p-3 shadow-lg backdrop-blur border border-slate-200">
+        <div className="absolute top-4 left-4 z-[1000] flex flex-wrap gap-2 rounded-xl bg-white/95 p-3 shadow-lg backdrop-blur border border-slate-200 animate-in-up">
           <select
             value={selectedKategori}
             onChange={(e) => setSelectedKategori(e.target.value)}
@@ -72,7 +72,7 @@ export default function MapPage() {
         </div>
 
         {/* Legend */}
-        <div className="absolute bottom-6 right-4 z-[1000] rounded-xl bg-white/95 p-4 shadow-lg backdrop-blur border border-slate-200 max-w-xs">
+        <div className="absolute bottom-6 right-4 z-[1000] rounded-xl bg-white/95 p-4 shadow-lg backdrop-blur border border-slate-200 max-w-xs animate-in-up-delay-1">
           <div className="mb-2 text-xs font-bold text-civix-navy flex items-center gap-1.5">
             <Layers size={14} /> Legenda Status Laporan
           </div>

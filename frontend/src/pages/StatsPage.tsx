@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
 import { StatsOverview, TrendRow, RegionStat, CategoryStat, KATEGORI_LABEL } from '@/types';
 import {
@@ -60,13 +61,15 @@ export default function StatsPage() {
       <Navbar />
 
       <div className="container-civix flex-1 py-12">
-        <div className="mb-10">
-          <p className="mb-2 text-sm font-bold uppercase tracking-widest text-civix-orange">Data-driven insight</p>
-          <h1 className="text-3xl font-extrabold text-civix-navy sm:text-4xl">Statistik Penanganan Laporan</h1>
-          <p className="mt-2 max-w-2xl text-slate-600">
-            Ringkasan kinerja penanganan laporan warga di DKI Jakarta, dihitung langsung dari data CIVIX.
-          </p>
-        </div>
+        <Reveal>
+          <div className="mb-10">
+            <p className="mb-2 text-sm font-bold uppercase tracking-widest text-civix-orange">Data-driven insight</p>
+            <h1 className="text-3xl font-extrabold text-civix-navy sm:text-4xl">Statistik Penanganan Laporan</h1>
+            <p className="mt-2 max-w-2xl text-slate-600">
+              Ringkasan kinerja penanganan laporan warga di DKI Jakarta, dihitung langsung dari data CIVIX.
+            </p>
+          </div>
+        </Reveal>
 
         {isEmpty && (
           <div className="mb-8 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
@@ -79,7 +82,8 @@ export default function StatsPage() {
         )}
 
         {/* Summary Cards */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Reveal delay="delay-1">
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { label: 'Total Laporan', value: overview?.totalLaporan ?? 0, suffix: '', icon: FileText, color: 'text-civix-navy bg-slate-100' },
             { label: 'Persentase Selesai', value: overview?.persentaseSelesai ?? 0, suffix: '%', icon: CheckCircle2, color: 'text-green-700 bg-green-100' },
@@ -96,9 +100,11 @@ export default function StatsPage() {
               <div className="mt-1 text-xs font-medium text-slate-500">{card.label}</div>
             </div>
           ))}
-        </div>
+          </div>
+        </Reveal>
 
-        <div className="mb-8 grid gap-6 lg:grid-cols-3">
+        <Reveal delay="delay-1">
+          <div className="mb-8 grid gap-6 lg:grid-cols-3">
           {/* Trend chart */}
           <div className="card min-w-0 p-6 lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
@@ -182,9 +188,11 @@ export default function StatsPage() {
             )}
           </div>
         </div>
+        </Reveal>
 
         {/* Insight */}
-        <div className="mb-8 rounded-xl border border-orange-200 bg-orange-50 p-5">
+        <Reveal delay="delay-2">
+          <div className="mb-8 rounded-xl border border-orange-200 bg-orange-50 p-5">
           <div className="flex items-start gap-3">
             <div className="rounded-lg bg-orange-100 p-2 text-civix-orange"><Lightbulb size={18} /></div>
             <div>
@@ -200,10 +208,12 @@ export default function StatsPage() {
               )}
             </div>
           </div>
-        </div>
+          </div>
+        </Reveal>
 
         {/* Region comparison */}
-        <div className="card overflow-hidden">
+        <Reveal delay="delay-2">
+          <div className="card overflow-hidden">
           <div className="border-b border-slate-100 p-6">
             <h2 className="font-bold text-civix-navy flex items-center gap-2"><Trophy size={18} /> Perbandingan Wilayah</h2>
             <p className="mt-1 text-xs text-slate-500">Diurutkan berdasarkan jumlah laporan</p>
@@ -236,7 +246,8 @@ export default function StatsPage() {
               </table>
             </div>
           )}
-        </div>
+          </div>
+        </Reveal>
       </div>
 
       <Footer />
