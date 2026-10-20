@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --forest: #052e1b;
-  --deep: #14532d;
-  --primary: #15803d;
-  --emerald: #10b981;
-  --mint: #d1fae5;
+  --forest: #0d3823;
+  --deep: #156637;
+  --primary: #16a34a;
+  --emerald: #22c55e;
+  --mint: #dcfce7;
   --soft: #f0fdf4;
-  --neutral: #fafcfa;
-  --text: #17251d;
-  --muted: #647067;
-  --border: #e2eae4;
+  --neutral: #f8faf8;
+  --text: #1a2e22;
+  --muted: #5c7263;
+  --border: #d5e2d9;
 
   --status-red: #dc2626;
   --status-amber: #d97706;
@@ -183,16 +183,16 @@
   transform-origin: center;
 }
 .gradient-forest {
-  background-image: linear-gradient(135deg, #052e1b 0%, #14532d 55%, #15803d 100%);
+  background-image: linear-gradient(135deg, #0f4d2a 0%, #166534 40%, #15803d 75%, #16a34a 100%);
 }
 .gradient-cta {
-  background-image: linear-gradient(120deg, #052e1b 0%, #14532d 45%, #15803d 85%, #10b981 100%);
+  background-image: linear-gradient(120deg, #14532d 0%, #15803d 50%, #22c55e 100%);
 }
 .gradient-radial-glow::before {
   content: '';
   position: absolute;
   inset: -20%;
-  background: radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.25), transparent 55%),
-    radial-gradient(circle at 15% 85%, rgba(21, 128, 61, 0.35), transparent 50%);
+  background: radial-gradient(circle at 70% 30%, rgba(134, 239, 172, 0.32), transparent 55%),
+    radial-gradient(circle at 15% 85%, rgba(34, 197, 94, 0.28), transparent 50%);
   pointer-events: none;
 }

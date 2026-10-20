@@ -5,25 +5,23 @@ export default {
     extend: {
       colors: {
         civix: {
-          primary: '#15803D',
-          deep: '#14532D',
-          forest: '#052E1B',
-          emerald: '#10B981',
-          mint: '#D1FAE5',
+          primary: '#16A34A',
+          deep: '#156637',
+          forest: '#0D3823',
+          emerald: '#22C55E',
+          mint: '#DCFCE7',
           soft: '#F0FDF4',
-          neutral: '#FAFCFA',
+          neutral: '#F8FAF8',
           surface: '#FFFFFF',
-          text: '#17251D',
-          muted: '#647067',
-          border: '#E2EAE4',
-          // status
+          text: '#1A2E22',
+          muted: '#5C7263',
+          border: '#D5E2D9',
           danger: '#DC2626',
           warning: '#D97706',
           success: '#16A34A',
-          // backwards compatibility fallbacks
-          navy: '#052E1B',
-          blue: '#14532D',
-          orange: '#15803D',
+          navy: '#0D3823',
+          blue: '#156637',
+          orange: '#16A34A',
         },
       },
       fontFamily: {

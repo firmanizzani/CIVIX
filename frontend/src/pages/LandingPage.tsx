@@ -392,15 +392,15 @@ function LandingPage() {
         {/* Transparansi & Tracking Preview */}
         <section className="border-b border-civix-border bg-white py-16 lg:py-20">
           <div className="container-civix">
-            <div className="grid overflow-hidden rounded-2xl border border-civix-border bg-civix-forest shadow-xl md:grid-cols-2">
+            <div className="grid overflow-hidden rounded-2xl border border-civix-border shadow-xl md:grid-cols-2" style={{background: 'linear-gradient(135deg, #0f4d2a 0%, #156637 50%, #16a34a 100%)'}}>
               <div className="p-8 text-white md:p-12">
-                <p className="eyebrow mb-4 text-civix-mint">Transparansi Publik</p>
+                <p className="eyebrow mb-4 text-emerald-300">Transparansi Publik</p>
                 <h2 className="text-3xl font-extrabold leading-tight sm:text-4xl">
                   Setiap laporan punya cerita.
                   <br />
                   Ikuti sampai tuntas.
                 </h2>
-                <p className="mt-4 leading-relaxed text-civix-mint/90">
+                <p className="mt-4 leading-relaxed text-emerald-100/90">
                   Gunakan kode tiket untuk melihat timeline, catatan tindak lanjut, dan bukti penyelesaian laporan.
                 </p>
                 <Link to="/track" className="btn-accent mt-6">
@@ -480,7 +480,7 @@ function LandingPage() {
                 <h2 className="text-3xl font-extrabold leading-tight text-white sm:text-4xl">
                   Mulai dari satu laporan. Bantu wujudkan perubahan.
                 </h2>
-                <p className="mt-3 leading-relaxed text-civix-mint/90">
+                <p className="mt-3 leading-relaxed text-emerald-100/90">
                   Laporkan masalah di sekitarmu dan pantau proses penanganannya bersama masyarakat Jakarta.
                 </p>
               </div>
