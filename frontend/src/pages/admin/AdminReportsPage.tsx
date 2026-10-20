@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
-import { Search, CheckCircle2, XCircle, Copy, Send, AlertCircle } from 'lucide-react';
+import { Search, CheckCircle2, XCircle, Copy, Send, AlertCircle, Image as ImageIcon } from 'lucide-react';
 
 export default function AdminReportsPage({ embedded = false }: { embedded?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -117,7 +117,13 @@ export default function AdminReportsPage({ embedded = false }: { embedded?: bool
             <div className="divide-y divide-slate-100">
               {filteredReports.map((report) => (
                 <div key={report.id} className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center">
-                  {report.photos?.[0] && <img src={report.photos[0].url} alt="" className="h-20 w-full rounded-lg object-cover lg:w-28" />}
+                  {report.photos?.[0] ? (
+                    <img src={report.photos[0].url} alt="" className="h-20 w-full rounded-lg object-cover lg:w-28 shrink-0" />
+                  ) : (
+                    <div className="flex h-20 w-full items-center justify-center rounded-lg bg-slate-100 text-slate-400 lg:w-28 shrink-0">
+                      <ImageIcon size={24} />
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center gap-2 text-xs">
                       <span className="mono font-bold text-slate-500">{report.kodeTiket}</span>
