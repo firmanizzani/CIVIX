@@ -13,7 +13,7 @@ export default function CitizenDashboard() {
 
   const { data: myReports = [], isLoading } = useQuery<Report[]>({
     queryKey: ['my-reports'],
-    queryFn: async () => (await apiClient.get('/me/reports')).data,
+    queryFn: async () => (await apiClient.get('/reports/me/reports')).data,
     enabled: !!user,
   });
 

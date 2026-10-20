@@ -20,6 +20,11 @@ app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeade
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'civix-api' }));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/reports', reportRoutes);
+// Alias agar /api/v1/me/reports tetap valid jika frontend memanggil tanpa prefix /reports
+app.get('/api/v1/me/reports', (req, res, next) => {
+  req.url = '/me/reports';
+  reportRoutes(req, res, next);
+});
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/agency', agencyRoutes);
 app.use('/api/v1/stats', statsRoutes);

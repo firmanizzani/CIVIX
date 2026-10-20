@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
@@ -160,9 +160,19 @@ export default function CreateReportPage() {
     );
   };
 
+  const queryClient = useQueryClient();
+
   const createMutation = useMutation({
     mutationFn: async (formData: FormData) => (await apiClient.post('/reports', formData, { headers: { 'Content-Type': undefined } })).data,
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['my-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['agency-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['public-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['map-points'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
       navigate(`/reports/${data.id}`);
     },
     onError: (err: any) => {

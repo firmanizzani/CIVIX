@@ -30,11 +30,10 @@ router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response
       orderBy: [desc(reports.dibuatPada)],
       limit: 100,
       with: {
-        photos: true,
-        statusLogs: { orderBy: [desc(reportStatusLogs.waktu)], limit: 5 },
+        photos: {
+          columns: { id: true, url: true, jenis: true },
+        },
         region: true,
-        comments: { limit: 5 },
-        upvotes: true,
       },
     });
 
