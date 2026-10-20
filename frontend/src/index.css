@@ -53,7 +53,7 @@
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[0.97] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-primary {
     @apply btn bg-gradient-to-r from-civix-deep to-civix-primary text-white shadow-sm hover:from-civix-primary hover:to-civix-emerald hover:shadow-md;
