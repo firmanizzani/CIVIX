@@ -39,19 +39,19 @@ router.get('/overview', async (_req, res: Response) => {
   }
 });
 
-// GET /stats/trend - Tren mingguan per kategori (8 minggu terakhir)
+// GET /stats/trend - Tren bulanan per kategori (6 bulan terakhir)
 router.get('/trend', async (_req, res: Response) => {
   try {
     const rows = await db
       .select({
-        minggu: sql<string>`TO_CHAR(DATE_TRUNC('week', ${reports.dibuatPada}), 'YYYY-MM-DD')`,
+        periode: sql<string>`TO_CHAR(DATE_TRUNC('month', ${reports.dibuatPada} AT TIME ZONE 'Asia/Jakarta'), 'YYYY-MM')`,
         kategori: reports.kategori,
         jumlah: count(),
       })
       .from(reports)
-      .where(gte(reports.dibuatPada, sql`NOW() - INTERVAL '8 weeks'`))
-      .groupBy(sql`DATE_TRUNC('week', ${reports.dibuatPada})`, reports.kategori)
-      .orderBy(sql`DATE_TRUNC('week', ${reports.dibuatPada})`);
+      .where(gte(reports.dibuatPada, sql`DATE_TRUNC('month', NOW() AT TIME ZONE 'Asia/Jakarta') - INTERVAL '5 months'`))
+      .groupBy(sql`DATE_TRUNC('month', ${reports.dibuatPada} AT TIME ZONE 'Asia/Jakarta')`, reports.kategori)
+      .orderBy(sql`DATE_TRUNC('month', ${reports.dibuatPada} AT TIME ZONE 'Asia/Jakarta')`);
 
     res.json(rows);
   } catch (err) {

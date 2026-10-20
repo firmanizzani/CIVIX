@@ -3,7 +3,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { StatsOverview, TrendRow, RegionStat, CategoryStat, KATEGORI_LABEL } from '@/types';
-import { formatDate } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, Legend,
@@ -35,11 +34,16 @@ export default function StatsPage() {
 
   const isEmpty = !overviewLoading && (overview?.totalLaporan ?? 0) === 0;
 
-  // Agregasi tren per minggu untuk grafik bertumpuk sederhana
+  // Agregasi tren per bulan untuk grafik bertumpuk sederhana
   const trendMap = new Map<string, Record<string, number | string>>();
   for (const row of trend) {
-    const key = row.minggu;
-    if (!trendMap.has(key)) trendMap.set(key, { minggu: formatDate(key) });
+    const key = row.periode;
+    if (!trendMap.has(key)) {
+      // format "YYYY-MM" → label bulan-tahun Indonesia (mis. "Okt 2026")
+      const [y, m] = key.split('-');
+      const label = new Date(Number(y), Number(m) - 1).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+      trendMap.set(key, { periode: label });
+    }
     const entry = trendMap.get(key)!;
     entry[row.kategori] = (entry[row.kategori] as number) || 0;
     entry[row.kategori] = (entry[row.kategori] as number) + Number(row.jumlah);
@@ -96,11 +100,11 @@ export default function StatsPage() {
 
         <div className="mb-8 grid gap-6 lg:grid-cols-3">
           {/* Trend chart */}
-          <div className="card p-6 lg:col-span-2">
+          <div className="card min-w-0 p-6 lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="font-bold text-civix-navy flex items-center gap-2"><TrendingUp size={18} /> Tren Laporan per Minggu</h2>
-                <p className="mt-1 text-xs text-slate-500">8 minggu terakhir, dipisah per kategori</p>
+                <h2 className="font-bold text-civix-navy flex items-center gap-2"><TrendingUp size={18} /> Tren Laporan per Bulan</h2>
+                <p className="mt-1 text-xs text-slate-500">6 bulan terakhir, dipisah per kategori</p>
               </div>
             </div>
             {trendLoading ? (
@@ -111,16 +115,29 @@ export default function StatsPage() {
                 Belum ada tren laporan.
               </div>
             ) : (
-              <div className="h-72">
+              <div className="h-72 w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={trendChartData}>
+                  <BarChart
+                    data={trendChartData}
+                    layout="horizontal"
+                    margin={{ top: 8, right: 8, bottom: 8, left: 0 }}
+                    barCategoryGap="24%"
+                    barGap={4}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="minggu" tick={{ fontSize: 11 }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
+                    <XAxis type="category" dataKey="periode" tick={{ fontSize: 11 }} />
+                    <YAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     {Object.entries(KATEGORI_LABEL).map(([key, label], i) => (
-                      <Bar key={key} dataKey={key} name={label} stackId="a" fill={CATEGORY_COLORS[i]} radius={i === 5 ? [4, 4, 0, 0] : undefined} />
+                      <Bar
+                        key={key}
+                        dataKey={key}
+                        name={label}
+                        fill={CATEGORY_COLORS[i]}
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={28}
+                      />
                     ))}
                   </BarChart>
                 </ResponsiveContainer>
@@ -129,7 +146,7 @@ export default function StatsPage() {
           </div>
 
           {/* Category pie */}
-          <div className="card p-6">
+          <div className="card min-w-0 p-6">
             <h2 className="font-bold text-civix-navy">Sebaran Kategori</h2>
             <p className="mt-1 text-xs text-slate-500">Laporan aktif (tanpa ditolak/duplikat)</p>
             {catLoading ? (

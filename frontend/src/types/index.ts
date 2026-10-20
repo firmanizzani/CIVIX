@@ -126,7 +126,7 @@ export interface StatsOverview {
 }
 
 export interface TrendRow {
-  minggu: string;
+  periode: string; // bulan dalam format 'YYYY-MM'
   kategori: KategoriLaporan;
   jumlah: number;
 }
