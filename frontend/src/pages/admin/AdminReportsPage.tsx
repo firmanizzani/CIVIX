@@ -148,7 +148,7 @@ export default function AdminReportsPage({ embedded = false }: { embedded?: bool
                      )}
                      {report.status === 'diterima' && (
                        <>
-                        <button onClick={() => handleAction(report, 'verify')} disabled={actionMutation.isPending} className="btn bg-green-600 text-white hover:bg-green-700 text-xs"><CheckCircle2 size={14} /> Verifikasi</button>
+                        <button onClick={() => handleAction(report, 'verify')} disabled={actionMutation.isPending} className="btn bg-lime-600 text-white hover:bg-lime-700 text-xs"><CheckCircle2 size={14} /> Verifikasi</button>
                         <button onClick={() => handleAction(report, 'reject')} disabled={actionMutation.isPending} className="btn bg-red-600 text-white hover:bg-red-700 text-xs"><XCircle size={14} /> Tolak</button>
                         <button onClick={() => handleAction(report, 'duplicate')} disabled={actionMutation.isPending} className="btn-outline text-xs"><Copy size={14} /> Duplikat</button>
                       </>

@@ -324,7 +324,7 @@ export default function CreateReportPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-8 text-sm font-medium text-slate-600 transition hover:border-civix-blue hover:bg-blue-50 hover:text-civix-blue"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-8 text-sm font-medium text-slate-600 transition hover:border-civix-blue hover:bg-lime-50 hover:text-civix-blue"
                     >
                       <Upload size={18} />
                       Pilih Foto ({photos.length}/3)

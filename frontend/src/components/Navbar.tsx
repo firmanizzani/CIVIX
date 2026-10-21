@@ -28,8 +28,8 @@ export default function Navbar() {
       <div className="container-civix">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 text-xl font-extrabold text-civix-forest transition-colors hover:text-civix-primary">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-civix-deep to-civix-primary shadow-sm">
-              <Leaf size={18} className="text-white" strokeWidth={2.5} />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-lime-600 via-lime-500 to-lime-400 shadow-sm ring-1 ring-lime-700/20">
+              <Leaf size={18} className="text-white drop-shadow-sm" strokeWidth={2.5} />
             </div>
             <span className="hidden sm:inline">CIVIX</span>
           </Link>

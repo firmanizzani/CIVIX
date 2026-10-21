@@ -38,7 +38,7 @@ const getStatusColor = (status: string) => {
     case 'dikerjakan':
       return '#d97706';
     case 'selesai':
-      return '#16a34a';
+      return '#65a30d';
     default:
       return '#64748b';
   }
@@ -77,7 +77,7 @@ function LandingPage() {
               <h1 className="max-w-xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
                 Masalah di sekitar,
                 <br />
-                <span className="text-civix-emerald">perubahan</span> yang bisa dipantau.
+                <span className="text-lime-300">perubahan</span> yang bisa dipantau.
               </h1>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-civix-mint/90 sm:text-lg">
                 Laporkan masalah infrastruktur dan lingkungan di Jakarta, pantau proses penanganannya, dan lihat
@@ -178,7 +178,7 @@ function LandingPage() {
                                   <p className="mt-1 text-xs font-medium text-civix-primary">{STATUS_LABEL[point.status]}</p>
                                   <Link
                                     to={`/reports/${point.id}`}
-                                    className="mt-2 inline-block text-xs font-semibold text-civix-primary hover:underline"
+                                    className="mt-2 inline-block !text-xs font-semibold !text-civix-primary hover:underline"
                                   >
                                     Lihat detail
                                   </Link>
@@ -312,11 +312,13 @@ function LandingPage() {
               ].map((step) => (
                 <div
                   key={step.n}
-                  className="group relative rounded-xl border border-civix-border bg-civix-neutral p-6 transition-all hover:-translate-y-1 hover:border-civix-primary hover:shadow-md"
+                  className="group relative rounded-xl border border-lime-200 bg-white p-6 transition-all hover:-translate-y-1 hover:border-lime-500 hover:shadow-md"
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <span className="mono text-sm font-bold text-civix-primary">{step.n}</span>
-                    <step.icon size={20} className="text-civix-deep transition-colors group-hover:text-civix-primary" />
+                    <span className="mono text-sm font-extrabold text-lime-700">{step.n}</span>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-lime-600 to-lime-400 text-white shadow-sm transition-transform group-hover:scale-110">
+                      <step.icon size={20} />
+                    </div>
                   </div>
                   <h3 className="mb-2 text-base font-bold text-civix-forest">{step.title}</h3>
                   <p className="text-sm leading-relaxed text-civix-muted">{step.desc}</p>
@@ -425,9 +427,9 @@ function LandingPage() {
                   title: 'Sampah & Kebersihan',
                   desc: 'Tumpukan sampah, tempat sampah penuh, area kotor.',
                   kategori: 'sampah',
-                  color: 'text-green-600',
-                  bgColor: 'bg-green-50',
-                  hoverBorder: 'hover:border-green-500',
+                  color: 'text-lime-600',
+                  bgColor: 'bg-lime-50',
+                  hoverBorder: 'hover:border-lime-500',
                 },
                 {
                   icon: Lightbulb,
@@ -443,18 +445,18 @@ function LandingPage() {
                   title: 'Drainase & Banjir',
                   desc: 'Saluran tersumbat, genangan air, risiko banjir.',
                   kategori: 'drainase',
-                  color: 'text-blue-600',
-                  bgColor: 'bg-blue-50',
-                  hoverBorder: 'hover:border-blue-500',
+                  color: 'text-cyan-600',
+                  bgColor: 'bg-cyan-50',
+                  hoverBorder: 'hover:border-cyan-500',
                 },
                 {
                   icon: Building2,
                   title: 'Fasilitas Umum',
                   desc: 'Taman, halte, jembatan penyeberangan yang rusak.',
                   kategori: 'fasilitas_umum',
-                  color: 'text-purple-600',
-                  bgColor: 'bg-purple-50',
-                  hoverBorder: 'hover:border-purple-500',
+                  color: 'text-lime-700',
+                  bgColor: 'bg-lime-50',
+                  hoverBorder: 'hover:border-lime-600',
                 },
                 {
                   icon: FileText,
@@ -485,7 +487,7 @@ function LandingPage() {
               ))}
             </div>
             <div className="mt-10 text-center">
-              <Link to="/citizen/create-report" className="btn-primary">
+              <Link to="/citizen/create-report" className="btn-accent">
                 Buat laporan sekarang <ArrowRight size={16} />
               </Link>
             </div>
@@ -498,7 +500,7 @@ function LandingPage() {
         <section className="border-b border-civix-border bg-civix-neutral py-14">
           <div className="container-civix">
             <div className="mx-auto max-w-2xl text-center">
-              <div className="mb-4 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-civix-primary to-civix-emerald p-3 text-white shadow-sm">
+              <div className="mb-4 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-lime-700 via-lime-600 to-lime-500 p-3 text-white shadow-sm">
                 <BarChart3 size={24} strokeWidth={2.2} />
               </div>
               <h2 className="section-title">Data yang membuka wawasan.</h2>
@@ -506,7 +508,7 @@ function LandingPage() {
                 Lihat tren kategori, perbandingan wilayah, dan kinerja penanganan berbasis laporan yang tercatat di
                 CIVIX.
               </p>
-              <Link to="/stats" className="btn-primary mt-6">
+              <Link to="/stats" className="btn-accent mt-6">
                 Jelajahi statistik <ArrowRight size={16} />
               </Link>
             </div>
@@ -523,7 +525,7 @@ function LandingPage() {
                 <h2 className="text-3xl font-extrabold leading-tight text-white sm:text-4xl">
                   Mulai dari satu laporan. Bantu wujudkan perubahan.
                 </h2>
-                <p className="mt-3 leading-relaxed text-emerald-100/90">
+                <p className="mt-3 leading-relaxed text-lime-100/90">
                   Laporkan masalah di sekitarmu dan pantau proses penanganannya bersama masyarakat Jakarta.
                 </p>
               </div>

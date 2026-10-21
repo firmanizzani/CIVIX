@@ -8,8 +8,8 @@ export default function Footer() {
         <div className="grid gap-10 md:grid-cols-4">
           <div>
             <div className="mb-4 flex items-center gap-2.5 text-lg font-extrabold text-civix-forest">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-civix-deep to-civix-primary shadow-sm">
-                <Leaf size={16} className="text-white" strokeWidth={2.5} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-lime-600 via-lime-500 to-lime-400 shadow-sm ring-1 ring-lime-700/20">
+                <Leaf size={16} className="text-white drop-shadow-sm" strokeWidth={2.5} />
               </div>
               CIVIX
             </div>

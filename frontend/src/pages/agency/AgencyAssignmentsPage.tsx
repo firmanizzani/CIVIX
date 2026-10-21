@@ -72,7 +72,7 @@ export default function AgencyAssignmentsPage() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {assignments.map((task) => (
-                  <button key={task.id} onClick={() => { setSelected(task); setNote(''); setProofFiles([]); }} className={`flex w-full gap-4 p-5 text-left transition hover:bg-slate-50 ${selected?.id === task.id ? 'bg-blue-50/60 border-l-4 border-civix-blue' : ''}`}>
+                  <button key={task.id} onClick={() => { setSelected(task); setNote(''); setProofFiles([]); }} className={`flex w-full gap-4 p-5 text-left transition hover:bg-slate-50 ${selected?.id === task.id ? 'bg-lime-50/60 border-l-4 border-civix-blue' : ''}`}>
                     {task.photos?.[0] ? <img src={task.photos[0].url} alt="" className="h-20 w-24 rounded-lg object-cover" /> : <div className="flex h-20 w-24 items-center justify-center rounded-lg bg-slate-100 text-slate-400"><ImageIcon size={20} /></div>}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2"><span className="mono text-xs text-slate-400">{task.kodeTiket}</span><span className="text-xs text-civix-blue">{KATEGORI_LABEL[task.kategori]}</span></div>
@@ -110,7 +110,7 @@ export default function AgencyAssignmentsPage() {
                     <button type="button" onClick={() => fileRef.current?.click()} className="btn-outline w-full"><Upload size={16} /> Tambah Bukti ({proofFiles.length}/3)</button>
                     {proofFiles.map((file, i) => <div key={i} className="flex items-center justify-between rounded bg-slate-50 p-2 text-xs"><span className="truncate">{file.name}</span><button onClick={() => setProofFiles((p) => p.filter((_, n) => n !== i))}><X size={14} /></button></div>)}
                     <p className="text-xs text-slate-500">Minimal 1 foto bukti wajib sebelum menyelesaikan laporan.</p>
-                    <button onClick={submitComplete} disabled={completeMutation.isPending || proofFiles.length === 0} className="btn bg-green-600 text-white hover:bg-green-700 w-full">
+                    <button onClick={submitComplete} disabled={completeMutation.isPending || proofFiles.length === 0} className="btn bg-lime-600 text-white hover:bg-lime-700 w-full">
                       {completeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />} Tandai Selesai
                     </button>
                   </div>

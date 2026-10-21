@@ -3,20 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --forest: #0d3823;
-  --deep: #156637;
-  --primary: #16a34a;
-  --emerald: #22c55e;
-  --mint: #dcfce7;
-  --soft: #f0fdf4;
-  --neutral: #f8faf8;
-  --text: #1a2e22;
-  --muted: #5c7263;
-  --border: #d5e2d9;
+  --forest: #365314;
+  --deep: #3f6212;
+  --primary: #4d7c0f;
+  --emerald: #a3e635;
+  --mint: #ecfccb;
+  --soft: #f7fee7;
+  --neutral: #fafef2;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #d9f99d;
 
   --status-red: #dc2626;
   --status-amber: #d97706;
-  --status-green: #16a34a;
+  --status-green: #65a30d;
 }
 
 @layer base {
@@ -56,10 +56,10 @@
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[0.97] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-primary {
-    @apply btn bg-gradient-to-r from-civix-deep to-civix-primary text-white shadow-sm hover:from-civix-primary hover:to-civix-emerald hover:shadow-md;
+    @apply btn bg-gradient-to-r from-lime-800 via-lime-700 to-lime-600 text-white shadow-sm hover:from-lime-900 hover:via-lime-800 hover:to-lime-700 hover:shadow-md;
   }
   .btn-accent {
-    @apply btn bg-gradient-to-r from-civix-primary to-civix-emerald text-white shadow-sm hover:from-civix-emerald hover:to-civix-mint hover:text-civix-forest hover:shadow-md;
+    @apply btn bg-gradient-to-r from-lime-500 via-lime-400 to-lime-300 text-lime-950 shadow-md hover:from-lime-600 hover:via-lime-500 hover:to-lime-400 hover:shadow-lg;
   }
   .btn-light {
     @apply btn bg-white text-civix-forest shadow-sm hover:bg-civix-mint;
@@ -183,16 +183,16 @@
   transform-origin: center;
 }
 .gradient-forest {
-  background-image: linear-gradient(135deg, #0f4d2a 0%, #166534 40%, #15803d 75%, #16a34a 100%);
+  background-image: linear-gradient(135deg, #365314 0%, #4d7c0f 42%, #65a30d 100%);
 }
 .gradient-cta {
-  background-image: linear-gradient(120deg, #14532d 0%, #15803d 50%, #22c55e 100%);
+  background-image: linear-gradient(120deg, #3f6212 0%, #4d7c0f 55%, #65a30d 100%);
 }
 .gradient-radial-glow::before {
   content: '';
   position: absolute;
   inset: -20%;
-  background: radial-gradient(circle at 70% 30%, rgba(134, 239, 172, 0.32), transparent 55%),
-    radial-gradient(circle at 15% 85%, rgba(34, 197, 94, 0.28), transparent 50%);
+  background: radial-gradient(circle at 72% 28%, rgba(217, 249, 157, 0.2), transparent 52%),
+    radial-gradient(circle at 12% 88%, rgba(163, 230, 53, 0.16), transparent 48%);
   pointer-events: none;
 }

@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { FileText, CheckCircle2, Timer, Clock, Lightbulb, Trophy, TrendingUp, AlertTriangle } from 'lucide-react';
 
-const CATEGORY_COLORS = ['#dc2626', '#d97706', '#1e3e62', '#0ea5e9', '#16a34a', '#64748b'];
+const CATEGORY_COLORS = ['#dc2626', '#d97706', '#4d7c0f', '#0ea5e9', '#65a30d', '#64748b'];
 
 export default function StatsPage() {
   const { data: overview, isLoading: overviewLoading } = useQuery<StatsOverview>({
@@ -86,8 +86,8 @@ export default function StatsPage() {
           <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { label: 'Total Laporan', value: overview?.totalLaporan ?? 0, suffix: '', icon: FileText, color: 'text-civix-navy bg-slate-100' },
-            { label: 'Persentase Selesai', value: overview?.persentaseSelesai ?? 0, suffix: '%', icon: CheckCircle2, color: 'text-green-700 bg-green-100' },
-            { label: 'Rata-rata Penyelesaian', value: overview?.rataRataHariSelesai ?? '—', suffix: overview?.rataRataHariSelesai != null ? ' hari' : '', icon: Timer, color: 'text-blue-700 bg-blue-100' },
+            { label: 'Persentase Selesai', value: overview?.persentaseSelesai ?? 0, suffix: '%', icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
+            { label: 'Rata-rata Penyelesaian', value: overview?.rataRataHariSelesai ?? '—', suffix: overview?.rataRataHariSelesai != null ? ' hari' : '', icon: Timer, color: 'text-cyan-700 bg-cyan-100' },
             { label: 'Laporan Menunggu', value: overview?.menunggu ?? 0, suffix: '', icon: Clock, color: 'text-amber-700 bg-amber-100' },
           ].map((card, i) => (
             <div key={i} className="card p-5">
@@ -237,7 +237,7 @@ export default function StatsPage() {
                     <tr key={region.regionId} className="border-b border-slate-50 last:border-none">
                       <td className="px-6 py-3 font-medium text-slate-800">{region.wilayah}</td>
                       <td className="px-4 py-3 text-right">{Number(region.total)}</td>
-                      <td className="px-4 py-3 text-right text-green-700">{Number(region.selesai)}</td>
+                      <td className="px-4 py-3 text-right text-lime-700">{Number(region.selesai)}</td>
                       <td className="px-4 py-3 text-right text-amber-700">{Number(region.belumTertangani)}</td>
                       <td className="px-6 py-3 text-right text-slate-600">{region.rataRataHari ?? '—'}</td>
                     </tr>

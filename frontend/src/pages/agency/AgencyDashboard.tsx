@@ -32,7 +32,7 @@ export default function AgencyDashboard() {
           {[
             { label: 'Menunggu Ditangani', value: data?.ditugaskan ?? 0, icon: ClipboardList, color: 'text-amber-700 bg-amber-100' },
             { label: 'Sedang Dikerjakan', value: data?.dikerjakan ?? 0, icon: AlertCircle, color: 'text-orange-700 bg-orange-100' },
-            { label: 'Selesai', value: data?.selesai ?? 0, icon: CheckCircle2, color: 'text-green-700 bg-green-100' },
+            { label: 'Selesai', value: data?.selesai ?? 0, icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
           ].map((stat) => (
             <div key={stat.label} className="card p-5">
               <div className={`mb-3 inline-flex rounded-lg p-2.5 ${stat.color}`}><stat.icon size={20} /></div>

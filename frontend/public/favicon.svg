@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 48 48">
   <defs>
     <linearGradient id="civix-gradient" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#156637"/>
-      <stop offset="1" stop-color="#22C55E"/>
+      <stop stop-color="#65A30D"/>
+      <stop offset="0.5" stop-color="#84CC16"/>
+      <stop offset="1" stop-color="#A3E635"/>
     </linearGradient>
   </defs>
   <rect width="48" height="48" rx="12" fill="url(#civix-gradient)"/>

@@ -119,8 +119,8 @@ export default function TrackPage() {
                         <li key={step} className="relative">
                           <span
                             className={`absolute -left-[31px] flex h-5 w-5 items-center justify-center rounded-full border-2 border-white ${
-                              done ? 'bg-green-500' : 'bg-slate-300'
-                            } ${current ? 'ring-4 ring-green-100' : ''}`}
+                              done ? 'bg-lime-500' : 'bg-slate-300'
+                            } ${current ? 'ring-4 ring-lime-100' : ''}`}
                           >
                             {done && <CheckCircle2 size={12} className="text-white" />}
                           </span>

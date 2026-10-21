@@ -18,7 +18,7 @@ const getColor = (status: StatusLaporan) => {
     case 'kuning':
       return '#d97706';
     case 'hijau':
-      return '#16a34a';
+      return '#65a30d';
     default:
       return '#64748b';
   }
@@ -147,7 +147,7 @@ export default function MapPage() {
                         <p className="text-xs font-semibold text-slate-700 mt-0.5">{STATUS_LABEL[point.status]}</p>
                         <Link
                           to={`/reports/${point.id}`}
-                          className="btn-primary mt-3 block text-center text-xs py-1"
+                          className="mt-3 block rounded-lg bg-lime-600 px-3 py-1.5 text-center text-xs font-semibold !text-white shadow-sm transition hover:bg-lime-700"
                         >
                           Buka Laporan
                         </Link>

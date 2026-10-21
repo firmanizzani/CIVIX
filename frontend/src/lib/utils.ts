@@ -29,11 +29,11 @@ export function getStatusBadgeClasses(status: StatusLaporan): string {
     case 'diverifikasi':
       return 'bg-sky-100 text-sky-800 border border-sky-200';
     case 'ditugaskan':
-      return 'bg-blue-100 text-blue-800 border border-blue-200';
+      return 'bg-cyan-100 text-cyan-800 border border-cyan-200';
     case 'dikerjakan':
       return 'bg-orange-100 text-orange-800 border border-orange-200';
     case 'selesai':
-      return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+      return 'bg-lime-100 text-lime-800 border border-lime-200';
     case 'ditolak':
       return 'bg-rose-100 text-rose-800 border border-rose-200';
     case 'duplikat':

@@ -144,14 +144,14 @@ export default function ReportDetailPage() {
             {/* Bukti Perbaikan (F7) */}
             {buktiPhotos.length > 0 && (
               <Reveal delay="delay-2">
-                <div className="card mt-6 border-green-200 bg-green-50/50 p-6">
-                <h2 className="mb-2 text-lg font-bold text-green-900 flex items-center gap-2">
-                  <CheckCircle2 className="text-green-600" size={20} /> Bukti Penyelesaian Instansi
+                <div className="card mt-6 border-lime-200 bg-lime-50/50 p-6">
+                <h2 className="mb-2 text-lg font-bold text-lime-900 flex items-center gap-2">
+                  <CheckCircle2 className="text-lime-600" size={20} /> Bukti Penyelesaian Instansi
                 </h2>
-                <p className="mb-4 text-xs text-green-700">Foto bukti hasil pekerjaan di lapangan</p>
+                <p className="mb-4 text-xs text-lime-700">Foto bukti hasil pekerjaan di lapangan</p>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {buktiPhotos.map((photo) => (
-                    <img key={photo.id} src={photo.url} alt="Bukti selesai" className="h-48 w-full rounded-lg object-cover border border-green-200" />
+                    <img key={photo.id} src={photo.url} alt="Bukti selesai" className="h-48 w-full rounded-lg object-cover border border-lime-200" />
                   ))}
                 </div>
                 </div>

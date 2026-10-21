@@ -36,9 +36,9 @@ export default function AdminDashboard() {
           {[
             { label: 'Total Laporan', value: stats?.total ?? 0, icon: FileText, color: 'text-civix-navy bg-slate-100' },
             { label: 'Menunggu Verifikasi', value: stats?.pending ?? 0, icon: Clock, color: 'text-amber-700 bg-amber-100' },
-            { label: 'Terverifikasi', value: stats?.verified ?? 0, icon: CheckCircle2, color: 'text-blue-700 bg-blue-100' },
+            { label: 'Terverifikasi', value: stats?.verified ?? 0, icon: CheckCircle2, color: 'text-cyan-700 bg-cyan-100' },
             { label: 'Sedang Dikerjakan', value: stats?.inProgress ?? 0, icon: AlertCircle, color: 'text-orange-700 bg-orange-100' },
-            { label: 'Selesai', value: stats?.completed ?? 0, icon: CheckCircle2, color: 'text-green-700 bg-green-100' },
+            { label: 'Selesai', value: stats?.completed ?? 0, icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
           ].map((stat, i) => (
             <div key={i} className="card p-5">
               <div className={`mb-3 inline-flex rounded-lg p-2.5 ${stat.color}`}>
