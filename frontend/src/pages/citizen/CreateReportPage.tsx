@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
-import { KATEGORI_LABEL } from '@/types';
+import { KATEGORI_LABEL, KategoriLaporan } from '@/types';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -66,10 +66,15 @@ function LocationPicker({
 
 export default function CreateReportPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const kategoriFromUrl = searchParams.get('kategori') || '';
+
   const [judul, setJudul] = useState('');
   const [deskripsi, setDeskripsi] = useState('');
   const [namaJalan, setNamaJalan] = useState('');
-  const [kategori, setKategori] = useState('');
+  const [kategori, setKategori] = useState(
+    kategoriFromUrl in KATEGORI_LABEL ? (kategoriFromUrl as KategoriLaporan) : ''
+  );
   const [anonim, setAnonim] = useState(false);
   const [photos, setPhotos] = useState<File[]>([]);
   const [position, setPosition] = useState<[number, number] | null>(null);

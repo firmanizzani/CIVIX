@@ -114,7 +114,7 @@ export default function AdminReportsPage({ embedded = false }: { embedded?: bool
           ) : filteredReports.length === 0 ? (
             <div className="p-12 text-center text-slate-500">Tidak ada laporan pada filter ini.</div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="max-h-[68vh] divide-y divide-slate-100 overflow-y-auto pr-1">
               {filteredReports.map((report) => (
                 <div key={report.id} className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center">
                   {report.photos?.[0] ? (

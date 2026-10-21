@@ -15,6 +15,8 @@ import {
   FileText,
   TrendingUp,
   Leaf,
+  Droplets,
+  Lightbulb,
 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -396,67 +398,96 @@ function LandingPage() {
         </section>
         </Reveal>
 
-        {/* Transparansi & Tracking Preview */}
+        {/* Kategori Laporan */}
         <Reveal delay="default">
         <section className="border-b border-civix-border bg-white py-16 lg:py-20">
           <div className="container-civix">
-            <div className="grid overflow-hidden rounded-2xl border border-civix-border shadow-xl md:grid-cols-2" style={{background: 'linear-gradient(135deg, #0f4d2a 0%, #156637 50%, #16a34a 100%)'}}>
-              <div className="p-8 text-white md:p-12">
-                <p className="eyebrow mb-4 text-emerald-300">Transparansi Publik</p>
-                <h2 className="text-3xl font-extrabold leading-tight sm:text-4xl">
-                  Setiap laporan punya cerita.
-                  <br />
-                  Ikuti sampai tuntas.
-                </h2>
-                <p className="mt-4 leading-relaxed text-emerald-100/90">
-                  Gunakan kode tiket untuk melihat timeline, catatan tindak lanjut, dan bukti penyelesaian laporan.
-                </p>
-                <Link to="/track" className="btn-accent mt-6">
-                  Lacak laporan <ArrowRight size={16} />
+            <div className="mb-12 text-center">
+              <p className="eyebrow mb-3">Apa yang Bisa Anda Laporkan?</p>
+              <h2 className="section-title">Masalah kecil, dampak besar.</h2>
+              <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-civix-muted">
+                Laporkan kondisi fasilitas dan lingkungan di sekitar Anda agar dapat ditindaklanjuti instansi terkait.
+              </p>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  icon: MapPin,
+                  title: 'Jalan & Trotoar',
+                  desc: 'Jalan rusak, berlubang, trotoar pecah atau tidak rata.',
+                  kategori: 'jalan_rusak',
+                  color: 'text-red-600',
+                  bgColor: 'bg-red-50',
+                  hoverBorder: 'hover:border-red-500',
+                },
+                {
+                  icon: Leaf,
+                  title: 'Sampah & Kebersihan',
+                  desc: 'Tumpukan sampah, tempat sampah penuh, area kotor.',
+                  kategori: 'sampah',
+                  color: 'text-green-600',
+                  bgColor: 'bg-green-50',
+                  hoverBorder: 'hover:border-green-500',
+                },
+                {
+                  icon: Lightbulb,
+                  title: 'Lampu Jalan',
+                  desc: 'Lampu mati, redup, atau rusak di area publik.',
+                  kategori: 'penerangan',
+                  color: 'text-amber-600',
+                  bgColor: 'bg-amber-50',
+                  hoverBorder: 'hover:border-amber-500',
+                },
+                {
+                  icon: Droplets,
+                  title: 'Drainase & Banjir',
+                  desc: 'Saluran tersumbat, genangan air, risiko banjir.',
+                  kategori: 'drainase',
+                  color: 'text-blue-600',
+                  bgColor: 'bg-blue-50',
+                  hoverBorder: 'hover:border-blue-500',
+                },
+                {
+                  icon: Building2,
+                  title: 'Fasilitas Umum',
+                  desc: 'Taman, halte, jembatan penyeberangan yang rusak.',
+                  kategori: 'fasilitas_umum',
+                  color: 'text-purple-600',
+                  bgColor: 'bg-purple-50',
+                  hoverBorder: 'hover:border-purple-500',
+                },
+                {
+                  icon: FileText,
+                  title: 'Lainnya',
+                  desc: 'Masalah infrastruktur atau lingkungan lainnya.',
+                  kategori: 'lainnya',
+                  color: 'text-slate-600',
+                  bgColor: 'bg-slate-50',
+                  hoverBorder: 'hover:border-slate-500',
+                },
+              ].map((item) => (
+                <Link
+                  key={item.kategori}
+                  to={`/citizen/create-report?kategori=${item.kategori}`}
+                  className={`group flex flex-col gap-4 rounded-xl border-2 border-civix-border bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-lg ${item.hoverBorder}`}
+                >
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${item.bgColor} ${item.color} transition-transform group-hover:scale-110`}>
+                    <item.icon size={24} strokeWidth={2.2} />
+                  </div>
+                  <div>
+                    <h3 className="mb-2 text-lg font-bold text-civix-forest">{item.title}</h3>
+                    <p className="text-sm leading-relaxed text-civix-muted">{item.desc}</p>
+                  </div>
+                  <div className={`mt-auto flex items-center gap-1.5 text-sm font-semibold ${item.color} opacity-0 transition-opacity group-hover:opacity-100`}>
+                    Laporkan sekarang <ArrowRight size={14} />
+                  </div>
                 </Link>
-              </div>
-              <div className="flex items-center justify-center bg-civix-deep/50 p-8 md:p-12">
-                <div className="w-full max-w-sm rounded-xl border border-civix-border bg-white p-6 shadow-2xl">
-                  <div className="mb-5 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-civix-muted">Lacak dengan kode tiket</p>
-                      <p className="mono mt-1 text-lg font-bold text-civix-forest">LPR-2026-XXXXX</p>
-                    </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-civix-soft text-civix-primary">
-                      <TrendingUp size={20} />
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    {[
-                      { label: 'Laporan diterima', done: true },
-                      { label: 'Diverifikasi admin', done: true },
-                      { label: 'Ditugaskan ke instansi', done: true },
-                      { label: 'Perbaikan berlangsung', done: false },
-                    ].map((step, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <div
-                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                            step.done ? 'bg-civix-mint text-civix-success' : 'bg-civix-soft text-civix-muted'
-                          }`}
-                        >
-                          {step.done ? <CheckCircle2 size={13} strokeWidth={2.5} /> : <Clock size={13} />}
-                        </div>
-                        <div>
-                          <p className={`text-sm font-medium ${step.done ? 'text-civix-text' : 'text-civix-muted'}`}>
-                            {step.label}
-                          </p>
-                          <p className="text-xs text-civix-muted">
-                            {step.done ? 'Status tercatat di timeline' : 'Menunggu pembaruan'}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-5 border-t border-civix-border pt-4 text-xs text-civix-muted">
-                    Pratinjau ilustrasi alur pelacakan
-                  </p>
-                </div>
-              </div>
+              ))}
+            </div>
+            <div className="mt-10 text-center">
+              <Link to="/citizen/create-report" className="btn-primary">
+                Buat laporan sekarang <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
         </section>
