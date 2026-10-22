@@ -66,9 +66,9 @@ function LandingPage() {
 
       <main>
         {/* Hero Section — Premium Green Forest */}
-        <section className="gradient-forest relative overflow-hidden text-white">
+        <section className="gradient-forest relative flex overflow-hidden text-white" style={{ minHeight: 'calc(100vh - 64px)' }}>
           <div className="gradient-radial-glow absolute inset-0"></div>
-          <div className="container-civix relative grid items-center gap-10 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24">
+          <div className="container-civix relative grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:py-0">
             <div className="animate-in-up">
               <div className="eyebrow mb-5 inline-flex items-center gap-2 rounded-full border border-civix-mint/30 bg-white/10 px-3 py-1.5 text-civix-mint backdrop-blur-sm">
                 <Leaf size={14} strokeWidth={2.5} />
@@ -120,7 +120,7 @@ function LandingPage() {
                   </Link>
                 </div>
 
-                <div className="relative h-[280px] sm:h-[320px]">
+                <div className="relative h-[260px] sm:h-[300px] lg:h-[330px] xl:h-[350px]">
                   {mapLoading ? (
                     <div className="flex h-full items-center justify-center bg-civix-soft">
                       <Loader2 className="animate-spin text-civix-primary" size={28} />

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AlertCircle, Loader2, Eye, EyeOff, Mail, Lock, ShieldCheck, ArrowRight } from 'lucide-react';
+import { AlertCircle, Loader2, Eye, EyeOff, Mail, Lock, ShieldCheck, ArrowRight, X, FlaskConical } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,83 +107,76 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Quick Demo Accounts Card */}
-          <div className="mt-5 rounded-2xl border border-civix-border bg-white/80 p-4 shadow-sm backdrop-blur-sm">
-            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-civix-muted">Akun demo cepat</p>
-            <div className="space-y-1.5 text-xs">
-              <button
-                type="button"
-                onClick={() => { setEmail('warga@demo.com'); setPassword('demo1234'); }}
-                className="flex w-full items-center justify-between rounded-lg border border-transparent bg-civix-neutral px-3 py-2 text-left transition hover:border-civix-mint hover:bg-civix-soft"
-              >
-                <span>
-                  <span className="font-semibold text-civix-forest">Warga</span>
-                  <span className="ml-2 text-civix-muted">warga@demo.com</span>
-                </span>
-                <span className="text-xs font-medium text-civix-primary">Isi</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('admin@demo.com'); setPassword('demo1234'); }}
-                className="flex w-full items-center justify-between rounded-lg border border-transparent bg-civix-neutral px-3 py-2 text-left transition hover:border-civix-mint hover:bg-civix-soft"
-              >
-                <span>
-                  <span className="font-semibold text-civix-forest">Admin</span>
-                  <span className="ml-2 text-civix-muted">admin@demo.com</span>
-                </span>
-                <span className="text-xs font-medium text-civix-primary">Isi</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('instansi@demo.com'); setPassword('demo1234'); }}
-                className="flex w-full items-center justify-between gap-3 rounded-lg border border-transparent bg-civix-neutral px-3 py-2 text-left transition hover:border-civix-mint hover:bg-civix-soft"
-              >
-                <span className="truncate">
-                  <span className="block truncate font-semibold text-civix-forest">Dinas Bina Marga DKI</span>
-                  <span className="text-civix-muted">instansi@demo.com</span>
-                </span>
-                <span className="shrink-0 text-xs font-medium text-civix-primary">Isi</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('air@demo.com'); setPassword('demo1234'); }}
-                className="flex w-full items-center justify-between gap-3 rounded-lg border border-transparent bg-civix-neutral px-3 py-2 text-left transition hover:border-civix-mint hover:bg-civix-soft"
-              >
-                <span className="truncate">
-                  <span className="block truncate font-semibold text-civix-forest">Dinas Sumber Daya Air DKI</span>
-                  <span className="text-civix-muted">air@demo.com</span>
-                </span>
-                <span className="shrink-0 text-xs font-medium text-civix-primary">Isi</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('lingkungan@demo.com'); setPassword('demo1234'); }}
-                className="flex w-full items-center justify-between gap-3 rounded-lg border border-transparent bg-civix-neutral px-3 py-2 text-left transition hover:border-civix-mint hover:bg-civix-soft"
-              >
-                <span className="truncate">
-                  <span className="block truncate font-semibold text-civix-forest">Dinas Lingkungan Hidup DKI</span>
-                  <span className="text-civix-muted">lingkungan@demo.com</span>
-                </span>
-                <span className="shrink-0 text-xs font-medium text-civix-primary">Isi</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('penerangan@demo.com'); setPassword('demo1234'); }}
-                className="flex w-full items-center justify-between gap-3 rounded-lg border border-transparent bg-civix-neutral px-3 py-2 text-left transition hover:border-civix-mint hover:bg-civix-soft"
-              >
-                <span className="truncate">
-                  <span className="block truncate font-semibold text-civix-forest">UPT Penerangan Jalan Umum DKI</span>
-                  <span className="text-civix-muted">penerangan@demo.com</span>
-                </span>
-                <span className="shrink-0 text-xs font-medium text-civix-primary">Isi</span>
-              </button>
-            </div>
-            <p className="mt-2.5 text-center text-[11px] text-civix-muted">
-              Sandi demo: <span className="font-semibold text-civix-forest">demo1234</span>
-            </p>
+          {/* Quick Demo Accounts Trigger */}
+          <div className="mt-5 text-center">
+            <button
+              type="button"
+              onClick={() => setShowDemo(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-civix-border bg-white/80 px-4 py-2.5 text-sm font-semibold text-civix-forest shadow-sm backdrop-blur-sm transition hover:border-civix-mint hover:bg-civix-soft"
+            >
+              <FlaskConical size={15} className="text-civix-primary" />
+              Lihat Akun Demo
+            </button>
           </div>
         </div>
       </div>
+
+      {showDemo && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-civix-forest/50 p-4 backdrop-blur-sm"
+          onClick={() => setShowDemo(false)}
+        >
+          <div
+            className="relative w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl border border-civix-border bg-white p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-lg font-extrabold text-civix-forest">
+                <FlaskConical size={18} className="text-civix-primary" />
+                Akun Demo
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowDemo(false)}
+                className="rounded-lg p-1.5 text-civix-muted transition hover:bg-civix-soft hover:text-civix-forest"
+                aria-label="Tutup"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="mb-4 text-xs text-civix-muted">
+              Sandi semua akun: <span className="font-semibold text-civix-forest">demo1234</span>
+            </p>
+            <div className="space-y-2">
+              {[
+                { label: 'Warga', email: 'warga@demo.com' },
+                { label: 'Admin', email: 'admin@demo.com' },
+                { label: 'Dinas Bina Marga DKI', email: 'instansi@demo.com' },
+                { label: 'Dinas Sumber Daya Air DKI', email: 'air@demo.com' },
+                { label: 'Dinas Lingkungan Hidup DKI', email: 'lingkungan@demo.com' },
+                { label: 'UPT Penerangan Jalan Umum DKI', email: 'penerangan@demo.com' },
+              ].map((acc) => (
+                <button
+                  key={acc.email}
+                  type="button"
+                  onClick={() => {
+                    setEmail(acc.email);
+                    setPassword('demo1234');
+                    setShowDemo(false);
+                  }}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-civix-border bg-civix-neutral px-4 py-3 text-left transition hover:border-civix-mint hover:bg-civix-soft"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-civix-forest">{acc.label}</span>
+                    <span className="block truncate text-xs text-civix-muted">{acc.email}</span>
+                  </span>
+                  <span className="shrink-0 text-xs font-semibold text-civix-primary">Gunakan →</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </div>
   );
