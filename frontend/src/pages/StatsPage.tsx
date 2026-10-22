@@ -192,18 +192,20 @@ export default function StatsPage() {
 
         {/* Insight */}
         <Reveal delay="delay-2">
-          <div className="mb-8 rounded-xl border border-orange-200 bg-orange-50 p-5">
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-orange-100 p-2 text-civix-orange"><Lightbulb size={18} /></div>
+          <div className="mb-8 rounded-2xl border border-civix-border bg-civix-soft/80 p-5 shadow-sm">
+          <div className="flex items-start gap-3.5">
+            <div className="rounded-xl bg-civix-mint p-2.5 text-civix-primary ring-1 ring-civix-border">
+              <Lightbulb size={20} />
+            </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-orange-700">Insight otomatis</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-civix-forest">Insight Otomatis</p>
               <p className="mt-1 text-sm font-medium text-slate-800">
                 {catLoading ? 'Menganalisis data...' : categoryData?.insight}
               </p>
               {fastestRegion && (
-                <p className="mt-1 text-sm text-slate-700">
-                  Wilayah tercepat menyelesaikan laporan: <strong>{fastestRegion.wilayah}</strong> dengan rata-rata{' '}
-                  <strong>{fastestRegion.rataRataHari} hari</strong>.
+                <p className="mt-1.5 text-sm text-slate-700">
+                  Wilayah tercepat menyelesaikan laporan: <strong className="text-civix-forest">{fastestRegion.wilayah}</strong> dengan rata-rata{' '}
+                  <strong className="text-civix-forest">{fastestRegion.rataRataHari} hari</strong>.
                 </p>
               )}
             </div>
