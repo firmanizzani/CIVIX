@@ -1,6 +1,7 @@
 ﻿import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { Menu, X, Leaf } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import CivixLogo from '@/components/CivixLogo';
 import { useState } from 'react';
 
 export default function Navbar() {
@@ -27,11 +28,8 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-civix-border bg-white/95 backdrop-blur-sm">
       <div className="container-civix">
         <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 text-xl font-extrabold text-civix-forest transition-colors hover:text-civix-primary">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-lime-600 via-lime-500 to-lime-400 shadow-sm ring-1 ring-lime-700/20">
-              <Leaf size={18} className="text-white drop-shadow-sm" strokeWidth={2.5} />
-            </div>
-            <span className="hidden sm:inline">CIVIX</span>
+          <Link to="/" className="text-xl text-civix-forest transition-colors hover:text-civix-primary">
+            <CivixLogo />
           </Link>
 
           <div className="hidden items-center gap-1 md:flex">
