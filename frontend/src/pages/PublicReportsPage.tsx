@@ -7,19 +7,21 @@ import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL, KategoriLaporan, StatusLaporan } from '@/types';
 import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
-import { Search, Filter, AlertTriangle, ArrowRight, MapPin } from 'lucide-react';
+import { Search, Filter, AlertTriangle, ArrowRight, MapPin, Clock } from 'lucide-react';
 
 export default function PublicReportsPage() {
   const [kategori, setKategori] = useState<string>('');
   const [status, setStatus] = useState<string>('');
+  const [periode, setPeriode] = useState<string>('');
   const [page, setPage] = useState(1);
 
   const { data: reports = [], isLoading } = useQuery<Report[]>({
-    queryKey: ['public-reports', kategori, status, page],
+    queryKey: ['public-reports', kategori, status, periode, page],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (kategori) params.append('kategori', kategori);
       if (status) params.append('status', status);
+      if (periode) params.append('periode', periode);
       params.append('page', page.toString());
       params.append('limit', '12');
       return (await apiClient.get(`/reports?${params.toString()}`)).data;
@@ -61,6 +63,16 @@ export default function PublicReportsPage() {
                   <option value="ditugaskan">Ditugaskan</option>
                   <option value="dikerjakan">Sedang Dikerjakan</option>
                   <option value="selesai">Selesai</option>
+                </select>
+              </div>
+
+              <div className="flex-1 min-w-[200px]">
+                <label className="label flex items-center gap-1.5"><Clock size={14} /> Waktu</label>
+                <select value={periode} onChange={(e) => { setPeriode(e.target.value); setPage(1); }} className="input">
+                  <option value="">Semua Waktu</option>
+                  <option value="7d">7 Hari Terakhir</option>
+                  <option value="30d">30 Hari Terakhir</option>
+                  <option value="month">Bulan Ini</option>
                 </select>
               </div>
             </div>

@@ -3,6 +3,7 @@ import PageTransition from '@/components/PageTransition';
 import LandingPage from '@/pages/LandingPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import PublicReportsPage from '@/pages/PublicReportsPage';
 import ReportDetailPage from '@/pages/ReportDetailPage';
 import MapPage from '@/pages/MapPage';
@@ -22,6 +23,7 @@ function App() {
       <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
       <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
       <Route path="/register" element={<PageTransition><RegisterPage /></PageTransition>} />
+      <Route path="/forgot-password" element={<PageTransition><ForgotPasswordPage /></PageTransition>} />
       <Route path="/reports" element={<PageTransition><PublicReportsPage /></PageTransition>} />
       <Route path="/reports/:id" element={<PageTransition><ReportDetailPage /></PageTransition>} />
       <Route path="/map" element={<PageTransition><MapPage /></PageTransition>} />
