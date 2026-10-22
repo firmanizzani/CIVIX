@@ -3,7 +3,7 @@ import { z } from 'zod';
 import multer from 'multer';
 import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportStatusLogs, comments, upvotes, users, regions } from '../../db/schema.js';
-import { eq, desc, and, sql, notInArray, gte } from 'drizzle-orm';
+import { eq, desc, and, sql, notInArray, gte, lte } from 'drizzle-orm';
 import { authMiddleware, AuthRequest } from '../../middleware/auth.js';
 import generateTicket from '../../utils/ticket.js';
 import { isWithinDKIJakarta } from '../../utils/geo.js';
@@ -46,7 +46,7 @@ router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response
 // GET /reports - Public feed (only non-rejected & non-duplicate)
 router.get('/', async (req, res: Response) => {
   try {
-    const { kategori, status, regionId, periode, limit = 20, page = 1 } = req.query;
+    const { kategori, status, regionId, periode, startDate, endDate, limit = 20, page = 1 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let conditions: any[] = [notInArray(reports.status, ['ditolak', 'duplikat'])];
@@ -61,6 +61,26 @@ router.get('/', async (req, res: Response) => {
       conditions.push(gte(reports.dibuatPada, sql`NOW() - INTERVAL '30 days'`));
     } else if (periode === 'month') {
       conditions.push(gte(reports.dibuatPada, sql`date_trunc('month', NOW())`));
+    } else if (periode === 'custom') {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      const isStartValid = typeof startDate === 'string' && dateRegex.test(startDate);
+      const isEndValid = typeof endDate === 'string' && dateRegex.test(endDate);
+
+      if (!isStartValid && !isEndValid) {
+        return res.status(400).json({ error: 'Tanggal awal atau tanggal akhir tidak valid' });
+      }
+
+      if (isStartValid && isEndValid && startDate > endDate) {
+        return res.status(400).json({ error: 'Tanggal awal tidak boleh melebihi tanggal akhir' });
+      }
+
+      if (isStartValid) {
+        conditions.push(gte(reports.dibuatPada, sql`${startDate}::date`));
+      }
+
+      if (isEndValid) {
+        conditions.push(lte(reports.dibuatPada, sql`(${endDate}::date + INTERVAL '1 day') - INTERVAL '1 second'`));
+      }
     }
 
     const result = await db.query.reports.findMany({

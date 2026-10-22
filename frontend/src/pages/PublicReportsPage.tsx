@@ -13,15 +13,19 @@ export default function PublicReportsPage() {
   const [kategori, setKategori] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [periode, setPeriode] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [page, setPage] = useState(1);
 
   const { data: reports = [], isLoading } = useQuery<Report[]>({
-    queryKey: ['public-reports', kategori, status, periode, page],
+    queryKey: ['public-reports', kategori, status, periode, startDate, endDate, page],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (kategori) params.append('kategori', kategori);
       if (status) params.append('status', status);
       if (periode) params.append('periode', periode);
+      if (periode === 'custom' && startDate) params.append('startDate', startDate);
+      if (periode === 'custom' && endDate) params.append('endDate', endDate);
       params.append('page', page.toString());
       params.append('limit', '12');
       return (await apiClient.get(`/reports?${params.toString()}`)).data;
@@ -73,8 +77,36 @@ export default function PublicReportsPage() {
                   <option value="7d">7 Hari Terakhir</option>
                   <option value="30d">30 Hari Terakhir</option>
                   <option value="month">Bulan Ini</option>
+                  <option value="custom">Rentang Tanggal Khusus</option>
                 </select>
               </div>
+
+              {periode === 'custom' && (
+                <div className="flex w-full flex-wrap gap-4">
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="label" htmlFor="start-date">Tanggal Awal</label>
+                    <input
+                      id="start-date"
+                      type="date"
+                      value={startDate}
+                      max={endDate || undefined}
+                      onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+                      className="input"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="label" htmlFor="end-date">Tanggal Akhir</label>
+                    <input
+                      id="end-date"
+                      type="date"
+                      value={endDate}
+                      min={startDate || undefined}
+                      onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+                      className="input"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </Reveal>
