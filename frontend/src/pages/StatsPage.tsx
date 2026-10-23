@@ -3,14 +3,21 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
-import { StatsOverview, TrendRow, RegionStat, CategoryStat, KATEGORI_LABEL } from '@/types';
+import { StatsOverview, TrendRow, RegionStat, CategoryStat, KATEGORI_LABEL, KategoriLaporan } from '@/types';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { FileText, CheckCircle2, Timer, Clock, Lightbulb, Trophy, TrendingUp, AlertTriangle } from 'lucide-react';
 
-const CATEGORY_COLORS = ['#dc2626', '#d97706', '#4d7c0f', '#0ea5e9', '#65a30d', '#64748b'];
+const CATEGORY_COLORS: Record<KategoriLaporan, string> = {
+  jalan_rusak: '#B91C1C',
+  drainase: '#2563EB',
+  sampah: '#0D9488',
+  penerangan: '#D97706',
+  fasilitas_umum: '#4D7C0F',
+  lainnya: '#64748B',
+};
 
 export default function StatsPage() {
   const { data: overview, isLoading: overviewLoading } = useQuery<StatsOverview>({
@@ -87,7 +94,7 @@ export default function StatsPage() {
           {[
             { label: 'Total Laporan', value: overview?.totalLaporan ?? 0, suffix: '', icon: FileText, color: 'text-civix-navy bg-slate-100' },
             { label: 'Persentase Selesai', value: overview?.persentaseSelesai ?? 0, suffix: '%', icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
-            { label: 'Rata-rata Penyelesaian', value: overview?.rataRataHariSelesai ?? '—', suffix: overview?.rataRataHariSelesai != null ? ' hari' : '', icon: Timer, color: 'text-cyan-700 bg-cyan-100' },
+            { label: 'Rata-rata Penyelesaian', value: overview?.rataRataHariSelesai ?? '—', suffix: overview?.rataRataHariSelesai != null ? ' hari' : '', icon: Timer, color: 'text-civix-forest bg-civix-mint' },
             { label: 'Laporan Menunggu', value: overview?.menunggu ?? 0, suffix: '', icon: Clock, color: 'text-amber-700 bg-amber-100' },
           ].map((card, i) => (
             <div key={i} className="card p-5">
@@ -140,7 +147,7 @@ export default function StatsPage() {
                         key={key}
                         dataKey={key}
                         name={label}
-                        fill={CATEGORY_COLORS[i]}
+                        fill={CATEGORY_COLORS[key as KategoriLaporan]}
                         radius={[4, 4, 0, 0]}
                         maxBarSize={28}
                       />
@@ -166,7 +173,7 @@ export default function StatsPage() {
                     <PieChart>
                       <Pie data={categoryData.rows} dataKey="jumlah" nameKey="label" innerRadius={45} outerRadius={75} paddingAngle={3}>
                         {categoryData.rows.map((_, index) => (
-                          <Cell key={index} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                          <Cell key={index} fill={CATEGORY_COLORS[categoryData.rows[index].kategori]} />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -177,7 +184,7 @@ export default function StatsPage() {
                   {categoryData.rows.slice(0, 4).map((row, i) => (
                     <div key={row.kategori} className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-2 text-slate-600">
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} />
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: CATEGORY_COLORS[row.kategori] }} />
                         {row.label}
                       </span>
                       <span className="font-semibold text-slate-700">{row.jumlah}</span>
