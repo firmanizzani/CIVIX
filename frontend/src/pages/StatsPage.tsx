@@ -142,7 +142,7 @@ export default function StatsPage() {
                     <YAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    {Object.entries(KATEGORI_LABEL).map(([key, label], i) => (
+                    {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
                       <Bar
                         key={key}
                         dataKey={key}
@@ -181,7 +181,7 @@ export default function StatsPage() {
                   </ResponsiveContainer>
                 </div>
                 <div className="space-y-1.5">
-                  {categoryData.rows.slice(0, 4).map((row, i) => (
+                  {categoryData.rows.slice(0, 4).map((row) => (
                     <div key={row.kategori} className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-2 text-slate-600">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ background: CATEGORY_COLORS[row.kategori] }} />
