@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from './index.js';
 import { reportPhotos, reports, reportStatusLogs, users } from './schema.js';
-import { uploadImageToStorage } from '../modules/uploads/service.js';
+import { buildReportPhotoPath, uploadImageToStorage } from '../modules/uploads/service.js';
 import { SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL } from '../config/index.js';
 
 const septemberReports = [
@@ -136,10 +136,14 @@ async function seedSeptemberReports() {
       where: and(eq(reportPhotos.reportId, report.id), eq(reportPhotos.jenis, 'awal')),
     });
 
+    const cleanStoragePath = buildReportPhotoPath(item.kodeTiket, 'awal', 1, 'image/jpeg');
+    const image = await downloadPhoto(item.photoUrl);
+    const storedUrl = await uploadImageToStorage(image, cleanStoragePath, 'image/jpeg', true);
+
     if (!photo) {
-      const image = await downloadPhoto(item.photoUrl);
-      const storedUrl = await uploadImageToStorage(image, `${item.kodeTiket.toLowerCase()}.jpg`, 'image/jpeg');
       await db.insert(reportPhotos).values({ reportId: report.id, url: storedUrl, jenis: 'awal', dibuatPada: item.dibuatPada });
+    } else {
+      await db.update(reportPhotos).set({ url: storedUrl }).where(eq(reportPhotos.id, photo.id));
     }
 
     const log = await db.query.reportStatusLogs.findFirst({

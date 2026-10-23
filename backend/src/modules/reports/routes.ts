@@ -7,7 +7,7 @@ import { eq, desc, and, sql, notInArray, gte, lte } from 'drizzle-orm';
 import { authMiddleware, AuthRequest } from '../../middleware/auth.js';
 import generateTicket from '../../utils/ticket.js';
 import { isWithinDKIJakarta } from '../../utils/geo.js';
-import { uploadImageToStorage } from '../uploads/service.js';
+import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.js';
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
@@ -201,8 +201,9 @@ router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequ
       .returning();
 
     // Upload & Save Photos
-    for (const file of files) {
-      const url = await uploadImageToStorage(file.buffer, file.originalname, file.mimetype);
+    for (const [index, file] of files.entries()) {
+      const storagePath = buildReportPhotoPath(kodeTiket, 'awal', index + 1, file.mimetype);
+      const url = await uploadImageToStorage(file.buffer, storagePath, file.mimetype);
       await db.insert(reportPhotos).values({
         reportId: newReport.id,
         url,

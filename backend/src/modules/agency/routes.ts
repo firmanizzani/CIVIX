@@ -4,7 +4,7 @@ import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportStatusLogs, agencies } from '../../db/schema.js';
 import { eq, desc, count, inArray, and, sql } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
-import { uploadImageToStorage } from '../uploads/service.js';
+import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.js';
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -178,8 +178,9 @@ router.post('/assignments/:id/complete', upload.array('bukti', 3), async (req: A
       return res.status(400).json({ error: 'Tugas harus berstatus "dikerjakan" terlebih dahulu' });
     }
 
-    for (const file of files) {
-      const url = await uploadImageToStorage(file.buffer, file.originalname, file.mimetype);
+    for (const [index, file] of files.entries()) {
+      const storagePath = buildReportPhotoPath(report.kodeTiket, 'bukti', index + 1, file.mimetype);
+      const url = await uploadImageToStorage(file.buffer, storagePath, file.mimetype);
       await db.insert(reportPhotos).values({ reportId: req.params.id, url, jenis: 'bukti_perbaikan' });
     }
 
