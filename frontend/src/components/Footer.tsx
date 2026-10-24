@@ -35,22 +35,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/track" className="transition-colors hover:text-civix-primary">
-                  Lacak Tiket
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4 text-sm font-bold text-civix-forest">Fitur</h4>
-            <ul className="space-y-2.5 text-sm text-civix-muted">
-              <li>
-                <Link to="/citizen/create-report" className="transition-colors hover:text-civix-primary">
-                  Buat Laporan
-                </Link>
-              </li>
-              <li>
                 <Link to="/stats" className="transition-colors hover:text-civix-primary">
                   Statistik
                 </Link>
@@ -59,10 +43,31 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-sm font-bold text-civix-forest">Informasi</h4>
+            <h4 className="mb-4 text-sm font-bold text-civix-forest">Layanan Warga</h4>
+            <ul className="space-y-2.5 text-sm text-civix-muted">
+              <li>
+                <Link to="/citizen/create-report" className="transition-colors hover:text-civix-primary">
+                  Buat Laporan
+                </Link>
+              </li>
+              <li>
+                <Link to="/citizen" className="transition-colors hover:text-civix-primary">
+                  Dashboard Warga
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="mb-4 text-sm font-bold text-civix-forest">Kontak</h4>
+            <a
+              href="mailto:civix@email.com"
+              className="mb-2.5 inline-block text-sm font-semibold text-civix-primary transition-colors hover:underline"
+            >
+              civix@email.com
+            </a>
             <p className="text-sm leading-relaxed text-civix-muted">
-              CIVIX adalah platform demonstrasi untuk Lomba Web In Action 2026. Data yang ditampilkan merupakan data
-              demo untuk keperluan presentasi.
+              Hubungi kami untuk bantuan dan masukan terkait CIVIX.
             </p>
           </div>
         </div>

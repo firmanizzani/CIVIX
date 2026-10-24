@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
@@ -6,23 +6,24 @@ import {
   MapPin,
   ShieldCheck,
   Activity,
-  BarChart3,
   Clock,
   CheckCircle2,
   Loader2,
   AlertTriangle,
   Building2,
   FileText,
-  TrendingUp,
   Leaf,
   Droplets,
   Lightbulb,
+  ChevronDown,
+  HelpCircle,
 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
+import AnimatedCounter from '@/components/AnimatedCounter';
 import apiClient from '@/lib/api';
 import { MapPoint, StatsOverview, STATUS_LABEL, KATEGORI_LABEL, Report } from '@/types';
 import { formatDate } from '@/lib/utils';
@@ -45,6 +46,7 @@ const getStatusColor = (status: string) => {
 };
 
 function LandingPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { data: stats, isLoading: statsLoading } = useQuery<StatsOverview>({
     queryKey: ['stats-overview'],
     queryFn: async () => (await apiClient.get('/stats/overview')).data,
@@ -232,31 +234,30 @@ function LandingPage() {
 
         {/* Stats Bar */}
         <Reveal>
-          <section className="border-b border-civix-border bg-civix-neutral py-10">
+          <section className="border-y border-slate-200 bg-slate-50 py-10">
           <div className="container-civix">
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm font-bold uppercase tracking-wider text-slate-900">Ringkasan Aktivitas</span>
+              <Link to="/stats" className="inline-flex items-center gap-1.5 rounded-full border border-lime-300 bg-white px-3 py-1.5 text-xs font-semibold text-civix-forest transition-colors hover:bg-lime-50">
+                Lihat statistik lengkap <ArrowRight size={13} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: 'Total Laporan', value: stats?.totalLaporan, icon: FileText, color: 'text-civix-forest' },
-                { label: 'Menunggu', value: stats?.menunggu, icon: Clock, color: 'text-civix-warning' },
-                {
-                  label: 'Dalam Proses',
-                  value: stats?.dalamProses,
-                  icon: Activity,
-                  color: 'text-civix-primary',
-                },
-                { label: 'Selesai', value: stats?.selesai, icon: CheckCircle2, color: 'text-civix-success' },
+                { label: 'Total Laporan', value: stats?.totalLaporan, icon: FileText, iconColor: 'text-slate-800', iconBg: 'bg-slate-100', valueColor: 'text-slate-900', border: 'border-slate-200' },
+                { label: 'Menunggu', value: stats?.menunggu, icon: Clock, iconColor: 'text-amber-700', iconBg: 'bg-amber-100', valueColor: 'text-amber-700', border: 'border-amber-200' },
+                { label: 'Dalam Proses', value: stats?.dalamProses, icon: Activity, iconColor: 'text-sky-700', iconBg: 'bg-sky-100', valueColor: 'text-sky-800', border: 'border-sky-200' },
+                { label: 'Selesai', value: stats?.selesai, icon: CheckCircle2, iconColor: 'text-emerald-700', iconBg: 'bg-emerald-100', valueColor: 'text-emerald-800', border: 'border-emerald-200' },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ${item.color}`}
-                  >
-                    <item.icon size={20} strokeWidth={2.2} />
+                <div key={i} className={`flex items-center gap-4 rounded-xl border bg-white px-5 py-4 shadow-sm ${item.border}`}>
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${item.iconBg} ${item.iconColor}`}>
+                    <item.icon size={21} strokeWidth={2.2} />
                   </div>
                   <div>
-                    <div className="text-2xl font-extrabold text-civix-forest">
-                      {statsLoading ? '—' : item.value ?? 0}
+                    <div className={`text-2xl font-extrabold ${item.valueColor}`}>
+                      {statsLoading ? '—' : <AnimatedCounter value={item.value ?? 0} />}
                     </div>
-                    <div className="text-xs font-medium text-civix-muted">{item.label}</div>
+                    <div className="mt-0.5 text-xs font-semibold text-slate-600">{item.label}</div>
                   </div>
                 </div>
               ))}
@@ -325,77 +326,6 @@ function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-        </Reveal>
-
-        {/* Recent Reports */}
-        <Reveal delay="delay-1">
-        <section className="border-b border-civix-border bg-civix-soft py-16 lg:py-20">
-          <div className="container-civix">
-            <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <p className="eyebrow mb-3">Pantau Sekitar</p>
-                <h2 className="section-title">Laporan terbaru</h2>
-              </div>
-              <Link to="/reports" className="btn-outline">
-                Lihat semua <ArrowRight size={16} />
-              </Link>
-            </div>
-            {reportsLoading ? (
-              <div className="grid gap-5 md:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="skeleton h-64" />
-                ))}
-              </div>
-            ) : recentReports.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-civix-border bg-white py-16 text-center">
-                <AlertTriangle className="mx-auto mb-3 text-civix-muted/50" size={32} />
-                <p className="font-semibold text-civix-text">Belum ada laporan publik</p>
-                <p className="mt-1 text-sm text-civix-muted">Laporan yang terverifikasi akan tampil di sini.</p>
-              </div>
-            ) : (
-              <div className="grid gap-5 md:grid-cols-3">
-                {recentReports.map((report) => (
-                  <Link
-                    key={report.id}
-                    to={`/reports/${report.id}`}
-                    className="group overflow-hidden rounded-xl border border-civix-border bg-white transition-all hover:-translate-y-1 hover:border-civix-primary hover:shadow-lg"
-                  >
-                    {report.photos?.[0] ? (
-                      <img src={report.photos[0].url} alt={report.judul} className="h-40 w-full object-cover" />
-                    ) : (
-                      <div className="flex h-40 items-center justify-center bg-civix-soft text-civix-muted/50">
-                        <MapPin size={36} />
-                      </div>
-                    )}
-                    <div className="p-5">
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-civix-primary">
-                          {KATEGORI_LABEL[report.kategori]}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs text-civix-muted">
-                          <span
-                            className={`status-dot ${
-                              report.status === 'selesai'
-                                ? 'status-green'
-                                : report.status === 'dikerjakan' || report.status === 'ditugaskan'
-                                  ? 'status-amber'
-                                  : 'status-red'
-                            }`}
-                          />
-                          {STATUS_LABEL[report.status]}
-                        </span>
-                      </div>
-                      <h3 className="line-clamp-2 font-bold text-civix-forest transition-colors group-hover:text-civix-primary">
-                        {report.judul}
-                      </h3>
-                      <p className="mt-2 text-xs text-civix-muted">{formatDate(report.dibuatPada)}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
         </section>
         </Reveal>
@@ -495,22 +425,154 @@ function LandingPage() {
         </section>
         </Reveal>
 
-        {/* Statistik Insight CTA */}
+        {/* Recent Reports */}
         <Reveal delay="delay-1">
-        <section className="border-b border-civix-border bg-civix-neutral py-14">
+        <section className="border-b border-civix-border bg-civix-soft py-16 lg:py-20">
           <div className="container-civix">
-            <div className="mx-auto max-w-2xl text-center">
-              <div className="mb-4 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-lime-700 via-lime-600 to-lime-500 p-3 text-white shadow-sm">
-                <BarChart3 size={24} strokeWidth={2.2} />
+            <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <p className="eyebrow mb-3">Pantau Sekitar</p>
+                <h2 className="section-title">Laporan terbaru</h2>
               </div>
-              <h2 className="section-title">Data yang membuka wawasan.</h2>
-              <p className="mt-4 leading-relaxed text-civix-muted">
-                Lihat tren kategori, perbandingan wilayah, dan kinerja penanganan berbasis laporan yang tercatat di
-                CIVIX.
-              </p>
-              <Link to="/stats" className="btn-accent mt-6">
-                Jelajahi statistik <ArrowRight size={16} />
+              <Link to="/reports" className="btn-outline">
+                Lihat semua <ArrowRight size={16} />
               </Link>
+            </div>
+            {reportsLoading ? (
+              <div className="grid gap-5 md:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton h-64" />
+                ))}
+              </div>
+            ) : recentReports.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-civix-border bg-white py-16 text-center">
+                <AlertTriangle className="mx-auto mb-3 text-civix-muted/50" size={32} />
+                <p className="font-semibold text-civix-text">Belum ada laporan publik</p>
+                <p className="mt-1 text-sm text-civix-muted">Laporan yang terverifikasi akan tampil di sini.</p>
+              </div>
+            ) : (
+              <div className="grid gap-5 md:grid-cols-3">
+                {recentReports.map((report) => (
+                  <Link
+                    key={report.id}
+                    to={`/reports/${report.id}`}
+                    className="group overflow-hidden rounded-xl border border-civix-border bg-white transition-all hover:-translate-y-1 hover:border-civix-primary hover:shadow-lg"
+                  >
+                    {report.photos?.[0] ? (
+                      <img src={report.photos[0].url} alt={report.judul} className="h-40 w-full object-cover" />
+                    ) : (
+                      <div className="flex h-40 items-center justify-center bg-civix-soft text-civix-muted/50">
+                        <MapPin size={36} />
+                      </div>
+                    )}
+                    <div className="p-5">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-civix-primary">
+                          {KATEGORI_LABEL[report.kategori]}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs text-civix-muted">
+                          <span
+                            className={`status-dot ${
+                              report.status === 'selesai'
+                                ? 'status-green'
+                                : report.status === 'dikerjakan' || report.status === 'ditugaskan'
+                                  ? 'status-amber'
+                                  : 'status-red'
+                            }`}
+                          />
+                          {STATUS_LABEL[report.status]}
+                        </span>
+                      </div>
+                      <h3 className="line-clamp-2 font-bold text-civix-forest transition-colors group-hover:text-civix-primary">
+                        {report.judul}
+                      </h3>
+                      <p className="mt-2 text-xs text-civix-muted">{formatDate(report.dibuatPada)}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+        </Reveal>
+
+        {/* FAQ Section */}
+        <Reveal delay="default">
+        <section className="border-b border-civix-border bg-white py-16 lg:py-20">
+          <div className="container-civix">
+            <div className="mx-auto mb-12 max-w-2xl text-center">
+              <div className="eyebrow mb-3 inline-flex items-center gap-2 rounded-full border border-lime-300 bg-lime-50 px-3 py-1 text-civix-forest">
+                <HelpCircle size={14} />
+                Pertanyaan Umum
+              </div>
+              <h2 className="section-title">Hal yang sering ditanyakan</h2>
+              <p className="mt-3 text-sm leading-relaxed text-civix-muted sm:text-base">
+                Informasi seputar cara kerja CIVIX, keamanan data pelapor, dan tindak lanjut laporan Anda.
+              </p>
+            </div>
+
+            <div className="mx-auto max-w-3xl space-y-3">
+              {[
+                {
+                  question: 'Bagaimana cara membuat laporan di CIVIX?',
+                  answer:
+                    'Masuk atau daftar sebagai warga, klik tombol "Buat Laporan", tentukan titik lokasi masalah pada peta atau isi alamat, unggah foto bukti, tulis deskripsi kejadian, lalu kirim laporan.',
+                },
+                {
+                  question: 'Apakah saya bisa melapor secara anonim?',
+                  answer:
+                    'Bisa. Saat mengisi formulir laporan, aktifkan opsi "Kirim sebagai anonim". Identitas nama Anda tidak akan ditampilkan kepada publik pada daftar laporan umum maupun peta.',
+                },
+                {
+                  question: 'Berapa lama laporan saya akan diproses?',
+                  answer:
+                    'Setiap laporan masuk akan diverifikasi admin terlebih dahulu maksimal 1x24 jam kerja. Setelah status terverifikasi, laporan ditugaskan langsung ke instansi terkait untuk dijadwalkan dan ditindaklanjuti di lapangan.',
+                },
+                {
+                  question: 'Bagaimana cara memantau progres laporan yang sudah dikirim?',
+                  answer:
+                    'Masuk ke akun Anda dan buka Dashboard Warga. Pada bagian "Laporan Saya", Anda bisa melihat seluruh riwayat tiket yang Anda buat lengkap dengan status penanganannya dari diterima hingga selesai.',
+                },
+                {
+                  question: 'Kategori apa saja yang dapat dilaporkan?',
+                  answer:
+                    'Anda dapat melaporkan jalan & trotoar rusak, tumpukan sampah, saluran air/drainase tersumbat, penerangan jalan mati, serta fasilitas umum yang membutuhkan perbaikan di wilayah DKI Jakarta.',
+                },
+                {
+                  question: 'Apakah ada biaya untuk menggunakan layanan CIVIX?',
+                  answer:
+                    'CIVIX dapat digunakan 100% gratis oleh seluruh masyarakat tanpa pungutan biaya apa pun.',
+                },
+              ].map((faq, index) => {
+                const isOpen = openFaq === index;
+                return (
+                  <div
+                    key={index}
+                    className="overflow-hidden rounded-xl border border-lime-200 bg-white transition hover:border-lime-300 shadow-sm"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaq(isOpen ? null : index)}
+                      className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left sm:px-6 sm:py-5"
+                    >
+                      <span className="text-base font-bold text-civix-forest sm:text-lg">
+                        {faq.question}
+                      </span>
+                      <ChevronDown
+                        size={18}
+                        className={`shrink-0 text-civix-primary transition-transform duration-200 ${
+                          isOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="border-t border-lime-100 bg-lime-50/50 px-5 py-4 text-sm leading-relaxed text-slate-700 sm:px-6">
+                        {faq.answer}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
