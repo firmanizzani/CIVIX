@@ -13,6 +13,7 @@ import CitizenDashboard from '@/pages/citizen/CitizenDashboard';
 import CreateReportPage from '@/pages/citizen/CreateReportPage';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminReportsPage from '@/pages/admin/AdminReportsPage';
+import AdminPeoplePage from '@/pages/admin/AdminPeoplePage';
 import AgencyDashboard from '@/pages/agency/AgencyDashboard';
 import AgencyAssignmentsPage from '@/pages/agency/AgencyAssignmentsPage';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -38,6 +39,7 @@ function App() {
       <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/reports" element={<AdminReportsPage />} />
+        <Route path="/admin/people" element={<AdminPeoplePage />} />
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['instansi', 'admin']} />}>

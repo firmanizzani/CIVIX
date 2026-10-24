@@ -197,6 +197,7 @@ export const upvotesRelations = relations(upvotes, ({ one }) => ({
 
 export const agenciesRelations = relations(agencies, ({ many }) => ({
   assignments: many(reportAssignments),
+  users: many(users),
 }));
 
 export const reportAssignmentsRelations = relations(reportAssignments, ({ one }) => ({

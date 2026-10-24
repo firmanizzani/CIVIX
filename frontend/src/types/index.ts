@@ -106,6 +106,31 @@ export interface AdminDashboard {
   verified: number;
   inProgress: number;
   completed: number;
+  totalWarga?: number;
+  totalInstansi?: number;
+  totalAkunInstansi?: number;
+}
+
+export interface AdminResident {
+  id: string;
+  nama: string;
+  email: string;
+  dibuatPada: string;
+}
+
+export interface AgencyAccount {
+  id: string;
+  nama: string;
+  email: string;
+  dibuatPada: string;
+}
+
+export interface AdminAgency {
+  id: string;
+  nama: string;
+  deskripsi: string | null;
+  dibuatPada?: string;
+  users?: AgencyAccount[];
 }
 
 export interface AgencyDashboard {
