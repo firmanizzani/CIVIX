@@ -5,13 +5,15 @@ import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
-import { Play, CheckCircle2, Upload, X, Loader2, Wrench, Image as ImageIcon } from 'lucide-react';
+import { Play, CheckCircle2, Upload, X, Loader2, Wrench, Image as ImageIcon, Search } from 'lucide-react';
 
-export default function AgencyAssignmentsPage() {
+export default function AgencyAssignmentsPage({ embedded = false }: { embedded?: boolean }) {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Report | null>(null);
   const [note, setNote] = useState('');
   const [proofFiles, setProofFiles] = useState<File[]>([]);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: assignments = [], isLoading } = useQuery<Report[]>({
@@ -56,70 +58,167 @@ export default function AgencyAssignmentsPage() {
     completeMutation.mutate({ id: selected.id, formData });
   };
 
+  const filteredAssignments = assignments.filter((task) => {
+    const matchesSearch =
+      task.judul.toLowerCase().includes(search.toLowerCase()) ||
+      task.kodeTiket.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter ? task.status === statusFilter : true;
+    return matchesSearch && matchesStatus;
+  });
+
+  const content = (
+    <div className={embedded ? '' : 'container-civix flex-1 py-12'}>
+      <div className="mb-8">
+        <h2 className="text-2xl font-extrabold text-civix-navy">Daftar Tugas Instansi</h2>
+        <p className="mt-1 text-slate-600">Mulai penanganan, tambah progres, dan unggah bukti penyelesaian.</p>
+      </div>
+
+      <div className="card mb-6 p-4">
+        <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari kode tiket atau judul..."
+              className="input pl-10"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="input w-auto min-w-[190px]"
+          >
+            <option value="">Semua Status</option>
+            <option value="ditugaskan">Menunggu Ditangani</option>
+            <option value="dikerjakan">Sedang Dikerjakan</option>
+            <option value="selesai">Selesai</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+        <div className="card overflow-hidden">
+          {isLoading ? (
+            <div className="space-y-3 p-6">
+              <div className="skeleton h-24" />
+              <div className="skeleton h-24" />
+            </div>
+          ) : filteredAssignments.length === 0 ? (
+            <div className="p-12 text-center text-slate-500">
+              {assignments.length === 0 ? 'Belum ada tugas yang ditugaskan.' : 'Tidak ada tugas pada filter ini.'}
+            </div>
+          ) : (
+            <div className="max-h-[68vh] divide-y divide-slate-100 overflow-y-auto pr-1">
+              {filteredAssignments.map((task) => (
+                <button
+                  key={task.id}
+                  onClick={() => {
+                    setSelected(task);
+                    setNote('');
+                    setProofFiles([]);
+                  }}
+                  className={`flex w-full gap-4 p-5 text-left transition hover:bg-slate-50 ${
+                    selected?.id === task.id ? 'bg-lime-50/60 border-l-4 border-civix-blue' : ''
+                  }`}
+                >
+                  {task.photos?.[0] ? (
+                    <img src={task.photos[0].url} alt="" className="h-20 w-24 rounded-lg object-cover" />
+                  ) : (
+                    <div className="flex h-20 w-24 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                      <ImageIcon size={20} />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="mono text-xs text-slate-400">{task.kodeTiket}</span>
+                      <span className="text-xs text-civix-blue">{KATEGORI_LABEL[task.kategori]}</span>
+                    </div>
+                    <h2 className="mt-1 font-bold text-civix-navy">{task.judul}</h2>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <span>{formatDate(task.dibuatPada)}</span>
+                      <span className={`rounded-full px-2 py-0.5 font-semibold ${getStatusBadgeClasses(task.status)}`}>
+                        {STATUS_LABEL[task.status]}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <aside className="card h-fit p-6 lg:sticky lg:top-24">
+          {!selected ? (
+            <div className="py-10 text-center text-sm text-slate-500">
+              <Wrench className="mx-auto mb-3 text-slate-300" size={30} />
+              Pilih tugas untuk memperbarui progres.
+            </div>
+          ) : (
+            <div>
+              <span className="mono text-xs text-slate-400">{selected.kodeTiket}</span>
+              <h2 className="mt-1 font-bold text-civix-navy">{selected.judul}</h2>
+              <p className="mt-2 text-xs text-slate-500">
+                Status: <strong>{STATUS_LABEL[selected.status]}</strong>
+              </p>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Catatan penanganan untuk timeline publik..."
+                className="input mt-5 min-h-24"
+              />
+
+              {selected.status === 'ditugaskan' && (
+                <button
+                  onClick={() => progressMutation.mutate({ id: selected.id, status: 'dikerjakan', catatan: note })}
+                  disabled={progressMutation.isPending}
+                  className="btn-primary mt-4 w-full"
+                >
+                  {progressMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}{' '}
+                  Mulai Pengerjaan
+                </button>
+              )}
+
+              {selected.status === 'dikerjakan' && (
+                <div className="mt-4 space-y-3">
+                  <input ref={fileRef} type="file" multiple accept="image/*" className="hidden" onChange={chooseProof} />
+                  <button type="button" onClick={() => fileRef.current?.click()} className="btn-outline w-full">
+                    <Upload size={16} /> Tambah Bukti ({proofFiles.length}/3)
+                  </button>
+                  {proofFiles.map((file, i) => (
+                    <div key={i} className="flex items-center justify-between rounded bg-slate-50 p-2 text-xs">
+                      <span className="truncate">{file.name}</span>
+                      <button onClick={() => setProofFiles((p) => p.filter((_, n) => n !== i))}>
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-xs text-slate-500">Minimal 1 foto bukti wajib sebelum menyelesaikan laporan.</p>
+                  <button
+                    onClick={submitComplete}
+                    disabled={completeMutation.isPending || proofFiles.length === 0}
+                    className="btn bg-lime-600 text-white hover:bg-lime-700 w-full"
+                  >
+                    {completeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}{' '}
+                    Tandai Selesai
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Navbar />
-      <div className="container-civix flex-1 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold text-civix-navy">Daftar Tugas Instansi</h1>
-          <p className="mt-1 text-slate-600">Mulai penanganan, tambah progres, dan unggah bukti penyelesaian.</p>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-          <div className="card overflow-hidden">
-            {isLoading ? <div className="space-y-3 p-6"><div className="skeleton h-24" /><div className="skeleton h-24" /></div> : assignments.length === 0 ? (
-              <div className="p-12 text-center text-slate-500">Belum ada tugas yang ditugaskan.</div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {assignments.map((task) => (
-                  <button key={task.id} onClick={() => { setSelected(task); setNote(''); setProofFiles([]); }} className={`flex w-full gap-4 p-5 text-left transition hover:bg-slate-50 ${selected?.id === task.id ? 'bg-lime-50/60 border-l-4 border-civix-blue' : ''}`}>
-                    {task.photos?.[0] ? <img src={task.photos[0].url} alt="" className="h-20 w-24 rounded-lg object-cover" /> : <div className="flex h-20 w-24 items-center justify-center rounded-lg bg-slate-100 text-slate-400"><ImageIcon size={20} /></div>}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2"><span className="mono text-xs text-slate-400">{task.kodeTiket}</span><span className="text-xs text-civix-blue">{KATEGORI_LABEL[task.kategori]}</span></div>
-                      <h2 className="mt-1 font-bold text-civix-navy">{task.judul}</h2>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                        <span>{formatDate(task.dibuatPada)}</span>
-                        <span className={`rounded-full px-2 py-0.5 font-semibold ${getStatusBadgeClasses(task.status)}`}>{STATUS_LABEL[task.status]}</span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <aside className="card h-fit p-6 lg:sticky lg:top-24">
-            {!selected ? (
-              <div className="py-10 text-center text-sm text-slate-500"><Wrench className="mx-auto mb-3 text-slate-300" size={30} />Pilih tugas untuk memperbarui progres.</div>
-            ) : (
-              <div>
-                <span className="mono text-xs text-slate-400">{selected.kodeTiket}</span>
-                <h2 className="mt-1 font-bold text-civix-navy">{selected.judul}</h2>
-                <p className="mt-2 text-xs text-slate-500">Status: <strong>{STATUS_LABEL[selected.status]}</strong></p>
-                <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Catatan penanganan untuk timeline publik..." className="input mt-5 min-h-24" />
-
-                {selected.status === 'ditugaskan' && (
-                  <button onClick={() => progressMutation.mutate({ id: selected.id, status: 'dikerjakan', catatan: note })} disabled={progressMutation.isPending} className="btn-primary mt-4 w-full">
-                    {progressMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />} Mulai Pengerjaan
-                  </button>
-                )}
-
-                {selected.status === 'dikerjakan' && (
-                  <div className="mt-4 space-y-3">
-                    <input ref={fileRef} type="file" multiple accept="image/*" className="hidden" onChange={chooseProof} />
-                    <button type="button" onClick={() => fileRef.current?.click()} className="btn-outline w-full"><Upload size={16} /> Tambah Bukti ({proofFiles.length}/3)</button>
-                    {proofFiles.map((file, i) => <div key={i} className="flex items-center justify-between rounded bg-slate-50 p-2 text-xs"><span className="truncate">{file.name}</span><button onClick={() => setProofFiles((p) => p.filter((_, n) => n !== i))}><X size={14} /></button></div>)}
-                    <p className="text-xs text-slate-500">Minimal 1 foto bukti wajib sebelum menyelesaikan laporan.</p>
-                    <button onClick={submitComplete} disabled={completeMutation.isPending || proofFiles.length === 0} className="btn bg-lime-600 text-white hover:bg-lime-700 w-full">
-                      {completeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />} Tandai Selesai
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </aside>
-        </div>
-      </div>
+      {content}
       <Footer />
     </div>
   );
