@@ -180,9 +180,9 @@ export const STATUS_LABEL: Record<StatusLaporan, string> = {
   duplikat: 'Laporan Duplikat',
 };
 
-export const STATUS_MAP_COLOR: Record<StatusLaporan, 'merah' | 'kuning' | 'hijau' | 'lain'> = {
+export const STATUS_MAP_COLOR: Record<StatusLaporan, 'merah' | 'oranye' | 'kuning' | 'hijau' | 'lain'> = {
   diterima: 'merah',
-  diverifikasi: 'merah',
+  diverifikasi: 'oranye',
   ditugaskan: 'kuning',
   dikerjakan: 'kuning',
   selesai: 'hijau',

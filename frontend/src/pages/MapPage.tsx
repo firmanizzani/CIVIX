@@ -15,8 +15,10 @@ const getColor = (status: StatusLaporan) => {
   switch (STATUS_MAP_COLOR[status]) {
     case 'merah':
       return '#dc2626';
-    case 'kuning':
+    case 'oranye':
       return '#d97706';
+    case 'kuning':
+      return '#facc15';
     case 'hijau':
       return '#65a30d';
     default:
@@ -35,7 +37,8 @@ export default function MapPage() {
 
   const filteredPoints = points.filter((p) => {
     if (selectedKategori && p.kategori !== selectedKategori) return false;
-    if (selectedStatus && p.status !== selectedStatus) return false;
+    if (selectedStatus === 'diproses' && !['ditugaskan', 'dikerjakan'].includes(p.status)) return false;
+    if (selectedStatus && selectedStatus !== 'diproses' && p.status !== selectedStatus) return false;
     return true;
   });
 
@@ -65,8 +68,7 @@ export default function MapPage() {
             <option value="">Semua Status</option>
             <option value="diterima">Menunggu Verifikasi</option>
             <option value="diverifikasi">Terverifikasi</option>
-            <option value="ditugaskan">Ditugaskan</option>
-            <option value="dikerjakan">Sedang Dikerjakan</option>
+            <option value="diproses">Sedang Diproses</option>
             <option value="selesai">Selesai</option>
           </select>
         </div>
@@ -79,11 +81,15 @@ export default function MapPage() {
           <div className="space-y-1.5 text-xs text-slate-700">
             <div className="flex items-center gap-2">
               <span className="status-dot status-red" />
-              <span>Merah: Baru dilaporkan / terverifikasi</span>
+              <span>Merah: Baru dilaporkan</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="status-dot status-orange" />
+              <span>Oranye: Terverifikasi</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="status-dot status-amber" />
-              <span>Kuning: Sedang ditangani instansi</span>
+              <span>Kuning: Sedang Diproses</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="status-dot status-green" />
@@ -104,7 +110,7 @@ export default function MapPage() {
               maxZoom={19}
             />
             {filteredPoints.map((point) => {
-              const isRed = point.status === 'diterima' || point.status === 'diverifikasi';
+              const isRed = point.status === 'diterima';
               const coords: [number, number] = [Number(point.latitude), Number(point.longitude)];
               return (
                 <React.Fragment key={point.id}>

@@ -15,7 +15,7 @@
   --border: #d9f99d;
 
   --status-red: #dc2626;
-  --status-amber: #d97706;
+  --status-amber: #facc15;
   --status-green: #65a30d;
 }
 
@@ -99,6 +99,9 @@
 }
 .status-amber {
   background: var(--status-amber);
+}
+.status-orange {
+  background: #d97706;
 }
 .status-green {
   background: var(--status-green);

@@ -33,11 +33,12 @@ const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'diterima':
-    case 'diverifikasi':
       return '#dc2626';
+    case 'diverifikasi':
+      return '#d97706';
     case 'ditugaskan':
     case 'dikerjakan':
-      return '#d97706';
+      return '#facc15';
     case 'selesai':
       return '#65a30d';
     default:
@@ -143,7 +144,7 @@ function LandingPage() {
                         maxZoom={19}
                       />
                       {mapPoints.slice(0, 15).map((point) => {
-                        const isRed = point.status === 'diterima' || point.status === 'diverifikasi';
+                        const isRed = point.status === 'diterima';
                         const coords: [number, number] = [Number(point.latitude), Number(point.longitude)];
                         return (
                           <React.Fragment key={point.id}>
@@ -198,7 +199,10 @@ function LandingPage() {
                         <span className="status-dot status-red" /> Baru
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <span className="status-dot status-amber" /> Diproses
+                        <span className="status-dot status-orange" /> Terverifikasi
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="status-dot status-amber" /> Sedang Diproses
                       </span>
                       <span className="flex items-center gap-1.5">
                         <span className="status-dot status-green" /> Selesai
@@ -206,27 +210,7 @@ function LandingPage() {
                     </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-3 divide-x divide-civix-border border-t border-civix-border bg-white">
-                  <div className="px-4 py-3 text-center">
-                    <div className="text-lg font-extrabold text-civix-forest">
-                      {statsLoading ? '—' : stats?.totalLaporan ?? 0}
-                    </div>
-                    <div className="text-[10px] font-medium text-civix-muted">Total laporan</div>
-                  </div>
-                  <div className="px-4 py-3 text-center">
-                    <div className="text-lg font-extrabold text-civix-warning">
-                      {statsLoading ? '—' : stats?.menunggu ?? 0}
-                    </div>
-                    <div className="text-[10px] font-medium text-civix-muted">Menunggu</div>
-                  </div>
-                  <div className="px-4 py-3 text-center">
-                    <div className="text-lg font-extrabold text-civix-success">
-                      {statsLoading ? '—' : stats?.selesai ?? 0}
-                    </div>
-                    <div className="text-[10px] font-medium text-civix-muted">Selesai</div>
-                  </div>
-                </div>
+                <div className="h-4 border-t border-civix-border bg-civix-soft" />
               </div>
             </div>
           </div>
