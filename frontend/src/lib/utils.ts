@@ -29,7 +29,7 @@ export function getStatusBadgeClasses(status: StatusLaporan): string {
     case 'diverifikasi':
       return 'bg-sky-100 text-sky-800 border border-sky-200';
     case 'ditugaskan':
-      return 'bg-cyan-100 text-cyan-800 border border-cyan-200';
+      return 'bg-amber-100 text-amber-800 border border-amber-200';
     case 'dikerjakan':
       return 'bg-orange-100 text-orange-800 border border-orange-200';
     case 'selesai':

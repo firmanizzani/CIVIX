@@ -51,8 +51,8 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
     const selesai = await db.select({ count: count() }).from(reports).where(and(eq(reports.status, 'selesai'), cond));
 
     const recent = await db.query.reports.findMany({
-      where: and(inArray(reports.status, ['ditugaskan', 'dikerjakan']), cond),
-      limit: 10,
+      where: and(inArray(reports.status, ['ditugaskan', 'dikerjakan', 'selesai']), cond),
+      limit: 20,
       orderBy: [desc(reports.dibuatPada)],
       with: { photos: { limit: 1 }, region: true, assignedAgency: true },
     });

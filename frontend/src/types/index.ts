@@ -173,7 +173,7 @@ export interface CategoryStat {
 export const STATUS_LABEL: Record<StatusLaporan, string> = {
   diterima: 'Menunggu Verifikasi',
   diverifikasi: 'Terverifikasi',
-  ditugaskan: 'Ditugaskan ke Instansi',
+  ditugaskan: 'Menunggu Ditangani',
   dikerjakan: 'Sedang Dikerjakan',
   selesai: 'Selesai',
   ditolak: 'Ditolak',
