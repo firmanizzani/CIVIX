@@ -102,7 +102,7 @@ async function seedSeptemberReports() {
     throw new Error('SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY wajib diisi untuk seed foto.');
   }
 
-  const warga = await db.query.users.findFirst({ where: eq(users.email, 'warga@demo.com') });
+  const warga = await db.query.users.findFirst({ where: eq(users.email, 'warga1@demo.com') });
   if (!warga) throw new Error('Akun warga demo tidak ditemukan. Jalankan npm run db:seed terlebih dahulu.');
 
   const allRegions = await db.query.regions.findMany();

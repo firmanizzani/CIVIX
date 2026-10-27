@@ -154,7 +154,8 @@ export default function LoginPage() {
             </p>
             <div className="space-y-2">
               {[
-                { label: 'Warga', email: 'warga@demo.com' },
+                { label: 'Warga 1', email: 'warga1@demo.com' },
+                { label: 'Warga 2', email: 'warga2@demo.com' },
                 { label: 'Admin', email: 'admin@demo.com' },
                 { label: 'Dinas Bina Marga DKI', email: 'instansi@demo.com' },
                 { label: 'Dinas Sumber Daya Air DKI', email: 'air@demo.com' },

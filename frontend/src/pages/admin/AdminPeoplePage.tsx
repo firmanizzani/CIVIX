@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { AlertCircle, Building2, KeyRound, Plus, Search, ShieldCheck, Users } from 'lucide-react';
+import { AlertCircle, Building2, KeyRound, Plus, Search, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
@@ -90,7 +90,7 @@ export default function AdminPeoplePage() {
           <button onClick={() => { setSection('instansi'); setError(''); }} className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold ${section === 'instansi' ? 'border-civix-navy text-civix-navy' : 'border-transparent text-slate-500'}`}><Building2 size={17} /> Instansi & Akun</button>
         </div>
 
-        <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <div className="mb-6 grid gap-4 sm:grid-cols-2">
           <div className="card p-4">
             <div className="mb-2 inline-flex rounded-lg bg-sky-100 p-2 text-sky-700"><Users size={18} /></div>
             <div className="text-2xl font-extrabold text-civix-navy">{stats?.totalWarga ?? 0}</div>
@@ -100,11 +100,6 @@ export default function AdminPeoplePage() {
             <div className="mb-2 inline-flex rounded-lg bg-indigo-100 p-2 text-indigo-700"><Building2 size={18} /></div>
             <div className="text-2xl font-extrabold text-civix-navy">{stats?.totalInstansi ?? 0}</div>
             <div className="text-xs font-medium text-slate-500">Total Instansi</div>
-          </div>
-          <div className="card p-4">
-            <div className="mb-2 inline-flex rounded-lg bg-emerald-100 p-2 text-emerald-700"><ShieldCheck size={18} /></div>
-            <div className="text-2xl font-extrabold text-civix-navy">{stats?.totalAkunInstansi ?? 0}</div>
-            <div className="text-xs font-medium text-slate-500">Akun Instansi Aktif</div>
           </div>
         </div>
 

@@ -38,7 +38,8 @@ async function seed() {
 
     const passwordHash = await bcrypt.hash('demo1234', 12);
     const usersData = [
-      { nama: 'Warga Demo', email: 'warga@demo.com', passwordHash, peran: 'warga' as const, agencyId: undefined },
+      { nama: 'Warga Demo 1', email: 'warga1@demo.com', passwordHash, peran: 'warga' as const, agencyId: undefined },
+      { nama: 'Warga Demo 2', email: 'warga2@demo.com', passwordHash, peran: 'warga' as const, agencyId: undefined },
       { nama: 'Admin CIVIX', email: 'admin@demo.com', passwordHash, peran: 'admin' as const, agencyId: undefined },
       { nama: 'Dinas Bina Marga Provinsi DKI Jakarta', email: 'instansi@demo.com', passwordHash, peran: 'instansi' as const, agencyId: agencyByName('Dinas Bina Marga Provinsi DKI Jakarta').id },
       { nama: 'Dinas Sumber Daya Air Provinsi DKI Jakarta', email: 'air@demo.com', passwordHash, peran: 'instansi' as const, agencyId: agencyByName('Dinas Sumber Daya Air Provinsi DKI Jakarta').id },
@@ -244,7 +245,8 @@ async function seed() {
     console.log('   ✓ Status logs created');
     console.log('\n✅ Seeding selesai!');
     console.log('\n📌 Akun Demo:');
-    console.log('   Warga     : warga@demo.com / demo1234');
+    console.log('   Warga 1   : warga1@demo.com / demo1234');
+    console.log('   Warga 2   : warga2@demo.com / demo1234');
     console.log('   Admin     : admin@demo.com / demo1234');
     console.log('   Dinas Bina Marga Provinsi DKI Jakarta: instansi@demo.com / demo1234');
     console.log('   Dinas Sumber Daya Air Provinsi DKI Jakarta: air@demo.com / demo1234');

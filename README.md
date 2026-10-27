@@ -209,7 +209,8 @@ npm run dev
 
 | Role | Unit / Instansi | Email | Password |
 |------|---------------|-------|----------|
-| Warga | Warga Demo | warga@demo.com | demo1234 |
+| Warga | Warga Demo 1 | warga1@demo.com | demo1234 |
+| Warga | Warga Demo 2 | warga2@demo.com | demo1234 |
 | Admin | Admin CIVIX | admin@demo.com | demo1234 |
 | Instansi | Dinas Bina Marga Provinsi DKI Jakarta | instansi@demo.com | demo1234 |
 | Instansi | Dinas Sumber Daya Air Provinsi DKI Jakarta | air@demo.com | demo1234 |
