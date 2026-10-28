@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { getLoginDestination } from '@/lib/authRedirect';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { AlertCircle, Loader2, Eye, EyeOff, User, Mail, Lock, UserPlus, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
+  const redirectQuery = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
   const { register, isLoading } = useAuthStore();
   const [nama, setNama] = useState('');
   const [email, setEmail] = useState('');
@@ -31,9 +35,9 @@ export default function RegisterPage() {
 
     try {
       await register(nama, email, password);
-      navigate('/citizen');
-    } catch (err: any) {
-      setError(err.message || 'Gagal mendaftar. Silakan coba lagi.');
+      navigate(getLoginDestination(redirect, 'warga'), { replace: true });
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : "") || 'Gagal mendaftar. Silakan coba lagi.');
     }
   };
 
@@ -57,18 +61,18 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="flex gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
+                <div role="alert" className="flex gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
                   <AlertCircle size={16} className="mt-0.5 shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
               <div>
-                <label className="label">Nama Lengkap</label>
+                <label htmlFor="auth-name" className="label">Nama Lengkap</label>
                 <div className="relative">
                   <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-civix-muted" />
                   <input
-                    type="text"
+                    id="auth-name" name="name" autoComplete="name" type="text"
                     value={nama}
                     onChange={(e) => setNama(e.target.value)}
                     placeholder="Budi Santoso"
@@ -79,11 +83,11 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="label">Alamat Email</label>
+                <label htmlFor="auth-email" className="label">Alamat Email</label>
                 <div className="relative">
                   <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-civix-muted" />
                   <input
-                    type="email"
+                    id="auth-email" name="email" autoComplete="email" type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nama@email.com"
@@ -94,10 +98,11 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="label">Kata Sandi</label>
+                <label htmlFor="auth-password" className="label">Kata Sandi</label>
                 <div className="relative">
                   <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-civix-muted" />
                   <input
+                    id="auth-password" name="password" autoComplete="new-password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -107,8 +112,9 @@ export default function RegisterPage() {
                   />
                   <button
                     type="button"
+                    aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"} aria-pressed={showPassword}
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-civix-muted transition hover:text-civix-forest"
+                    className="absolute right-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center text-civix-muted transition hover:text-civix-forest"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -120,11 +126,11 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="label">Konfirmasi Kata Sandi</label>
+                <label htmlFor="auth-confirm-password" className="label">Konfirmasi Kata Sandi</label>
                 <div className="relative">
                   <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-civix-muted" />
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    id="auth-confirm-password" name="confirmPassword" autoComplete="new-password" type={showPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
@@ -152,7 +158,7 @@ export default function RegisterPage() {
 
             <div className="mt-6 border-t border-civix-border/70 pt-5 text-center text-xs">
               <span className="text-civix-muted">Sudah punya akun? </span>
-              <Link to="/login" className="font-semibold text-civix-primary transition hover:underline">
+              <Link to={`/login${redirectQuery}`} className="font-semibold text-civix-primary transition hover:underline">
                 Masuk di sini
               </Link>
             </div>

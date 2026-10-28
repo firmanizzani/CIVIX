@@ -1,36 +1,22 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import QueryError from '@/components/QueryError';
+import { getStatusColor } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
-import { MapPoint, STATUS_LABEL, KATEGORI_LABEL, STATUS_MAP_COLOR, KategoriLaporan, StatusLaporan } from '@/types';
+import { MapPoint, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Filter, Layers, Info } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
-
-const getColor = (status: StatusLaporan) => {
-  switch (STATUS_MAP_COLOR[status]) {
-    case 'merah':
-      return '#dc2626';
-    case 'oranye':
-      return '#d97706';
-    case 'kuning':
-      return '#facc15';
-    case 'hijau':
-      return '#65a30d';
-    default:
-      return '#64748b';
-  }
-};
 
 export default function MapPage() {
   const [selectedKategori, setSelectedKategori] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
-  const { data: points = [], isLoading } = useQuery<MapPoint[]>({
+  const { data: points = [], isLoading, isError, refetch, isFetching } = useQuery<MapPoint[]>({
     queryKey: ['map-points-full'],
     queryFn: async () => (await apiClient.get('/reports/map')).data,
   });
@@ -47,12 +33,15 @@ export default function MapPage() {
       <Navbar />
 
       <div className="relative flex flex-1 flex-col">
+        {isError && <div className="p-4"><QueryError subject="Peta laporan" retry={refetch} pending={isFetching} /></div>}
+        {!isError && <p role="status" className="px-4 py-2 text-sm text-slate-600">{isLoading ? "Memuat peta laporan…" : filteredPoints.length === 0 ? "Tidak ada laporan untuk filter ini. Coba ubah kategori atau status." : `${filteredPoints.length} laporan ditampilkan pada peta.`}</p>}
         {/* Floating Filter Controls */}
-        <div className="absolute top-4 left-4 z-[1000] flex flex-wrap gap-2 rounded-xl bg-white/95 p-3 shadow-lg backdrop-blur border border-slate-200 animate-in-up">
+        <div className="relative z-10 mx-4 my-3 flex flex-wrap gap-2 rounded-xl bg-white/95 p-3 shadow-lg backdrop-blur border border-slate-200 animate-in-up">
           <select
+            aria-label="Filter kategori laporan"
             value={selectedKategori}
             onChange={(e) => setSelectedKategori(e.target.value)}
-            className="input text-xs py-1.5 min-w-[140px]"
+            className="input min-h-11 text-sm py-1.5 min-w-[140px]"
           >
             <option value="">Semua Kategori</option>
             {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
@@ -61,27 +50,28 @@ export default function MapPage() {
           </select>
 
           <select
+            aria-label="Filter status laporan"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="input text-xs py-1.5 min-w-[140px]"
+            className="input min-h-11 text-sm py-1.5 min-w-[140px]"
           >
             <option value="">Semua Status</option>
             <option value="diterima">Menunggu Verifikasi</option>
             <option value="diverifikasi">Terverifikasi</option>
-            <option value="diproses">Sedang Diproses</option>
+            <option value="diproses">Dalam Proses</option>
             <option value="selesai">Selesai</option>
           </select>
         </div>
 
         {/* Legend */}
-        <div className="absolute bottom-6 right-4 z-[1000] rounded-xl bg-white/95 p-4 shadow-lg backdrop-blur border border-slate-200 max-w-xs animate-in-up-delay-1">
+        <div className="absolute bottom-6 right-4 z-10 rounded-xl bg-white/95 p-4 shadow-lg backdrop-blur border border-slate-200 max-w-xs animate-in-up-delay-1">
           <div className="mb-2 text-xs font-bold text-civix-navy flex items-center gap-1.5">
             <Layers size={14} /> Legenda Status Laporan
           </div>
           <div className="space-y-1.5 text-xs text-slate-700">
             <div className="flex items-center gap-2">
               <span className="status-dot status-red" />
-              <span>Merah: Baru dilaporkan</span>
+              <span>Merah: Menunggu Verifikasi</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="status-dot status-orange" />
@@ -89,14 +79,14 @@ export default function MapPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="status-dot status-amber" />
-              <span>Kuning: Sedang Diproses</span>
+              <span>Kuning: Dalam Proses</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="status-dot status-green" />
               <span>Hijau: Selesai (tampil 7 hari)</span>
             </div>
           </div>
-          <p className="mt-3 text-[10px] text-slate-400 border-t border-slate-100 pt-2">
+          <p className="mt-3 text-xs text-slate-600 border-t border-slate-100 pt-2">
             Titik hijau otomatis hilang setelah 7 hari untuk menjaga keterbacaan peta.
           </p>
         </div>
@@ -135,7 +125,7 @@ export default function MapPage() {
                     pathOptions={{
                       color: 'white',
                       weight: 2,
-                      fillColor: getColor(point.status),
+                      fillColor: getStatusColor(point.status),
                       fillOpacity: 0.95,
                       className: isRed ? 'marker-pulse-red' : '',
                     }}

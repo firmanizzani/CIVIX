@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
@@ -20,27 +21,27 @@ const CATEGORY_COLORS: Record<KategoriLaporan, string> = {
 };
 
 export default function StatsPage() {
-  const { data: overview, isLoading: overviewLoading } = useQuery<StatsOverview>({
+  const { data: overview, isLoading: overviewLoading, isError: overviewError, refetch: overviewRetry, isFetching: overviewFetching } = useQuery<StatsOverview>({
     queryKey: ['stats-overview-full'],
     queryFn: async () => (await apiClient.get('/stats/overview')).data,
   });
 
-  const { data: trend = [], isLoading: trendLoading } = useQuery<TrendRow[]>({
+  const { data: trend = [], isLoading: trendLoading, isError: trendError, refetch: trendRetry, isFetching: trendFetching } = useQuery<TrendRow[]>({
     queryKey: ['stats-trend'],
     queryFn: async () => (await apiClient.get('/stats/trend')).data,
   });
 
-  const { data: regions = [], isLoading: regionsLoading } = useQuery<RegionStat[]>({
+  const { data: regions = [], isLoading: regionsLoading, isError: regionsError, refetch: regionsRetry, isFetching: regionsFetching } = useQuery<RegionStat[]>({
     queryKey: ['stats-regions'],
     queryFn: async () => (await apiClient.get('/stats/regions')).data,
   });
 
-  const { data: categoryData, isLoading: catLoading } = useQuery<CategoryStat>({
+  const { data: categoryData, isLoading: catLoading, isError: catError, refetch: catRetry, isFetching: catFetching } = useQuery<CategoryStat>({
     queryKey: ['stats-category'],
     queryFn: async () => (await apiClient.get('/stats/category')).data,
   });
 
-  const isEmpty = !overviewLoading && (overview?.totalLaporan ?? 0) === 0;
+  const isEmpty = !overviewLoading && !overviewError && overview?.totalLaporan === 0;
 
   // Agregasi tren per bulan untuk grafik bertumpuk sederhana
   const trendMap = new Map<string, Record<string, number | string>>();
@@ -88,6 +89,7 @@ export default function StatsPage() {
           </div>
         )}
 
+        {overviewError && <div className="mb-6"><QueryError subject="Ringkasan statistik" retry={overviewRetry} pending={overviewFetching} /></div>}
         {/* Summary Cards */}
         <Reveal delay="delay-1">
           <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -95,16 +97,17 @@ export default function StatsPage() {
             { label: 'Total Laporan', value: overview?.totalLaporan ?? 0, suffix: '', icon: FileText, color: 'text-civix-navy bg-slate-100' },
             { label: 'Persentase Selesai', value: overview?.persentaseSelesai ?? 0, suffix: '%', icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
             { label: 'Rata-rata Penyelesaian', value: overview?.rataRataHariSelesai ?? '—', suffix: overview?.rataRataHariSelesai != null ? ' hari' : '', icon: Timer, color: 'text-civix-forest bg-civix-mint' },
-            { label: 'Laporan Menunggu', value: overview?.menunggu ?? 0, suffix: '', icon: Clock, color: 'text-amber-700 bg-amber-100' },
+            { label: 'Menunggu Tindak Lanjut', value: overview?.menunggu ?? 0, suffix: '', icon: Clock, color: 'text-amber-700 bg-amber-100' },
           ].map((card, i) => (
             <div key={i} className="card p-5">
               <div className={`mb-4 inline-flex rounded-lg p-2.5 ${card.color}`}>
                 <card.icon size={20} />
               </div>
               <div className="text-2xl font-extrabold text-civix-navy">
-                {overviewLoading ? '—' : card.value}{card.suffix}
+                {overviewLoading || overviewError ? '—' : card.value}{!overviewLoading && !overviewError && card.suffix}
               </div>
               <div className="mt-1 text-xs font-medium text-slate-500">{card.label}</div>
+              {card.label === "Menunggu Tindak Lanjut" && <p className="mt-1 text-xs text-slate-600">Menunggu verifikasi atau sudah terverifikasi</p>}
             </div>
           ))}
           </div>
@@ -122,7 +125,7 @@ export default function StatsPage() {
             </div>
             {trendLoading ? (
               <div className="skeleton h-72" />
-            ) : trendChartData.length === 0 ? (
+            ) : trendError ? <QueryError subject="Tren laporan" retry={trendRetry} pending={trendFetching} /> : trendChartData.length === 0 ? (
               <div className="flex h-72 flex-col items-center justify-center text-sm text-slate-500">
                 <TrendingUp size={28} className="mb-2 text-slate-300" />
                 Belum ada tren laporan.
@@ -164,7 +167,7 @@ export default function StatsPage() {
             <p className="mt-1 text-xs text-slate-500">Laporan aktif (tanpa ditolak/duplikat)</p>
             {catLoading ? (
               <div className="skeleton mt-4 h-56" />
-            ) : !categoryData?.rows.length ? (
+            ) : catError ? <QueryError subject="Sebaran kategori" retry={catRetry} pending={catFetching} /> : !categoryData?.rows.length ? (
               <div className="flex h-56 items-center justify-center text-sm text-slate-500">Belum ada data.</div>
             ) : (
               <>
@@ -207,9 +210,9 @@ export default function StatsPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-civix-forest">Insight Otomatis</p>
               <p className="mt-1 text-sm font-medium text-slate-800">
-                {catLoading ? 'Menganalisis data...' : categoryData?.insight}
+                {catLoading ? 'Menganalisis data…' : catError ? 'Insight belum tersedia karena data kategori gagal dimuat.' : categoryData?.insight || 'Insight akan tersedia setelah ada laporan.'}
               </p>
-              {fastestRegion && (
+              {!regionsError && fastestRegion && (
                 <p className="mt-1.5 text-sm text-slate-700">
                   Wilayah tercepat menyelesaikan laporan: <strong className="text-civix-forest">{fastestRegion.wilayah}</strong> dengan rata-rata{' '}
                   <strong className="text-civix-forest">{fastestRegion.rataRataHari} hari</strong>.
@@ -227,7 +230,7 @@ export default function StatsPage() {
             <h2 className="font-bold text-civix-navy flex items-center gap-2"><Trophy size={18} /> Perbandingan Wilayah</h2>
             <p className="mt-1 text-xs text-slate-500">Diurutkan berdasarkan jumlah laporan</p>
           </div>
-          {regionsLoading ? (
+          {regionsError ? <div className="p-6"><QueryError subject="Perbandingan wilayah" retry={regionsRetry} pending={regionsFetching} /></div> : regionsLoading ? (
             <div className="skeleton h-64 m-6" />
           ) : (
             <div className="overflow-x-auto">
@@ -242,6 +245,7 @@ export default function StatsPage() {
                   </tr>
                 </thead>
                 <tbody>
+                  {regions.length === 0 && <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-600">Belum ada data wilayah.</td></tr>}
                   {regions.map((region) => (
                     <tr key={region.regionId} className="border-b border-slate-50 last:border-none">
                       <td className="px-6 py-3 font-medium text-slate-800">{region.wilayah}</td>

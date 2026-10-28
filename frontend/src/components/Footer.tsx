@@ -51,6 +51,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/track" className="transition-colors hover:text-civix-primary">Lacak Laporan</Link>
+              </li>
+              <li>
                 <Link to="/citizen" className="transition-colors hover:text-civix-primary">
                   Dashboard Warga
                 </Link>

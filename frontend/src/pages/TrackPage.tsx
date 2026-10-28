@@ -1,6 +1,9 @@
-import { useState } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
+import QueryError from '@/components/QueryError';
+import { isAxiosError } from 'axios';
+import { getStatusBadgeClasses, getStatusColor } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
@@ -16,13 +19,13 @@ export default function TrackPage() {
   const [input, setInput] = useState(searchParams.get('kode') || '');
 
   const kode = searchParams.get('kode') || '';
+  useEffect(() => setInput(kode), [kode]);
 
-  const { data: report, isLoading, isError, error } = useQuery<Report>({
+  const { data: report, isLoading, isError, error, refetch, isFetching } = useQuery<Report>({
     queryKey: ['track', kode],
     queryFn: async () => (await apiClient.get(`/reports/track/${encodeURIComponent(kode)}`)).data,
     enabled: !!kode,
     retry: false,
-    placeholderData: keepPreviousData,
   });
 
   const submit = (e: React.FormEvent) => {
@@ -30,6 +33,7 @@ export default function TrackPage() {
     if (input.trim()) setSearchParams({ kode: input.trim().toUpperCase() });
   };
 
+  const notFound = isAxiosError(error) && error.response?.status === 404;
   const stepIndex = report ? stepOrder.indexOf(report.status) : -1;
 
   return (
@@ -56,7 +60,7 @@ export default function TrackPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
-                  value={input}
+                  name="kode" autoComplete="off" spellCheck={false} value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="LPR-2026-XXXXX"
                   className="input mono h-12 pl-11 text-base uppercase"
@@ -69,8 +73,10 @@ export default function TrackPage() {
             </form>
           </Reveal>
 
-          {isError && kode && (
-            <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-5 text-red-800">
+          {isLoading && <p role="status" className="mb-6 text-sm text-slate-600">Memuat status laporan…</p>}
+          {isError && kode && !notFound && <QueryError subject="Pelacakan laporan" retry={refetch} pending={isFetching} />}
+          {isError && kode && notFound && (
+            <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-5 text-red-800">
               <AlertCircle size={20} className="mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold">Kode tiket tidak ditemukan</p>
@@ -81,7 +87,7 @@ export default function TrackPage() {
             </div>
           )}
 
-          {report && (
+          {report && !isError && (
             <div className="animate-in-up space-y-6">
               <div className="card p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -89,7 +95,7 @@ export default function TrackPage() {
                     <p className="text-xs text-slate-400">Kode Tiket</p>
                     <p className="mono text-lg font-bold text-civix-navy">{report.kodeTiket}</p>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-700">
+                  <span className={`rounded-full px-3 py-1 text-sm font-bold ${getStatusBadgeClasses(report.status)}`}>
                     {STATUS_LABEL[report.status]}
                   </span>
                 </div>
@@ -116,16 +122,17 @@ export default function TrackPage() {
                       const done = index <= stepIndex;
                       const current = index === stepIndex;
                       return (
-                        <li key={step} className="relative">
+                        <li key={step} className="relative" aria-current={current ? "step" : undefined}>
                           <span
+                            style={done ? { backgroundColor: getStatusColor(step as keyof typeof STATUS_LABEL) } : undefined}
                             className={`absolute -left-[31px] flex h-5 w-5 items-center justify-center rounded-full border-2 border-white ${
-                              done ? 'bg-lime-500' : 'bg-slate-300'
+                              done ? '' : 'bg-slate-300'
                             } ${current ? 'ring-4 ring-lime-100' : ''}`}
                           >
                             {done && <CheckCircle2 size={12} className="text-white" />}
                           </span>
                           <p className={`text-sm font-bold ${done ? 'text-civix-navy' : 'text-slate-400'}`}>
-                            {STATUS_LABEL[step as keyof typeof STATUS_LABEL]}
+                            {STATUS_LABEL[step as keyof typeof STATUS_LABEL]}{current && <span className="ml-2 text-xs font-normal">(Status saat ini)</span>}
                           </p>
                           {!done && (
                             <p className="flex items-center gap-1 text-xs text-slate-400">

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
-import { Report, STATUS_LABEL, KATEGORI_LABEL, KategoriLaporan, StatusLaporan } from '@/types';
+import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
-import { Search, Filter, AlertTriangle, ArrowRight, MapPin, Clock } from 'lucide-react';
+import { AlertTriangle, MapPin, Clock } from 'lucide-react';
 
 export default function PublicReportsPage() {
   const [kategori, setKategori] = useState<string>('');
@@ -17,7 +18,7 @@ export default function PublicReportsPage() {
   const [endDate, setEndDate] = useState<string>('');
   const [page, setPage] = useState(1);
 
-  const { data: reports = [], isLoading } = useQuery<Report[]>({
+  const { data: reports = [], isLoading, isError, refetch, isFetching } = useQuery<Report[]>({
     queryKey: ['public-reports', kategori, status, periode, startDate, endDate, page],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -49,8 +50,8 @@ export default function PublicReportsPage() {
           <div className="card mb-8 p-4">
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-[200px]">
-                <label className="label">Kategori</label>
-                <select value={kategori} onChange={(e) => { setKategori(e.target.value); setPage(1); }} className="input">
+                <label htmlFor="public-category" className="label">Kategori</label>
+                <select id="public-category" value={kategori} onChange={(e) => { setKategori(e.target.value); setPage(1); }} className="input">
                   <option value="">Semua Kategori</option>
                   {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
@@ -59,20 +60,20 @@ export default function PublicReportsPage() {
               </div>
 
               <div className="flex-1 min-w-[200px]">
-                <label className="label">Status</label>
-                <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="input">
+                <label htmlFor="public-status" className="label">Status</label>
+                <select id="public-status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="input">
                   <option value="">Semua Status</option>
                   <option value="diterima">Menunggu Verifikasi</option>
                   <option value="diverifikasi">Terverifikasi</option>
-                  <option value="ditugaskan">Ditugaskan</option>
+                  <option value="ditugaskan">{STATUS_LABEL.ditugaskan}</option>
                   <option value="dikerjakan">Sedang Dikerjakan</option>
                   <option value="selesai">Selesai</option>
                 </select>
               </div>
 
               <div className="flex-1 min-w-[200px]">
-                <label className="label flex items-center gap-1.5"><Clock size={14} /> Waktu</label>
-                <select value={periode} onChange={(e) => { setPeriode(e.target.value); setPage(1); }} className="input">
+                <label htmlFor="public-period" className="label flex items-center gap-1.5"><Clock size={14} /> Waktu</label>
+                <select id="public-period" value={periode} onChange={(e) => { setPeriode(e.target.value); setPage(1); }} className="input">
                   <option value="">Semua Waktu</option>
                   <option value="7d">7 Hari Terakhir</option>
                   <option value="30d">30 Hari Terakhir</option>
@@ -119,11 +120,13 @@ export default function PublicReportsPage() {
                 <div key={i} className="skeleton h-64" />
               ))}
             </div>
+          ) : isError ? (
+            <QueryError subject="Daftar laporan" retry={refetch} pending={isFetching} />
           ) : reports.length === 0 ? (
             <div className="card p-12 text-center">
               <AlertTriangle className="mx-auto mb-3 text-slate-400" size={36} />
               <p className="text-lg font-bold text-slate-800">Tidak ada laporan ditemukan</p>
-              <p className="mt-1 text-sm text-slate-500">Coba ubah filter atau kata kunci pencarian</p>
+              <p className="mt-1 text-sm text-slate-500">Coba ubah filter kategori, status, atau waktu.</p>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-3">

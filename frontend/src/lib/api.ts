@@ -18,10 +18,14 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isAuthRequest = /^\/?auth\/(login|register)(?:\?|$)/.test(error.config?.url || '');
+    if (error.response?.status === 401 && !isAuthRequest) {
       localStorage.removeItem('civix_token');
       localStorage.removeItem('civix_user');
-      window.location.href = '/login';
+      if (!['/login', '/register', '/forgot-password'].includes(window.location.pathname)) {
+        const destination = window.location.pathname + window.location.search + window.location.hash;
+        window.location.replace(`/login?redirect=${encodeURIComponent(destination)}`);
+      }
     }
     return Promise.reject(error);
   }

@@ -25,13 +25,13 @@ export function formatDateTime(dateStr: string): string {
 export function getStatusBadgeClasses(status: StatusLaporan): string {
   switch (status) {
     case 'diterima':
-      return 'bg-amber-100 text-amber-800 border border-amber-200';
+      return 'bg-red-100 text-red-800 border border-red-200';
     case 'diverifikasi':
-      return 'bg-sky-100 text-sky-800 border border-sky-200';
+      return 'bg-orange-100 text-orange-800 border border-orange-200';
     case 'ditugaskan':
       return 'bg-amber-100 text-amber-800 border border-amber-200';
     case 'dikerjakan':
-      return 'bg-orange-100 text-orange-800 border border-orange-200';
+      return 'bg-amber-100 text-amber-800 border border-amber-200';
     case 'selesai':
       return 'bg-lime-100 text-lime-800 border border-lime-200';
     case 'ditolak':
@@ -41,4 +41,8 @@ export function getStatusBadgeClasses(status: StatusLaporan): string {
     default:
       return 'bg-slate-100 text-slate-700 border border-slate-200';
   }
+}
+
+export function getStatusColor(status: StatusLaporan): string {
+  return { diterima: '#dc2626', diverifikasi: '#d97706', ditugaskan: '#facc15', dikerjakan: '#facc15', selesai: '#65a30d', ditolak: '#be123c', duplikat: '#7e22ce' }[status];
 }

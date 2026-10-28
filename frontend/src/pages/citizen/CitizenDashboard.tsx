@@ -1,17 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
-import { PlusCircle, FileText, Clock, CheckCircle2, AlertCircle, Loader2, UserRound } from 'lucide-react';
+import { PlusCircle, FileText, Clock, CheckCircle2, AlertCircle, UserRound } from 'lucide-react';
 
 export default function CitizenDashboard() {
   const { user } = useAuthStore();
 
-  const { data: myReports = [], isLoading } = useQuery<Report[]>({
+  const { data: myReports = [], isLoading, isError, refetch, isFetching } = useQuery<Report[]>({
     queryKey: ['my-reports'],
     queryFn: async () => (await apiClient.get('/reports/me/reports')).data,
     enabled: !!user,
@@ -46,15 +47,15 @@ export default function CitizenDashboard() {
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { label: 'Total Laporan', value: total, icon: FileText, color: 'text-civix-navy bg-slate-100' },
-            { label: 'Menunggu Verifikasi', value: pending, icon: Clock, color: 'text-amber-700 bg-amber-100' },
-            { label: 'Sedang Dikerjakan', value: inProgress, icon: AlertCircle, color: 'text-orange-700 bg-orange-100' },
+            { label: 'Menunggu Tindak Lanjut', value: pending, icon: Clock, color: 'text-amber-700 bg-amber-100' },
+            { label: 'Dalam Proses', value: inProgress, icon: AlertCircle, color: 'text-amber-800 bg-amber-100' },
             { label: 'Selesai', value: completed, icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
           ].map((stat, i) => (
             <div key={i} className="card p-5">
               <div className={`mb-3 inline-flex rounded-lg p-2.5 ${stat.color}`}>
                 <stat.icon size={20} />
               </div>
-              <div className="text-2xl font-extrabold text-civix-navy">{stat.value}</div>
+              <div className="text-2xl font-extrabold text-civix-navy">{isLoading || isError ? "—" : stat.value}</div>
               <div className="mt-1 text-xs font-medium text-slate-500">{stat.label}</div>
             </div>
           ))}
@@ -70,7 +71,7 @@ export default function CitizenDashboard() {
                 <div key={i} className="skeleton h-20" />
               ))}
             </div>
-          ) : myReports.length === 0 ? (
+          ) : isError ? <QueryError subject="Laporan Anda" retry={refetch} pending={isFetching} /> : myReports.length === 0 ? (
             <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 py-12 text-center">
               <FileText className="mx-auto mb-3 text-slate-300" size={32} />
               <p className="font-semibold text-slate-700">Belum ada laporan</p>

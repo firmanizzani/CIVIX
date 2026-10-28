@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Mail, ArrowLeft, KeyRound, CheckCircle2 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
+  const redirectQuery = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -74,7 +77,7 @@ export default function ForgotPasswordPage() {
             )}
 
             <div className="mt-6 border-t border-civix-border/70 pt-5 text-center text-xs">
-              <Link to="/login" className="inline-flex items-center gap-1.5 font-semibold text-civix-primary transition hover:underline">
+              <Link to={`/login${redirectQuery}`} className="inline-flex items-center gap-1.5 font-semibold text-civix-primary transition hover:underline">
                 <ArrowLeft size={13} /> Kembali ke halaman masuk
               </Link>
             </div>

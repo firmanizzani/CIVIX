@@ -20,45 +20,32 @@ import {
 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useAuthStore } from '@/stores/authStore';
+import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import apiClient from '@/lib/api';
 import { MapPoint, StatsOverview, STATUS_LABEL, KATEGORI_LABEL, Report } from '@/types';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getStatusColor } from '@/lib/utils';
 
 const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'diterima':
-      return '#dc2626';
-    case 'diverifikasi':
-      return '#d97706';
-    case 'ditugaskan':
-    case 'dikerjakan':
-      return '#facc15';
-    case 'selesai':
-      return '#65a30d';
-    default:
-      return '#64748b';
-  }
-};
-
 function LandingPage() {
+  const user = useAuthStore((state) => state.user);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { data: stats, isLoading: statsLoading } = useQuery<StatsOverview>({
+  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: retryStats, isFetching: statsFetching } = useQuery<StatsOverview>({
     queryKey: ['stats-overview'],
     queryFn: async () => (await apiClient.get('/stats/overview')).data,
   });
 
-  const { data: mapPoints = [], isLoading: mapLoading } = useQuery<MapPoint[]>({
+  const { data: mapPoints = [], isLoading: mapLoading, isError: mapError, refetch: retryMap, isFetching: mapFetching } = useQuery<MapPoint[]>({
     queryKey: ['map-points-preview'],
     queryFn: async () => (await apiClient.get('/reports/map')).data,
   });
 
-  const { data: recentReports = [], isLoading: reportsLoading } = useQuery<Report[]>({
+  const { data: recentReports = [], isLoading: reportsLoading, isError: reportsError, refetch: retryReports, isFetching: reportsFetching } = useQuery<Report[]>({
     queryKey: ['recent-reports'],
     queryFn: async () => (await apiClient.get('/reports?limit=3')).data,
   });
@@ -91,12 +78,13 @@ function LandingPage() {
                   Buat Laporan <ArrowRight size={16} />
                 </Link>
                 <Link
-                  to="/map"
+                  to="/track"
                   className="btn border border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
                 >
-                  <MapPin size={16} /> Jelajahi Peta
+                  <Clock size={16} /> Lacak Laporan
                 </Link>
               </div>
+              {!user && <p className="mt-3 text-sm text-civix-mint">Masuk diperlukan untuk mengirim laporan. Anda akan kembali ke formulir setelah masuk.</p>}
               <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-civix-mint/80">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck size={15} /> Pelacakan transparan
@@ -128,6 +116,8 @@ function LandingPage() {
                     <div className="flex h-full items-center justify-center bg-civix-soft">
                       <Loader2 className="animate-spin text-civix-primary" size={28} />
                     </div>
+                  ) : mapError ? (
+                    <div className="flex h-full items-center justify-center p-4"><QueryError subject="Peta laporan" retry={retryMap} pending={mapFetching} /></div>
                   ) : mapPoints.length === 0 ? (
                     <div className="flex h-full flex-col items-center justify-center bg-civix-soft px-6 text-center">
                       <MapPin size={32} className="mb-2 text-civix-muted/60" />
@@ -193,16 +183,16 @@ function LandingPage() {
                       })}
                     </MapContainer>
                   )}
-                  <div className="absolute bottom-3 left-3 z-[1000] rounded-lg border border-civix-border bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
-                    <div className="flex flex-wrap gap-3 text-[10px] font-semibold text-civix-text">
+                  <div hidden={mapError || mapLoading} className="absolute bottom-3 left-3 right-3 z-10 rounded-lg border border-civix-border bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-civix-text">
                       <span className="flex items-center gap-1.5">
-                        <span className="status-dot status-red" /> Baru
+                        <span className="status-dot status-red" /> Menunggu Verifikasi
                       </span>
                       <span className="flex items-center gap-1.5">
                         <span className="status-dot status-orange" /> Terverifikasi
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <span className="status-dot status-amber" /> Sedang Diproses
+                        <span className="status-dot status-amber" /> Dalam Proses
                       </span>
                       <span className="flex items-center gap-1.5">
                         <span className="status-dot status-green" /> Selesai
@@ -226,12 +216,13 @@ function LandingPage() {
                 Lihat statistik lengkap <ArrowRight size={13} />
               </Link>
             </div>
+            {statsError && <div className="mb-4"><QueryError subject="Ringkasan aktivitas" retry={retryStats} pending={statsFetching} /></div>}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 { label: 'Total Laporan', value: stats?.totalLaporan, icon: FileText, iconColor: 'text-slate-800', iconBg: 'bg-slate-100', valueColor: 'text-slate-900', border: 'border-slate-200' },
-                { label: 'Menunggu', value: stats?.menunggu, icon: Clock, iconColor: 'text-amber-700', iconBg: 'bg-amber-100', valueColor: 'text-amber-700', border: 'border-amber-200' },
-                { label: 'Dalam Proses', value: stats?.dalamProses, icon: Activity, iconColor: 'text-sky-700', iconBg: 'bg-sky-100', valueColor: 'text-sky-800', border: 'border-sky-200' },
-                { label: 'Selesai', value: stats?.selesai, icon: CheckCircle2, iconColor: 'text-emerald-700', iconBg: 'bg-emerald-100', valueColor: 'text-emerald-800', border: 'border-emerald-200' },
+                { label: 'Menunggu Tindak Lanjut', value: stats?.menunggu, icon: Clock, iconColor: 'text-amber-700', iconBg: 'bg-amber-100', valueColor: 'text-amber-700', border: 'border-amber-200' },
+                { label: 'Dalam Proses', value: stats?.dalamProses, icon: Activity, iconColor: 'text-amber-800', iconBg: 'bg-amber-100', valueColor: 'text-amber-800', border: 'border-amber-200' },
+                { label: 'Selesai', value: stats?.selesai, icon: CheckCircle2, iconColor: 'text-lime-700', iconBg: 'bg-lime-100', valueColor: 'text-lime-800', border: 'border-lime-200' },
               ].map((item, i) => (
                 <div key={i} className={`flex items-center gap-4 rounded-xl border bg-white px-5 py-4 shadow-sm ${item.border}`}>
                   <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${item.iconBg} ${item.iconColor}`}>
@@ -239,9 +230,11 @@ function LandingPage() {
                   </div>
                   <div>
                     <div className={`text-2xl font-extrabold ${item.valueColor}`}>
-                      {statsLoading ? '—' : <AnimatedCounter value={item.value ?? 0} />}
+                      {statsLoading || statsError ? '—' : <AnimatedCounter value={item.value ?? 0} />}
                     </div>
                     <div className="mt-0.5 text-xs font-semibold text-slate-600">{item.label}</div>
+                    {item.label === "Menunggu Tindak Lanjut" && <p className="mt-1 text-xs text-slate-600">Menunggu verifikasi atau sudah terverifikasi</p>}
+                    {item.label === "Dalam Proses" && <p className="mt-1 text-xs text-slate-600">Menunggu ditangani atau sedang dikerjakan</p>}
                   </div>
                 </div>
               ))}
@@ -428,6 +421,8 @@ function LandingPage() {
                   <div key={i} className="skeleton h-64" />
                 ))}
               </div>
+            ) : reportsError ? (
+              <QueryError subject="Laporan terbaru" retry={retryReports} pending={reportsFetching} />
             ) : recentReports.length === 0 ? (
               <div className="rounded-xl border border-dashed border-civix-border bg-white py-16 text-center">
                 <AlertTriangle className="mx-auto mb-3 text-civix-muted/50" size={32} />
@@ -456,13 +451,7 @@ function LandingPage() {
                         </span>
                         <span className="flex items-center gap-1.5 text-xs text-civix-muted">
                           <span
-                            className={`status-dot ${
-                              report.status === 'selesai'
-                                ? 'status-green'
-                                : report.status === 'dikerjakan' || report.status === 'ditugaskan'
-                                  ? 'status-amber'
-                                  : 'status-red'
-                            }`}
+                            className="status-dot" style={{ backgroundColor: getStatusColor(report.status) }}
                           />
                           {STATUS_LABEL[report.status]}
                         </span>
@@ -536,6 +525,7 @@ function LandingPage() {
                   >
                     <button
                       type="button"
+                      id={`faq-question-${index}`} aria-expanded={isOpen} aria-controls={`faq-answer-${index}`}
                       onClick={() => setOpenFaq(isOpen ? null : index)}
                       className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left sm:px-6 sm:py-5"
                     >
@@ -549,8 +539,8 @@ function LandingPage() {
                         }`}
                       />
                     </button>
-                    {isOpen && (
-                      <div className="border-t border-lime-100 bg-lime-50/50 px-5 py-4 text-sm leading-relaxed text-slate-700 sm:px-6">
+                    {(
+                      <div hidden={!isOpen} id={`faq-answer-${index}`} role="region" aria-labelledby={`faq-question-${index}`} className="border-t border-lime-100 bg-lime-50/50 px-5 py-4 text-sm leading-relaxed text-slate-700 sm:px-6">
                         {faq.answer}
                       </div>
                     )}
@@ -583,10 +573,10 @@ function LandingPage() {
                   Buat laporan <ArrowRight size={16} />
                 </Link>
                 <Link
-                  to="/map"
+                  to="/track"
                   className="btn border border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
                 >
-                  Jelajahi peta
+                  Lacak Laporan
                 </Link>
               </div>
             </div>

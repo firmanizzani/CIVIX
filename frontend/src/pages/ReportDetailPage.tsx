@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import { isAxiosError } from 'axios';
+import QueryError from '@/components/QueryError';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDateTime, getStatusColor } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import Reveal from '@/components/Reveal';
-import { ThumbsUp, MessageSquare, ArrowLeft, CheckCircle2, Clock, MapPin, AlertCircle, ShieldAlert } from 'lucide-react';
+import { ThumbsUp, MessageSquare, ArrowLeft, CheckCircle2, Clock, MapPin, AlertCircle } from 'lucide-react';
 
 export default function ReportDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +18,7 @@ export default function ReportDetailPage() {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
 
-  const { data: report, isLoading, error } = useQuery<Report>({
+  const { data: report, isLoading, error, refetch, isFetching } = useQuery<Report>({
     queryKey: ['report-detail', id],
     queryFn: async () => (await apiClient.get(`/reports/${id}`)).data,
   });
@@ -51,8 +53,9 @@ export default function ReportDetailPage() {
       <div className="flex min-h-screen flex-col bg-slate-50">
         <Navbar />
         <div className="container-civix flex-1 py-20 text-center">
-          <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
-          <h2 className="text-2xl font-bold text-slate-800">Laporan Tidak Ditemukan</h2>
+          {error && !(isAxiosError(error) && error.response?.status === 404) ? (
+            <QueryError subject="Detail laporan" retry={refetch} pending={isFetching} />
+          ) : <><AlertCircle className="mx-auto mb-4 text-red-500" size={48} /><h2 className="text-2xl font-bold text-slate-800">Laporan Tidak Ditemukan</h2></>}
           <Link to="/reports" className="btn-primary mt-6">Kembali ke Daftar Laporan</Link>
         </div>
         <Footer />
@@ -219,7 +222,7 @@ export default function ReportDetailPage() {
               <div className="relative border-l-2 border-slate-200 pl-4 space-y-6">
                 {report.statusLogs?.map((log, index) => (
                   <div key={log.id} className="relative">
-                    <span className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-civix-orange ring-4 ring-orange-100' : 'bg-slate-300'}`} />
+                    <span style={{ backgroundColor: getStatusColor(log.status) }} className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'ring-4 ring-slate-100' : ''}`} />
                     <p className="text-xs text-slate-400">{formatDateTime(log.waktu)}</p>
                     <p className="font-bold text-sm text-civix-navy">{STATUS_LABEL[log.status]}</p>
                     {log.catatan && <p className="mt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded">{log.catatan}</p>}

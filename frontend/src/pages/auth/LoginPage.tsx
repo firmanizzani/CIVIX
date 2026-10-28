@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { getLoginDestination } from '@/lib/authRedirect';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { AlertCircle, Loader2, Eye, EyeOff, Mail, Lock, ShieldCheck, ArrowRight, X, FlaskConical } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
+  const redirectQuery = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
   const { login, isLoading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,9 +24,9 @@ export default function LoginPage() {
     try {
       await login(email, password);
       const role = useAuthStore.getState().user?.peran;
-      navigate(role === 'admin' ? '/admin' : role === 'instansi' ? '/agency' : '/citizen');
-    } catch (err: any) {
-      setError(err.message || 'Gagal masuk. Silakan cek kembali email dan password.');
+      navigate(getLoginDestination(redirect, role || 'warga'), { replace: true });
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : "") || 'Gagal masuk. Silakan cek kembali email dan password.');
     }
   };
 
@@ -39,22 +43,23 @@ export default function LoginPage() {
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-civix-forest">Masuk ke CIVIX</h1>
               <p className="mt-1 text-sm text-civix-muted">Lapor & pantau masalah infrastruktur di Jakarta</p>
+              {redirect?.startsWith("/citizen/create-report") && <p className="mt-3 text-sm text-civix-primary">Masuk untuk melanjutkan ke formulir laporan. Pilihan kategori Anda tetap tersimpan.</p>}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="flex gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
+                <div role="alert" className="flex gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
                   <AlertCircle size={16} className="mt-0.5 shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
               <div>
-                <label className="label">Alamat Email</label>
+                <label htmlFor="auth-email" className="label">Alamat Email</label>
                 <div className="relative">
                   <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-civix-muted" />
                   <input
-                    type="email"
+                    id="auth-email" name="email" autoComplete="email" type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nama@email.com"
@@ -65,10 +70,11 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="label">Kata Sandi</label>
+                <label htmlFor="auth-password" className="label">Kata Sandi</label>
                 <div className="relative">
                   <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-civix-muted" />
                   <input
+                    id="auth-password" name="password" autoComplete="current-password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -78,14 +84,15 @@ export default function LoginPage() {
                   />
                   <button
                     type="button"
+                    aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"} aria-pressed={showPassword}
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-civix-muted transition hover:text-civix-forest"
+                    className="absolute right-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center text-civix-muted transition hover:text-civix-forest"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
                 <div className="mt-1.5 text-right">
-                  <Link to="/forgot-password" className="text-xs font-medium text-civix-muted transition hover:text-civix-primary hover:underline">
+                  <Link to={`/forgot-password${redirectQuery}`} className="text-xs font-medium text-civix-muted transition hover:text-civix-primary hover:underline">
                     Lupa kata sandi?
                   </Link>
                 </div>
@@ -106,7 +113,7 @@ export default function LoginPage() {
 
             <div className="mt-6 border-t border-civix-border/70 pt-5 text-center text-xs">
               <span className="text-civix-muted">Belum punya akun? </span>
-              <Link to="/register" className="font-semibold text-civix-primary transition hover:underline">
+              <Link to={`/register${redirectQuery}`} className="font-semibold text-civix-primary transition hover:underline">
                 Daftar akun warga
               </Link>
             </div>

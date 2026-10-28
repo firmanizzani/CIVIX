@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import AgencyAssignmentsPage from '@/pages/agency/AgencyAssignmentsPage';
+import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
@@ -7,7 +8,7 @@ import { AgencyDashboard as AgencyDashboardType } from '@/types';
 import { Building2, ClipboardList, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function AgencyDashboard() {
-  const { data, isLoading } = useQuery<AgencyDashboardType>({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery<AgencyDashboardType>({
     queryKey: ['agency-dashboard'],
     queryFn: async () => (await apiClient.get('/agency/dashboard')).data,
   });
@@ -28,15 +29,16 @@ export default function AgencyDashboard() {
         </div>
 
         {/* Stat cards */}
+        {isError && <div className="mb-6"><QueryError subject="Ringkasan instansi" retry={refetch} pending={isFetching} /></div>}
         <div className="mb-10 grid gap-5 sm:grid-cols-3">
           {[
             { label: 'Menunggu Ditangani', value: data?.ditugaskan ?? 0, icon: ClipboardList, color: 'text-amber-700 bg-amber-100' },
-            { label: 'Sedang Dikerjakan', value: data?.dikerjakan ?? 0, icon: AlertCircle, color: 'text-orange-700 bg-orange-100' },
+            { label: 'Sedang Dikerjakan', value: data?.dikerjakan ?? 0, icon: AlertCircle, color: 'text-amber-800 bg-amber-100' },
             { label: 'Selesai', value: data?.selesai ?? 0, icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
           ].map((stat) => (
             <div key={stat.label} className="card flex flex-col items-center justify-center gap-3 p-6 text-center">
               <div className={`flex rounded-xl p-3 ${stat.color}`}><stat.icon size={28} /></div>
-              <div className="text-3xl font-extrabold text-civix-navy">{isLoading ? '—' : stat.value}</div>
+              <div className="text-3xl font-extrabold text-civix-navy">{isLoading || isError ? '—' : stat.value}</div>
               <div className="text-sm font-medium text-slate-500">{stat.label}</div>
             </div>
           ))}
