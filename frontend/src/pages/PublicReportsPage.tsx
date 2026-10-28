@@ -133,8 +133,9 @@ export default function PublicReportsPage() {
               {reports.map((report) => (
                 <Link
                   key={report.id}
+                  data-reveal-item
                   to={`/reports/${report.id}`}
-                  className="group card overflow-hidden transition hover:-translate-y-1 hover:shadow-lg"
+                  className="group card overflow-hidden transition motion-card hover:shadow-lg"
                 >
                   {report.photos?.[0] ? (
                     <img src={report.photos[0].url} alt={report.judul} className="h-48 w-full object-cover" />

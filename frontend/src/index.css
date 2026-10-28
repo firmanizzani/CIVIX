@@ -14,6 +14,11 @@
   --muted: #6b7280;
   --border: #d9f99d;
 
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-panel: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-fast: 140ms;
+  --motion-ui: 220ms;
+
   --status-red: #dc2626;
   --status-amber: #facc15;
   --status-green: #65a30d;
@@ -31,6 +36,9 @@
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-delay: 0ms !important;
       transition-duration: 0.01ms !important;
     }
   }
@@ -53,7 +61,8 @@
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[0.97] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold active:scale-[0.97] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60;
+    transition: transform var(--motion-fast) var(--ease-out), color var(--motion-fast) ease, background-color var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
   }
   .btn-primary {
     @apply btn bg-gradient-to-r from-lime-800 via-lime-700 to-lime-600 text-white shadow-sm hover:from-lime-900 hover:via-lime-800 hover:to-lime-700 hover:shadow-md;
@@ -131,18 +140,18 @@
 
 /* Animations */
 .animate-in-up {
-  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fadeInUp 480ms var(--ease-out) backwards;
 }
 .animate-in-up-delay-1 {
-  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  animation: fadeInUp 480ms var(--ease-out) 80ms backwards;
 }
 .animate-in-up-delay-2 {
-  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  animation: fadeInUp 480ms var(--ease-out) 140ms backwards;
 }
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -150,38 +159,20 @@
   }
 }
 
-/* Pulsing glowing red marker effect */
+/* A short status cue instead of a permanent, paint-heavy glow. */
 @keyframes redMarkerPulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 3px rgba(220, 38, 38, 0.9));
-    opacity: 1;
-  }
-  50% {
-    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 1)) drop-shadow(0 0 28px rgba(220, 38, 38, 0.85));
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
 }
 @keyframes redHaloPulse {
-  0% {
-    transform: scale(0.7);
-    opacity: 0.85;
-  }
-  50% {
-    transform: scale(1.35);
-    opacity: 0.25;
-  }
-  100% {
-    transform: scale(0.7);
-    opacity: 0.85;
-  }
+  0%, 100% { transform: scale(0.85); opacity: 0.2; }
+  50% { transform: scale(1.2); opacity: 0.55; }
 }
 .marker-pulse-red {
-  animation: redMarkerPulse 1.2s infinite ease-in-out !important;
-  transform-box: fill-box;
-  transform-origin: center;
+  animation: redMarkerPulse 1.8s ease-in-out 2;
 }
 .marker-pulse-halo {
-  animation: redHaloPulse 1.6s infinite cubic-bezier(0.4, 0, 0.6, 1) !important;
+  animation: redHaloPulse 1.8s ease-in-out 2;
   transform-box: fill-box;
   transform-origin: center;
 }
@@ -198,4 +189,74 @@
   background: radial-gradient(circle at 72% 28%, rgba(217, 249, 157, 0.2), transparent 52%),
     radial-gradient(circle at 12% 88%, rgba(163, 230, 53, 0.16), transparent 48%);
   pointer-events: none;
+}
+
+
+/* Page navigation never translates the navbar, map, or fixed dialogs. */
+.page-transition {
+  animation: pageEnter 180ms var(--ease-out);
+}
+@keyframes pageEnter {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+.collapse-shell {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows var(--motion-ui) var(--ease-panel),
+    opacity 160ms ease-out, visibility 0s var(--motion-ui);
+}
+.collapse-shell[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition: grid-template-rows var(--motion-ui) var(--ease-panel),
+    opacity 180ms ease-out, visibility 0s;
+}
+.collapse-content {
+  min-height: 0;
+  overflow: hidden;
+}
+.menu-toggle-icon {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.menu-toggle-icon svg {
+  position: absolute;
+  inset: 0;
+  transition: transform 180ms var(--ease-out), opacity 120ms ease-out;
+}
+.menu-icon-close { opacity: 0; transform: rotate(-45deg) scale(0.85); }
+.menu-toggle-icon[data-open="true"] .menu-icon-bars { opacity: 0; transform: rotate(45deg) scale(0.85); }
+.menu-toggle-icon[data-open="true"] .menu-icon-close { opacity: 1; transform: rotate(0) scale(1); }
+.motion-card {
+  transition-duration: var(--motion-ui);
+  transition-timing-function: var(--ease-out);
+}
+.btn .lucide-arrow-right {
+  transition: transform var(--motion-fast) var(--ease-out);
+}
+.input {
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .motion-card:hover { transform: translateY(-3px); }
+  .btn:hover .lucide-arrow-right { transform: translateX(2px); }
+}
+.motion-backdrop { animation: backdropEnter 160ms ease-out; }
+.motion-dialog { animation: dialogEnter 240ms var(--ease-out); }
+@keyframes backdropEnter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialogEnter {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn:active, .motion-card:hover, .btn:hover .lucide-arrow-right,
+  .menu-toggle-icon svg { transform: none !important; }
+  .marker-pulse-red, .marker-pulse-halo, .skeleton::after { animation: none; }
 }

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import useReducedMotion from '@/hooks/useReducedMotion';
 
 interface AnimatedCounterProps {
   value: number;
@@ -6,44 +7,48 @@ interface AnimatedCounterProps {
   className?: string;
 }
 
-export default function AnimatedCounter({ value, duration = 750, className = '' }: AnimatedCounterProps) {
-  const [current, setCurrent] = useState(() => (value < 20 ? 0 : Math.floor(value * 0.6)));
+export default function AnimatedCounter({ value, duration = 650, className = '' }: AnimatedCounterProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const previous = useRef(0);
+  const [current, setCurrent] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion || duration <= 0) {
-      setCurrent(value);
-      return;
-    }
+    if (!ref.current || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setVisible(true); observer.disconnect(); }
+    }, { threshold: 0 });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
 
-    const startValue = value < 20 ? 0 : Math.floor(value * 0.6);
-    const range = value - startValue;
-    if (range <= 0) {
-      setCurrent(value);
-      return;
-    }
-
+  useEffect(() => {
+    if (!visible && !reducedMotion) return;
+    const finish = () => { previous.current = value; setCurrent(value); };
+    if (reducedMotion || duration <= 0 || document.hidden) { finish(); return; }
+    const startValue = previous.current;
     const startTime = performance.now();
-    let frameId: number;
-
+    let frameId = 0;
     const tick = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOutQuad = 1 - (1 - progress) * (1 - progress);
-      const nextValue = Math.round(startValue + range * easeOutQuad);
-
-      setCurrent(nextValue);
-
-      if (progress < 1) {
-        frameId = requestAnimationFrame(tick);
-      } else {
-        setCurrent(value);
-      }
+      const progress = Math.min((now - startTime) / duration, 1);
+      const next = Math.round(startValue + (value - startValue) * (1 - Math.pow(1 - progress, 3)));
+      previous.current = next;
+      setCurrent(next);
+      if (progress < 1) frameId = requestAnimationFrame(tick);
     };
-
+    const onVisibility = () => {
+      if (document.hidden) { cancelAnimationFrame(frameId); finish(); }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
     frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
-  }, [value, duration]);
+    return () => {
+      cancelAnimationFrame(frameId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [value, duration, visible, reducedMotion]);
 
-  return <span className={className}>{current.toLocaleString('id-ID')}</span>;
+  return <span ref={ref} className={`tabular-nums ${className}`} aria-label={value.toLocaleString('id-ID')}>
+    <span aria-hidden="true">{current.toLocaleString('id-ID')}</span>
+  </span>;
 }

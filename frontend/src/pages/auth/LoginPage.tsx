@@ -135,11 +135,11 @@ export default function LoginPage() {
 
       {showDemo && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-civix-forest/50 p-4 backdrop-blur-sm"
+          className="motion-backdrop fixed inset-0 z-[60] flex items-center justify-center bg-civix-forest/50 p-4 backdrop-blur-sm"
           onClick={() => setShowDemo(false)}
         >
           <div
-            className="relative w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl border border-civix-border bg-white p-5 shadow-2xl"
+            className="motion-dialog relative w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl border border-civix-border bg-white p-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">

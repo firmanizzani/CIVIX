@@ -25,6 +25,7 @@ import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
+import AnimatedCollapse from '@/components/AnimatedCollapse';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import apiClient from '@/lib/api';
 import { MapPoint, StatsOverview, STATUS_LABEL, KATEGORI_LABEL, Report } from '@/types';
@@ -287,7 +288,8 @@ function LandingPage() {
               ].map((step) => (
                 <div
                   key={step.n}
-                  className="group relative rounded-xl border border-lime-200 bg-white p-6 transition-all hover:-translate-y-1 hover:border-lime-500 hover:shadow-md"
+                  data-reveal-item
+                  className="group relative rounded-xl border border-lime-200 bg-white p-6 transition-[transform,box-shadow,border-color,background-color] motion-card hover:border-lime-500 hover:shadow-md"
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <span className="mono text-sm font-extrabold text-lime-700">{step.n}</span>
@@ -374,8 +376,9 @@ function LandingPage() {
               ].map((item) => (
                 <Link
                   key={item.kategori}
+                  data-reveal-item
                   to={`/citizen/create-report?kategori=${item.kategori}`}
-                  className={`group flex flex-col gap-4 rounded-xl border-2 border-civix-border bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-lg ${item.hoverBorder}`}
+                  className={`group flex flex-col gap-4 rounded-xl border-2 border-civix-border bg-white p-6 transition-[transform,box-shadow,border-color,background-color] motion-card hover:shadow-lg ${item.hoverBorder}`}
                 >
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${item.bgColor} ${item.color} transition-transform group-hover:scale-110`}>
                     <item.icon size={24} strokeWidth={2.2} />
@@ -431,8 +434,9 @@ function LandingPage() {
                 {recentReports.map((report) => (
                   <Link
                     key={report.id}
+                    data-reveal-item
                     to={`/reports/${report.id}`}
-                    className="group overflow-hidden rounded-xl border border-civix-border bg-white transition-all hover:-translate-y-1 hover:border-civix-primary hover:shadow-lg"
+                    className="group overflow-hidden rounded-xl border border-civix-border bg-white transition-[transform,box-shadow,border-color,background-color] motion-card hover:border-civix-primary hover:shadow-lg"
                   >
                     {report.photos?.[0] ? (
                       <img src={report.photos[0].url} alt={report.judul} className="h-40 w-full object-cover" />
@@ -537,9 +541,11 @@ function LandingPage() {
                       />
                     </button>
                     {(
-                      <div hidden={!isOpen} id={`faq-answer-${index}`} role="region" aria-labelledby={`faq-question-${index}`} className="border-t border-lime-100 bg-lime-50/50 px-5 py-4 text-sm leading-relaxed text-slate-700 sm:px-6">
+                      <AnimatedCollapse open={isOpen} id={`faq-answer-${index}`} labelledBy={`faq-question-${index}`}>
+                      <div className="border-t border-lime-100 bg-lime-50/50 px-5 py-4 text-sm leading-relaxed text-slate-700 sm:px-6">
                         {faq.answer}
                       </div>
+                      </AnimatedCollapse>
                     )}
                   </div>
                 );

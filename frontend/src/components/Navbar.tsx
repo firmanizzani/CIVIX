@@ -1,6 +1,7 @@
 ﻿import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { Menu, X } from 'lucide-react';
+import AnimatedCollapse from '@/components/AnimatedCollapse';
 import CivixLogo from '@/components/CivixLogo';
 import { useEffect, useRef, useState } from 'react';
 
@@ -85,12 +86,14 @@ export default function Navbar() {
             onClick={() => setMobileOpen(!mobileOpen)}
             ref={menuButton} type="button" aria-expanded={mobileOpen} aria-controls="mobile-navigation" aria-label={mobileOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
           >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            <span className="menu-toggle-icon" data-open={mobileOpen} aria-hidden="true"><Menu size={20} className="menu-icon-bars" /><X size={20} className="menu-icon-close" /></span>
           </button>
         </div>
 
         {(
-          <div hidden={!mobileOpen} id="mobile-navigation" className="border-t border-civix-border py-4 md:hidden">
+          <div className="md:hidden">
+          <AnimatedCollapse open={mobileOpen} id="mobile-navigation">
+          <div className="border-t border-civix-border py-4">
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <NavLink
@@ -130,6 +133,8 @@ export default function Navbar() {
                 </>
               )}
             </div>
+          </div>
+          </AnimatedCollapse>
           </div>
         )}
       </div>
