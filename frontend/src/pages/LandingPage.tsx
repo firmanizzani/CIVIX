@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
@@ -6,9 +6,7 @@ import {
   MapPin,
   ShieldCheck,
   Activity,
-  Clock,
   CheckCircle2,
-  Loader2,
   AlertTriangle,
   Building2,
   FileText,
@@ -17,10 +15,15 @@ import {
   Lightbulb,
   ChevronDown,
   HelpCircle,
+  Map as MapIcon,
+  ChevronRight,
+  PencilLine,
+  Settings,
 } from 'lucide-react';
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import LandingMap from '@/components/LandingMap';
+import CivixLogo from '@/components/CivixLogo';
+import './LandingPage.css';
 import 'leaflet/dist/leaflet.css';
-import { useAuthStore } from '@/stores/authStore';
 import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -31,10 +34,8 @@ import apiClient from '@/lib/api';
 import { MapPoint, StatsOverview, STATUS_LABEL, KATEGORI_LABEL, Report } from '@/types';
 import { formatDate, getStatusColor } from '@/lib/utils';
 
-const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
 
 function LandingPage() {
-  const user = useAuthStore((state) => state.user);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { data: stats, isLoading: statsLoading } = useQuery<StatsOverview>({
     queryKey: ['stats-overview'],
@@ -51,260 +52,68 @@ function LandingPage() {
     queryFn: async () => (await apiClient.get('/reports?limit=3')).data,
   });
 
+  const previewProgress = recentReports[0]
+    ? ({ diterima: 0, diverifikasi: 1, ditugaskan: 2, dikerjakan: 2, selesai: 3, ditolak: -1, duplikat: -1 }[recentReports[0].status])
+    : -1;
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="landing-page min-h-screen bg-white">
       <Navbar />
 
       <main>
-        {/* Hero Section — Premium Green Forest */}
-        <section className="gradient-forest relative flex overflow-hidden text-white" style={{ minHeight: 'calc(100vh - 64px)' }}>
-          <div className="gradient-radial-glow absolute inset-0"></div>
-          <div className="container-civix relative grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:py-0">
-            <div className="animate-in-up">
-              <div className="eyebrow mb-5 inline-flex items-center gap-2 rounded-full border border-civix-mint/30 bg-white/10 px-3 py-1.5 text-civix-mint backdrop-blur-sm">
-                <Leaf size={14} strokeWidth={2.5} />
-                Platform Pelaporan Publik
-              </div>
-              <h1 className="max-w-xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                Masalah di sekitar,
-                <br />
-                <span className="text-lime-300">perubahan</span> yang bisa dipantau.
-              </h1>
-              <p className="mt-5 max-w-lg text-base leading-relaxed text-civix-mint/90 sm:text-lg">
-                Laporkan masalah infrastruktur dan lingkungan di Jakarta, pantau proses penanganannya, dan lihat
-                perkembangan laporan secara transparan dalam satu platform.
-              </p>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link to="/citizen/create-report" className="btn-accent">
-                  Buat Laporan <ArrowRight size={16} />
-                </Link>
-                <Link
-                  to="/map"
-                  className="btn border border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
-                >
-                  <MapPin size={16} /> Jelajahi Peta
-                </Link>
-              </div>
-              {!user && <p className="mt-3 text-sm text-civix-mint">Masuk diperlukan untuk mengirim laporan. Anda akan kembali ke formulir setelah masuk.</p>}
-              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-civix-mint/80">
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck size={15} /> Pelacakan transparan
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Activity size={15} /> Status real-time
-                </span>
-              </div>
+        <section className="landing-hero">
+          <div className="landing-city-art" aria-hidden="true" />
+          <div className="container-civix landing-hero-grid">
+            <div className="landing-hero-copy animate-in-up">
+              <span className="landing-kicker">Platform pelaporan publik</span>
+              <h1>Masalah di sekitar,<br />perubahan yang<br />bisa dipantau.</h1>
+              <p>Laporkan masalah infrastruktur dan lingkungan di Jakarta, pantau proses penanganannya, dan lihat perkembangan laporan secara transparan dalam satu platform.</p>
+              <div className="landing-actions"><Link to="/citizen/create-report" className="btn landing-button">Buat Laporan <ArrowRight size={17} /></Link><Link to="/map" className="btn landing-button-outline"><MapIcon size={18} /> Jelajahi Peta</Link></div>
             </div>
-
-            <div className="animate-in-up-delay-1 relative">
-              <div className="absolute -inset-6 rounded-3xl bg-civix-emerald/30 blur-2xl"></div>
-              <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white shadow-2xl">
-                <div className="flex items-center justify-between border-b border-civix-border bg-civix-soft px-4 py-3">
-                  <div>
-                    <div className="text-sm font-bold text-civix-forest">Peta Laporan Jakarta</div>
-                    <div className="text-xs text-civix-muted">Data laporan publik real-time</div>
-                  </div>
-                  <Link
-                    to="/map"
-                    className="flex items-center gap-1 rounded-md bg-civix-primary px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-civix-emerald"
-                  >
-                    Lihat peta <ArrowRight size={12} />
-                  </Link>
-                </div>
-
-                <div className="relative h-[260px] sm:h-[300px] lg:h-[330px] xl:h-[350px]">
-                  {mapLoading ? (
-                    <div className="flex h-full items-center justify-center bg-civix-soft">
-                      <Loader2 className="animate-spin text-civix-primary" size={28} />
-                    </div>
-                  ) : mapError ? (
-                    <div className="flex h-full items-center justify-center p-4"><QueryError subject="Peta laporan" retry={retryMap} pending={mapFetching} /></div>
-                  ) : mapPoints.length === 0 ? (
-                    <div className="flex h-full flex-col items-center justify-center bg-civix-soft px-6 text-center">
-                      <MapPin size={32} className="mb-2 text-civix-muted/60" />
-                      <p className="text-sm font-semibold text-civix-text">Belum ada laporan di peta</p>
-                      <p className="mt-1 text-xs text-civix-muted">
-                        Laporan publik akan muncul setelah diverifikasi.
-                      </p>
-                    </div>
-                  ) : (
-                    <MapContainer center={DKI_CENTER} zoom={11} scrollWheelZoom={false} className="h-full w-full">
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        maxZoom={19}
-                      />
-                      {mapPoints.slice(0, 15).map((point) => {
-                        const isRed = point.status === 'diterima';
-                        const coords: [number, number] = [Number(point.latitude), Number(point.longitude)];
-                        return (
-                          <React.Fragment key={point.id}>
-                            {isRed && (
-                              <CircleMarker
-                                center={coords}
-                                radius={15}
-                                interactive={false}
-                                pathOptions={{
-                                  color: '#ef4444',
-                                  weight: 1.5,
-                                  fillColor: '#dc2626',
-                                  fillOpacity: 0.25,
-                                  className: 'marker-pulse-halo',
-                                }}
-                              />
-                            )}
-                            <CircleMarker
-                              center={coords}
-                              radius={isRed ? 9 : 7}
-                              pathOptions={{
-                                color: 'white',
-                                weight: 2,
-                                fillColor: getStatusColor(point.status),
-                                fillOpacity: 0.95,
-                                className: isRed ? 'marker-pulse-red' : '',
-                              }}
-                            >
-                              <Popup>
-                                <div className="min-w-[180px]">
-                                  <p className="font-semibold text-civix-forest">{point.judul}</p>
-                                  {point.namaJalan && <p className="mt-1 text-xs text-slate-600">{point.namaJalan}</p>}
-                                  <p className="mt-1 text-xs text-civix-muted">{KATEGORI_LABEL[point.kategori]}</p>
-                                  <p className="mt-1 text-xs font-medium text-civix-primary">{STATUS_LABEL[point.status]}</p>
-                                  <Link
-                                    to={`/reports/${point.id}`}
-                                    className="mt-2 inline-block !text-xs font-semibold !text-civix-primary hover:underline"
-                                  >
-                                    Lihat detail
-                                  </Link>
-                                </div>
-                              </Popup>
-                            </CircleMarker>
-                          </React.Fragment>
-                        );
-                      })}
-                    </MapContainer>
-                  )}
-                  <div hidden={mapError || mapLoading} className="absolute bottom-3 left-3 right-3 z-10 rounded-lg border border-civix-border bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-civix-text">
-                      <span className="flex items-center gap-1.5">
-                        <span className="status-dot status-red" /> Menunggu Verifikasi
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="status-dot status-orange" /> Terverifikasi
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="status-dot status-amber" /> Dalam Proses
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="status-dot status-green" /> Selesai
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="h-4 border-t border-civix-border bg-civix-soft" />
+            <div className="landing-product animate-in-up-delay-1">
+              <div className="landing-browser" data-ui>
+                <div className="landing-browser-bar"><CivixLogo size="sm" /><span>Peta laporan</span><span>Laporan publik</span><MapIcon size={16} /></div>
+                <LandingMap points={mapPoints} loading={mapLoading} error={mapError} retry={retryMap} fetching={mapFetching} />
               </div>
+              <div className="landing-report-float" data-ui>
+                {recentReports[0] ? <><Link to={`/reports/${recentReports[0].id}`} className="landing-float-report">
+                    {recentReports[0].photos?.[0] && <img src={recentReports[0].photos[0].url} alt="" />}
+                    <div><span>{KATEGORI_LABEL[recentReports[0].kategori]}</span><h2>{recentReports[0].judul}</h2><p><MapPin size={12} />{recentReports[0].namaJalan || 'DKI Jakarta'}</p><small>{formatDate(recentReports[0].dibuatPada)}</small></div>
+                  </Link><p className="landing-float-status"><span style={{ background: getStatusColor(recentReports[0].status) }} />{STATUS_LABEL[recentReports[0].status]}</p>
+                </> : <><span className="landing-float-label"><ShieldCheck size={17} /> Proses yang transparan</span><h2>Setiap laporan,<br />bisa Anda pantau.</h2><p className="landing-float-description">Dari laporan diterima hingga penanganan selesai.</p></>}
+                <div className="landing-mini-progress" aria-label="Tahapan penanganan laporan">{['Diterima', 'Verifikasi', 'Ditangani', 'Selesai'].map((label, index) => <span key={label} data-complete={previewProgress >= index}><i />{label}</span>)}</div>
+              </div>
+              <Link to="/stats" className="landing-count-float" data-ui><div><strong>{statsLoading || !stats ? '—' : stats.totalLaporan.toLocaleString('id-ID')}</strong><span>Laporan publik<br />di Jakarta</span></div><Activity size={36} /></Link>
             </div>
           </div>
         </section>
 
-        {/* Stats Bar */}
-        <Reveal>
-          <section className="border-y border-slate-200 bg-slate-50 py-10">
-          <div className="container-civix">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-sm font-bold uppercase tracking-wider text-slate-900">Ringkasan Aktivitas</span>
-              <Link to="/stats" className="inline-flex items-center gap-1.5 rounded-full border border-lime-300 bg-white px-3 py-1.5 text-xs font-semibold text-civix-forest transition-colors hover:bg-lime-50">
-                Lihat statistik lengkap <ArrowRight size={13} />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { label: 'Total Laporan', value: stats?.totalLaporan, icon: FileText, iconColor: 'text-slate-800', iconBg: 'bg-slate-100', valueColor: 'text-slate-900', border: 'border-slate-200' },
-                { label: 'Menunggu', value: stats?.menunggu, icon: Clock, iconColor: 'text-amber-700', iconBg: 'bg-amber-100', valueColor: 'text-amber-700', border: 'border-amber-200' },
-                { label: 'Dalam Proses', value: stats?.dalamProses, icon: Activity, iconColor: 'text-sky-700', iconBg: 'bg-sky-100', valueColor: 'text-sky-800', border: 'border-sky-200' },
-                { label: 'Selesai', value: stats?.selesai, icon: CheckCircle2, iconColor: 'text-emerald-700', iconBg: 'bg-emerald-100', valueColor: 'text-emerald-800', border: 'border-emerald-200' },
-              ].map((item, i) => (
-                <div key={i} className={`flex items-center gap-4 rounded-xl border bg-white px-5 py-4 shadow-sm ${item.border}`}>
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${item.iconBg} ${item.iconColor}`}>
-                    <item.icon size={21} strokeWidth={2.2} />
-                  </div>
-                  <div>
-                    <div className={`text-2xl font-extrabold ${item.valueColor}`}>
-                      {statsLoading ? '—' : <AnimatedCounter value={item.value ?? 0} />}
-                    </div>
-                    <div className="mt-0.5 text-xs font-semibold text-slate-600">{item.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-        </Reveal>
-
-        {/* Cara Kerja — Clean Timeline */}
-        <Reveal delay="default">
-        <section className="border-b border-civix-border bg-white py-16 lg:py-20">
-          <div className="container-civix">
-            <div className="mb-12 grid gap-5 md:grid-cols-2 md:items-end">
-              <div>
-                <p className="eyebrow mb-3">Cara Kerja</p>
-                <h2 className="section-title">
-                  Dari laporan warga
-                  <br />
-                  menjadi aksi nyata.
-                </h2>
+        <section className="container-civix landing-stats-wrap" aria-label="Ringkasan aktivitas"><div className="landing-stats">
+            {[
+              { label: 'Laporan Publik', value: stats?.totalLaporan, icon: MapPin },
+              { label: 'Kategori Masalah', value: Object.keys(KATEGORI_LABEL).length, icon: FileText },
+              { label: 'Dalam Proses', value: stats?.dalamProses, icon: Building2 },
+              { label: 'Laporan Selesai', value: stats?.selesai, icon: ShieldCheck },
+            ].map(item => <Link to="/stats" key={item.label}><span className="landing-stat-icon"><item.icon size={24} /></span><div><strong>{item.value === undefined ? '—' : <AnimatedCounter value={item.value} />}</strong><span>{item.label}</span></div></Link>)}
+        </div></section>
+        <Reveal><section className="landing-map-section"><div className="container-civix landing-map-grid">
+              <div className="landing-map-frame"><LandingMap points={mapPoints} loading={mapLoading} error={mapError} retry={retryMap} fetching={mapFetching} />
+                <div className="landing-map-legend"><strong>Status laporan</strong>{(['diterima', 'diverifikasi', 'dikerjakan', 'selesai'] as const).map(status => <span key={status}><i style={{ background: getStatusColor(status) }} />{STATUS_LABEL[status]}</span>)}</div>
+                <Link to="/map" className="landing-map-caption"><MapPin size={25} /><span><strong>Lihat laporan di sekitar Anda</strong><small>Temukan dan pantau laporan dari warga lain.</small></span><ArrowRight size={17} /></Link>
               </div>
-              <p className="max-w-md text-base leading-relaxed text-civix-muted md:justify-self-end">
-                Proses yang jelas dan terukur. Setiap laporan diverifikasi, ditangani oleh instansi terkait, lalu
-                dipantau bersama.
-              </p>
-            </div>
-            <div className="grid gap-6 md:grid-cols-4">
-              {[
-                {
-                  n: '01',
-                  title: 'Laporkan',
-                  desc: 'Ceritakan masalah, tambahkan foto dan titik lokasi di Jakarta.',
-                  icon: FileText,
-                },
-                {
-                  n: '02',
-                  title: 'Verifikasi',
-                  desc: 'Admin memeriksa laporan dan memastikan informasi valid.',
-                  icon: ShieldCheck,
-                },
-                {
-                  n: '03',
-                  title: 'Tindak Lanjut',
-                  desc: 'Laporan diteruskan ke instansi yang bertanggung jawab.',
-                  icon: Building2,
-                },
-                {
-                  n: '04',
-                  title: 'Pantau Progres',
-                  desc: 'Lihat perkembangan dan bukti penyelesaian secara transparan.',
-                  icon: Activity,
-                },
-              ].map((step) => (
-                <div
-                  key={step.n}
-                  data-reveal-item
-                  className="group relative rounded-xl border border-lime-200 bg-white p-6 transition-[transform,box-shadow,border-color,background-color] motion-card hover:border-lime-500 hover:shadow-md"
-                >
-                  <div className="mb-4 flex items-center justify-between">
-                    <span className="mono text-sm font-extrabold text-lime-700">{step.n}</span>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-lime-600 to-lime-400 text-white shadow-sm transition-transform group-hover:scale-110">
-                      <step.icon size={20} />
-                    </div>
-                  </div>
-                  <h3 className="mb-2 text-base font-bold text-civix-forest">{step.title}</h3>
-                  <p className="text-sm leading-relaxed text-civix-muted">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-        </Reveal>
+              <div className="landing-map-copy"><span className="landing-kicker">Peta laporan</span><h2>Lihat kondisi Jakarta<br />secara nyata di peta.</h2><p>Jelajahi laporan dari seluruh wilayah Jakarta, filter berdasarkan kategori, dan temukan masalah di sekitar Anda dengan mudah.</p><Link to="/map" className="btn landing-button">Buka Peta Laporan <ArrowRight size={17} /></Link></div>
+        </div></section></Reveal>
+
+        <Reveal><section className="landing-how" id="cara-kerja"><div className="landing-how-city" aria-hidden="true" /><div className="container-civix">
+              <div className="landing-how-heading"><span className="landing-kicker">Cara kerja CIVIX</span><h2>Dari laporan Anda<br />hingga perubahan nyata.</h2><p>Proses yang transparan dan dapat dipantau oleh semua warga.</p></div>
+              <div className="landing-steps">{[
+                  { title: 'Laporkan masalah', desc: 'Sampaikan masalah di sekitar Anda dengan foto dan lokasi yang jelas.', icon: PencilLine },
+                  { title: 'Laporan diverifikasi', desc: 'Laporan akan diperiksa untuk memastikan keabsahan informasi.', icon: FileText },
+                  { title: 'Instansi menangani', desc: 'Laporan diteruskan ke instansi terkait untuk ditindaklanjuti.', icon: Settings },
+                  { title: 'Pantau hingga selesai', desc: 'Ikuti perkembangan laporan secara real-time dalam satu platform.', icon: CheckCircle2 },
+                ].map((step, index) => <div key={step.title} data-reveal-item className="landing-step"><span className="landing-step-icon"><step.icon size={27} /></span><h3>{step.title}</h3><p>{step.desc}</p>{index < 3 && <ChevronRight className="landing-step-arrow" size={23} aria-hidden="true" />}</div>)}
+              </div>
+        </div></section></Reveal>
 
         {/* Kategori Laporan */}
         <Reveal delay="default">
@@ -555,40 +364,13 @@ function LandingPage() {
         </section>
         </Reveal>
 
-        {/* Final CTA — Gradient Forest */}
-        <Reveal delay="default">
-        <section className="gradient-cta py-16 lg:py-20">
-          <div className="container-civix">
-            <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-              <div className="max-w-xl">
-                <h2 className="text-3xl font-extrabold leading-tight text-white sm:text-4xl">
-                  Mulai dari satu laporan. Bantu wujudkan perubahan.
-                </h2>
-                <p className="mt-3 leading-relaxed text-lime-100/90">
-                  Laporkan masalah di sekitarmu dan pantau proses penanganannya bersama masyarakat Jakarta.
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-wrap gap-3">
-                <Link
-                  to="/citizen/create-report"
-                  className="btn bg-white text-civix-forest shadow-md hover:bg-civix-mint"
-                >
-                  Buat laporan <ArrowRight size={16} />
-                </Link>
-                <Link
-                  to="/map"
-                  className="btn border border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
-                >
-                  Jelajahi Peta
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-        </Reveal>
+        <section className="landing-cta"><div className="container-civix landing-cta-grid">
+            <div className="landing-cta-copy"><span className="landing-kicker">Jakarta lebih baik</span><h2>Mulai dari satu laporan.<br />Bantu wujudkan perubahan.</h2><p>Suara Anda penting. Laporkan masalah di sekitar Anda<br className="hidden sm:block" /> dan pantau proses penanganannya secara transparan.</p><div className="landing-actions"><Link to="/citizen/create-report" className="btn landing-button-white">Buat Laporan Sekarang <ArrowRight size={16} /></Link><Link to="/map" className="btn landing-button-outline">Jelajahi Peta</Link></div></div>
+            <div className="landing-cta-note"><span><Leaf size={29} /></span><p>Jakarta yang lebih baik<br />dimulai dari<br /><strong>kepedulian kita.</strong></p></div>
+        </div></section>
       </main>
 
-      <Footer />
+      <Footer compact />
     </div>
   );
 }

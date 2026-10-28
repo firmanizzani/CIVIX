@@ -57,7 +57,7 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className={`${location.pathname === '/' ? 'flex landing-nav-auth' : 'hidden md:flex'} items-center gap-2`}>
             {user ? (
               <>
                 {dashLink && (

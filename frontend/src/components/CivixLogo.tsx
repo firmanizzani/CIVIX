@@ -31,26 +31,22 @@ interface CivixLogoProps {
 }
 
 export default function CivixLogo({ size = 'md', showText = true, className = '' }: CivixLogoProps) {
-  const tileDimensions = {
-    sm: 'h-8 w-8',
-    md: 'h-9 w-9',
-    lg: 'h-11 w-11',
-  }[size];
-
-  const iconSizes = {
-    sm: 20,
-    md: 23,
-    lg: 28,
+  const dimensions = {
+    sm: 'h-8 w-6',
+    md: 'h-9 w-7',
+    lg: 'h-11 w-9',
   }[size];
 
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <div
-        className={`flex ${tileDimensions} items-center justify-center rounded-lg bg-gradient-to-br from-civix-forest via-civix-primary to-civix-success shadow-sm ring-1 ring-civix-emerald/30 text-white`}
-      >
-        <CitySkylineIcon size={iconSizes} className="drop-shadow-sm" />
-      </div>
-      {showText && <span className="font-extrabold tracking-tight">CIVIX</span>}
+    <div className={`inline-flex items-center gap-2 ${className}`}>
+      <svg className={`${dimensions} shrink-0`} viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M14 1C6.82 1 1 6.61 1 13.53C1 22.3 14 35 14 35S27 22.3 27 13.53C27 6.61 21.18 1 14 1Z" fill="#008558" />
+        <path d="M14 3C8.05 3 3.2 7.69 3.2 13.5C3.2 20.17 11.12 29.49 14 32.7V3Z" fill="#079B68" />
+        <circle cx="14" cy="13" r="7.3" fill="white" />
+        <circle cx="14" cy="12" r="3.3" fill="#008558" />
+        <path d="M12.6 14H15.4V24.5L14 26L12.6 24.5V14Z" fill="#008558" />
+      </svg>
+      {showText && <span className="font-extrabold tracking-tight" style={{ color: '#07533e' }}>CIVIX</span>}
     </div>
   );
 }
