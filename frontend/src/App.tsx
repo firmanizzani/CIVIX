@@ -7,7 +7,6 @@ import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import PublicReportsPage from '@/pages/PublicReportsPage';
 import ReportDetailPage from '@/pages/ReportDetailPage';
 import MapPage from '@/pages/MapPage';
-import TrackPage from '@/pages/TrackPage';
 import StatsPage from '@/pages/StatsPage';
 import CitizenDashboard from '@/pages/citizen/CitizenDashboard';
 import CreateReportPage from '@/pages/citizen/CreateReportPage';
@@ -28,7 +27,6 @@ function App() {
       <Route path="/reports" element={<PageTransition><PublicReportsPage /></PageTransition>} />
       <Route path="/reports/:id" element={<PageTransition><ReportDetailPage /></PageTransition>} />
       <Route path="/map" element={<PageTransition><MapPage /></PageTransition>} />
-      <Route path="/track" element={<PageTransition><TrackPage /></PageTransition>} />
       <Route path="/stats" element={<PageTransition><StatsPage /></PageTransition>} />
 
       <Route element={<ProtectedRoute allowedRoles={['warga']} />}>

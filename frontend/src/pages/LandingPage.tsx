@@ -35,7 +35,7 @@ const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
 function LandingPage() {
   const user = useAuthStore((state) => state.user);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: retryStats, isFetching: statsFetching } = useQuery<StatsOverview>({
+  const { data: stats, isLoading: statsLoading } = useQuery<StatsOverview>({
     queryKey: ['stats-overview'],
     queryFn: async () => (await apiClient.get('/stats/overview')).data,
   });
@@ -78,10 +78,10 @@ function LandingPage() {
                   Buat Laporan <ArrowRight size={16} />
                 </Link>
                 <Link
-                  to="/track"
+                  to="/map"
                   className="btn border border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
                 >
-                  <Clock size={16} /> Lacak Laporan
+                  <MapPin size={16} /> Jelajahi Peta
                 </Link>
               </div>
               {!user && <p className="mt-3 text-sm text-civix-mint">Masuk diperlukan untuk mengirim laporan. Anda akan kembali ke formulir setelah masuk.</p>}
@@ -216,13 +216,12 @@ function LandingPage() {
                 Lihat statistik lengkap <ArrowRight size={13} />
               </Link>
             </div>
-            {statsError && <div className="mb-4"><QueryError subject="Ringkasan aktivitas" retry={retryStats} pending={statsFetching} /></div>}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 { label: 'Total Laporan', value: stats?.totalLaporan, icon: FileText, iconColor: 'text-slate-800', iconBg: 'bg-slate-100', valueColor: 'text-slate-900', border: 'border-slate-200' },
-                { label: 'Menunggu Tindak Lanjut', value: stats?.menunggu, icon: Clock, iconColor: 'text-amber-700', iconBg: 'bg-amber-100', valueColor: 'text-amber-700', border: 'border-amber-200' },
-                { label: 'Dalam Proses', value: stats?.dalamProses, icon: Activity, iconColor: 'text-amber-800', iconBg: 'bg-amber-100', valueColor: 'text-amber-800', border: 'border-amber-200' },
-                { label: 'Selesai', value: stats?.selesai, icon: CheckCircle2, iconColor: 'text-lime-700', iconBg: 'bg-lime-100', valueColor: 'text-lime-800', border: 'border-lime-200' },
+                { label: 'Menunggu', value: stats?.menunggu, icon: Clock, iconColor: 'text-amber-700', iconBg: 'bg-amber-100', valueColor: 'text-amber-700', border: 'border-amber-200' },
+                { label: 'Dalam Proses', value: stats?.dalamProses, icon: Activity, iconColor: 'text-sky-700', iconBg: 'bg-sky-100', valueColor: 'text-sky-800', border: 'border-sky-200' },
+                { label: 'Selesai', value: stats?.selesai, icon: CheckCircle2, iconColor: 'text-emerald-700', iconBg: 'bg-emerald-100', valueColor: 'text-emerald-800', border: 'border-emerald-200' },
               ].map((item, i) => (
                 <div key={i} className={`flex items-center gap-4 rounded-xl border bg-white px-5 py-4 shadow-sm ${item.border}`}>
                   <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${item.iconBg} ${item.iconColor}`}>
@@ -230,11 +229,9 @@ function LandingPage() {
                   </div>
                   <div>
                     <div className={`text-2xl font-extrabold ${item.valueColor}`}>
-                      {statsLoading || statsError ? '—' : <AnimatedCounter value={item.value ?? 0} />}
+                      {statsLoading ? '—' : <AnimatedCounter value={item.value ?? 0} />}
                     </div>
                     <div className="mt-0.5 text-xs font-semibold text-slate-600">{item.label}</div>
-                    {item.label === "Menunggu Tindak Lanjut" && <p className="mt-1 text-xs text-slate-600">Menunggu verifikasi atau sudah terverifikasi</p>}
-                    {item.label === "Dalam Proses" && <p className="mt-1 text-xs text-slate-600">Menunggu ditangani atau sedang dikerjakan</p>}
                   </div>
                 </div>
               ))}
@@ -573,10 +570,10 @@ function LandingPage() {
                   Buat laporan <ArrowRight size={16} />
                 </Link>
                 <Link
-                  to="/track"
+                  to="/map"
                   className="btn border border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
                 >
-                  Lacak Laporan
+                  Jelajahi Peta
                 </Link>
               </div>
             </div>
