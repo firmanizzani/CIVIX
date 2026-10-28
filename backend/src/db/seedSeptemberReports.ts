@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { and, eq } from 'drizzle-orm';
 import { db } from './index.js';
 import { reportPhotos, reports, reportStatusLogs, users } from './schema.js';
@@ -17,7 +18,7 @@ const septemberReports = [
     region: 'Jakarta Pusat',
     dibuatPada: new Date('2026-09-03T02:30:00.000Z'),
     selesaiPada: new Date('2026-09-08T08:00:00.000Z'),
-    photoUrl: 'https://live.staticflickr.com/7395/12683223904_687fcc4783_b.jpg',
+    photoAsset: 'pothole-kramat',
   },
   {
     kodeTiket: 'LPR-2026-SEP-002',
@@ -31,7 +32,7 @@ const septemberReports = [
     region: 'Jakarta Pusat',
     dibuatPada: new Date('2026-09-07T03:15:00.000Z'),
     selesaiPada: new Date('2026-09-12T09:00:00.000Z'),
-    photoUrl: 'https://live.staticflickr.com/2141/1806439935_1c91b14218_b.jpg',
+    photoAsset: 'drain-cikini',
   },
   {
     kodeTiket: 'LPR-2026-SEP-003',
@@ -45,7 +46,7 @@ const septemberReports = [
     region: 'Jakarta Selatan',
     dibuatPada: new Date('2026-09-11T04:45:00.000Z'),
     selesaiPada: new Date('2026-09-14T07:00:00.000Z'),
-    photoUrl: 'https://live.staticflickr.com/4409/35972464294_07f76f7e8d_b.jpg',
+    photoAsset: 'garbage-kemang',
   },
   {
     kodeTiket: 'LPR-2026-SEP-004',
@@ -59,7 +60,7 @@ const septemberReports = [
     region: 'Jakarta Pusat',
     dibuatPada: new Date('2026-09-15T11:10:00.000Z'),
     selesaiPada: new Date('2026-09-18T12:00:00.000Z'),
-    photoUrl: 'https://live.staticflickr.com/137/323514828_686e51e6da_b.jpg',
+    photoAsset: 'streetlight-senen',
   },
   {
     kodeTiket: 'LPR-2026-SEP-005',
@@ -73,7 +74,7 @@ const septemberReports = [
     region: 'Jakarta Selatan',
     dibuatPada: new Date('2026-09-20T05:20:00.000Z'),
     selesaiPada: new Date('2026-09-25T10:00:00.000Z'),
-    photoUrl: 'https://live.staticflickr.com/2748/4247948122_390d55e390_b.jpg',
+    photoAsset: 'bus-stop-gatot',
   },
   {
     kodeTiket: 'LPR-2026-SEP-006',
@@ -87,15 +88,9 @@ const septemberReports = [
     region: 'Jakarta Pusat',
     dibuatPada: new Date('2026-09-26T01:40:00.000Z'),
     selesaiPada: new Date('2026-09-30T09:30:00.000Z'),
-    photoUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1200&q=80',
+    photoAsset: 'cracked-sidewalk',
   },
 ];
-
-async function downloadPhoto(url: string) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Gagal mengunduh foto: ${response.status} ${url}`);
-  return Buffer.from(await response.arrayBuffer());
-}
 
 async function seedSeptemberReports() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -113,7 +108,7 @@ async function seedSeptemberReports() {
     if (!regionId) throw new Error(`Wilayah tidak ditemukan: ${item.region}`);
 
     const reportData = { ...item };
-    delete reportData.photoUrl;
+    delete reportData.photoAsset;
     delete reportData.region;
 
     await db.insert(reports).values({
@@ -136,9 +131,9 @@ async function seedSeptemberReports() {
       where: and(eq(reportPhotos.reportId, report.id), eq(reportPhotos.jenis, 'awal')),
     });
 
-    const cleanStoragePath = buildReportPhotoPath(item.kodeTiket, 'awal', 1, 'image/jpeg');
-    const image = await downloadPhoto(item.photoUrl);
-    const storedUrl = await uploadImageToStorage(image, cleanStoragePath, 'image/jpeg', true);
+    const cleanStoragePath = buildReportPhotoPath(item.kodeTiket, 'awal', 1, 'image/webp');
+    const image = await readFile(new URL(`../../../frontend/src/assets/report-demo-photos/${item.photoAsset}.webp`, import.meta.url));
+    const storedUrl = await uploadImageToStorage(image, cleanStoragePath, 'image/webp', true);
 
     if (!photo) {
       await db.insert(reportPhotos).values({ reportId: report.id, url: storedUrl, jenis: 'awal', dibuatPada: item.dibuatPada });

@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
-import { reports, reportStatusLogs, agencies, reportAssignments, users } from '../../db/schema.js';
+import { reports, reportPhotos, reportStatusLogs, agencies, reportAssignments, users } from '../../db/schema.js';
 import { eq, desc, count, asc, ilike, or } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import bcrypt from 'bcrypt';
@@ -55,7 +55,7 @@ router.get('/reports', async (req, res: Response) => {
       offset,
       orderBy: [desc(reports.dibuatPada)],
       with: {
-        photos: true,
+        photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true,
         user: { columns: { nama: true, email: true } },
       },

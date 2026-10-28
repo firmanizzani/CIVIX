@@ -3,7 +3,7 @@ import { z } from 'zod';
 import multer from 'multer';
 import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportStatusLogs, comments, upvotes, users, regions } from '../../db/schema.js';
-import { eq, desc, and, sql, notInArray, gte, lte } from 'drizzle-orm';
+import { asc, eq, desc, and, sql, notInArray, gte, lte } from 'drizzle-orm';
 import { authMiddleware, AuthRequest } from '../../middleware/auth.js';
 import generateTicket from '../../utils/ticket.js';
 import { isWithinDKIJakarta } from '../../utils/geo.js';
@@ -31,6 +31,7 @@ router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response
       limit: 100,
       with: {
         photos: {
+          orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)],
           columns: { id: true, url: true, jenis: true },
         },
         region: true,
@@ -89,7 +90,7 @@ router.get('/', async (req, res: Response) => {
       offset,
       orderBy: [desc(reports.dibuatPada)],
       with: {
-        photos: true,
+        photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true,
         upvotes: true,
         comments: { with: { user: { columns: { nama: true } } } },
@@ -122,7 +123,7 @@ router.get('/map', async (_req, res: Response) => {
         dibuatPada: true,
       },
       with: {
-        photos: { limit: 1 },
+        photos: { limit: 1, orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
       },
     });
 
@@ -138,7 +139,7 @@ router.get('/track/:kodeTiket', async (req, res: Response) => {
     const report = await db.query.reports.findFirst({
       where: eq(reports.kodeTiket, req.params.kodeTiket),
       with: {
-        photos: true,
+        photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         statusLogs: {
           orderBy: [desc(reportStatusLogs.waktu)],
           with: { user: { columns: { nama: true, peran: true } } },
@@ -232,7 +233,7 @@ router.get('/:id', async (req, res: Response) => {
     const report = await db.query.reports.findFirst({
       where: eq(reports.id, req.params.id),
       with: {
-        photos: true,
+        photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         statusLogs: { orderBy: [desc(reportStatusLogs.waktu)] },
         region: true,
         upvotes: true,

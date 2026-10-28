@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import multer from 'multer';
 import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportStatusLogs, agencies, users } from '../../db/schema.js';
-import { eq, desc, count, inArray, and, sql } from 'drizzle-orm';
+import { asc, eq, desc, count, inArray, and, sql } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.js';
 
@@ -58,7 +58,7 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
       where: and(inArray(reports.status, ['ditugaskan', 'dikerjakan', 'selesai']), cond),
       limit: 20,
       orderBy: [desc(reports.dibuatPada)],
-      with: { photos: { limit: 1 }, region: true, assignedAgency: true },
+      with: { photos: { limit: 1, orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] }, region: true, assignedAgency: true },
     });
 
     let agency: { nama: string } | null = null;
@@ -94,7 +94,7 @@ router.get('/assignments', async (req: AuthRequest, res: Response) => {
       limit: Number(limit),
       offset,
       orderBy: [desc(reports.dibuatPada)],
-      with: { photos: { limit: 1 }, region: true, assignedAgency: true, statusLogs: { orderBy: [desc(reportStatusLogs.waktu)], limit: 3 } },
+      with: { photos: { limit: 1, orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] }, region: true, assignedAgency: true, statusLogs: { orderBy: [desc(reportStatusLogs.waktu)], limit: 3 } },
     });
 
     res.json(tasks);
@@ -112,7 +112,7 @@ router.get('/assignments/:id', async (req: AuthRequest, res: Response) => {
     const task = await db.query.reports.findFirst({
       where: and(eq(reports.id, req.params.id), scopeCondition(scope.agencyId)),
       with: {
-        photos: true,
+        photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true,
         assignedAgency: true,
         statusLogs: { orderBy: [desc(reportStatusLogs.waktu)] },
