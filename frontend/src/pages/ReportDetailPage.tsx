@@ -38,7 +38,7 @@ export default function ReportDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-50">
+      <div className="app-page report-detail-page flex min-h-screen flex-col bg-civix-neutral">
         <Navbar />
         <div className="container-civix flex-1 py-12">
           <div className="skeleton h-96 w-full" />
@@ -50,7 +50,7 @@ export default function ReportDetailPage() {
 
   if (error || !report) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-50">
+      <div className="app-page report-detail-page flex min-h-screen flex-col bg-civix-neutral">
         <Navbar />
         <div className="container-civix flex-1 py-20 text-center">
           {error && !(isAxiosError(error) && error.response?.status === 404) ? (
@@ -68,7 +68,7 @@ export default function ReportDetailPage() {
   const buktiPhotos = report.photos?.filter((p) => p.jenis === 'bukti_perbaikan') || [];
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="app-page report-detail-page flex min-h-screen flex-col bg-civix-neutral">
       <Navbar />
 
       <div className="container-civix flex-1 py-12">

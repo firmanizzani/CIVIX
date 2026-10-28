@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom';
 import CivixLogo from '@/components/CivixLogo';
 import { Leaf, Mail } from 'lucide-react';
 
-export default function Footer({ compact = false }: { compact?: boolean }) {
+export default function Footer({ compact = true }: { compact?: boolean }) {
   if (compact) return (
     <footer className="landing-footer">
       <div className="container-civix landing-footer-grid">
         <div className="landing-footer-brand"><Link to="/" aria-label="CIVIX Beranda"><CivixLogo size="sm" /></Link><p>Platform pelaporan publik untuk Jakarta yang lebih transparan, responsif, dan partisipatif.</p></div>
         <div><h2>Navigasi</h2><Link to="/">Beranda</Link><Link to="/map">Peta Laporan</Link><Link to="/reports">Laporan Publik</Link><Link to="/stats">Statistik</Link></div>
-        <div><h2>Informasi</h2><a href="#cara-kerja">Cara Kerja</a><Link to="/citizen/create-report">Buat Laporan</Link><a href="mailto:civix@email.com">Hubungi Kami</a></div>
+        <div><h2>Informasi</h2><a href="/#cara-kerja">Cara Kerja</a><Link to="/citizen/create-report">Buat Laporan</Link><a href="mailto:civix@email.com">Hubungi Kami</a></div>
         <a className="landing-footer-contact" href="mailto:civix@email.com" aria-label="Email CIVIX"><Mail size={21} /></a>
       </div>
       <div className="container-civix landing-footer-bottom"><p>© {new Date().getFullYear()} CIVIX. Semua hak dilindungi.</p><p><Leaf size={14} /> Bersama warga untuk Jakarta yang lebih baik.</p></div>

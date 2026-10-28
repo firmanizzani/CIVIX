@@ -37,7 +37,7 @@ export default function Navbar() {
   const dashLink = getDashboardLink();
 
   return (
-    <nav aria-label="Navigasi utama" className="sticky top-0 z-50 border-b border-civix-border bg-white/95 backdrop-blur-sm">
+    <nav aria-label="Navigasi utama" className="civix-navbar sticky top-0 z-50 border-b border-civix-border bg-white">
       <div className="container-civix">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="text-xl text-civix-forest transition-colors hover:text-civix-primary">
@@ -57,7 +57,7 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className={`${location.pathname === '/' ? 'flex landing-nav-auth' : 'hidden md:flex'} items-center gap-2`}>
+          <div className="civix-nav-auth flex items-center gap-2">
             {user ? (
               <>
                 {dashLink && (

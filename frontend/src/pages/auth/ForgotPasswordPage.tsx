@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import AuthLayout from '@/components/AuthLayout';
 import { Mail, ArrowLeft, KeyRound, CheckCircle2 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
@@ -17,11 +16,9 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-civix-neutral">
-      <Navbar />
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
+    <AuthLayout>
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-civix-border bg-white p-6 shadow-xl shadow-civix-forest/5 sm:p-8">
+          <div className="auth-card">
             {!submitted ? (
               <>
                 <div className="mb-6 text-center">
@@ -83,8 +80,6 @@ export default function ForgotPasswordPage() {
             </div>
           </div>
         </div>
-      </div>
-      <Footer />
-    </div>
+    </AuthLayout>
   );
 }

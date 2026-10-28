@@ -1,0 +1,168 @@
+/* Shared CIVIX language: emerald actions, mint surfaces, clear working layouts. */
+:root {
+  --forest: #07533e;
+  --deep: #006d49;
+  --primary: #008358;
+  --emerald: #42b689;
+  --mint: #e2f4ea;
+  --soft: #f1f9f5;
+  --neutral: #f8fcfa;
+  --text: #192c33;
+  --muted: #5c6d70;
+  --border: #d9eae1;
+  --landing-green: var(--primary);
+  --landing-dark: var(--forest);
+  --landing-ink: var(--text);
+  --landing-muted: var(--muted);
+  --landing-mint: var(--mint);
+  --status-green: #008358;
+}
+body { background: var(--neutral); }
+.container-civix { max-width: 1240px; padding-inline: 40px; }
+.civix-navbar { background: #fafffc; border-color: #e2eee7; }
+.civix-navbar > .container-civix > div:first-child { height: 84px; }
+.civix-navbar a[aria-current="page"] { background: transparent; color: var(--forest); text-decoration-color: #42b689; text-underline-offset: 13px; }
+.civix-navbar .btn-ghost { border: 1px solid #cce4d9; color: var(--forest); padding-inline: 25px; }
+.civix-navbar .btn-primary { padding-inline: 27px; }
+.btn-primary, .btn-accent { background-image: none; background-color: var(--primary); color: #fff; box-shadow: none; min-height: 44px; border-radius: 9px; }
+.btn-primary:hover, .btn-accent:hover { background-color: var(--deep); }
+.btn-outline { border-color: #cce4d9; color: var(--forest); min-height: 44px; }
+.btn-outline:hover { background-color: var(--soft); border-color: #a6cdb9; }
+.input { min-height: 44px; border-color: #d6e5dd; border-radius: 9px; color: var(--text); background: #fff; }
+.input:hover { border-color: #b6d1c2; }
+.input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px #00835812; }
+.input::placeholder { color: #81928a; }
+.label { color: #36534a; font-weight: 600; }
+.card { border-color: #dfece5; border-radius: 16px; background: #fff; }
+.brand-label { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 6px 11px; border-radius: 999px; background: #def2e7; color: #08754e; font-size: 11px; font-weight: 700; line-height: 1.4; }
+.app-page { background: var(--neutral); }
+.app-page > .container-civix { padding-block: 35px 55px; }
+.page-heading { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 28px; overflow: hidden; margin-bottom: 28px; padding: 29px 32px; border-radius: 20px; background: #eaf6ef; }
+.page-heading::before { content: ''; position: absolute; z-index: -1; inset: 0; background: url('./assets/jakarta-green-panorama.webp') right bottom / auto 250px no-repeat; opacity: .22; mask-image: linear-gradient(90deg, transparent 35%, black); pointer-events: none; }
+.page-heading > div:first-child { max-width: 760px; }
+.page-heading h1 { margin-top: 13px; color: var(--text); font-size: clamp(27px, 2.4vw, 35px); line-height: 1.2; font-weight: 800; letter-spacing: -.04em; }
+.page-heading p { max-width: 650px; margin-top: 11px; color: #506960; font-size: 14px; line-height: 1.7; }
+.page-heading-action { flex-shrink: 0; }
+.reports-page .card, .stats-page .card, .people-page .card { box-shadow: 0 4px 18px #07533e03; }
+.reports-page .group:hover { border-color: #a7d4bc; }
+.reports-page .card > .flex.flex-wrap { gap: 18px; }
+.report-detail-page .card { padding: 27px; }
+.report-detail-page h1 { color: var(--text); letter-spacing: -.035em; line-height: 1.3; }
+.report-detail-page .lg\:col-span-2 + div { align-self: start; }
+.create-report-page .max-w-3xl { max-width: 860px; }
+.create-report-page form > .card { padding: 28px; }
+.create-report-page form h2 { color: var(--forest); letter-spacing: -.02em; }
+.stats-page .recharts-default-tooltip { border: 1px solid #d9eae1 !important; border-radius: 12px; }
+.stats-page .recharts-cartesian-axis-tick-value, .stats-page .recharts-legend-item-text { font-family: inherit; font-size: 12px; }
+.stats-page table th { color: #436157; background: #f2f8f5; }
+.map-page > .container-civix { padding-top: 24px; padding-bottom: 0; }
+.map-page .page-heading { padding: 23px 28px; margin-bottom: 22px; }
+.map-page .page-heading h1 { font-size: 29px; }
+.map-page .page-heading p { margin-top: 7px; }
+.map-workspace { width: calc(100% - 80px); max-width: 1160px; margin: 0 auto 28px; border: 1px solid #d5e6dc; border-radius: 20px; overflow: hidden; isolation: isolate; }
+.map-canvas { height: calc(100dvh - 295px); min-height: 440px; }
+.map-workspace > .absolute { border-color: #dce9e1; backdrop-filter: none; background: #fffffff5; box-shadow: 0 6px 22px #184d3212; }
+.map-workspace .leaflet-container { background: #e7f1eb; font-family: inherit; }
+.map-workspace .marker-pulse-red, .map-workspace .marker-pulse-halo { animation-iteration-count: infinite; }
+.map-workspace .leaflet-control-zoom { border-color: #d4e6dc; box-shadow: 0 3px 12px #154c3512; border-radius: 9px; overflow: hidden; }
+.leaflet-popup-content-wrapper { border-radius: 13px; color: var(--text); }
+.leaflet-popup-content a { color: var(--primary); }
+.auth-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--neutral); }
+.auth-shell { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 65px; align-items: center; padding-block: 42px; }
+.auth-story { position: relative; isolation: isolate; align-self: stretch; min-height: 590px; overflow: hidden; border-radius: 26px; background: #e6f5ed; padding: 38px; }
+.auth-story-copy { position: relative; z-index: 1; }
+.auth-story h2 { margin-top: 22px; color: var(--text); font-size: clamp(29px, 2.7vw, 39px); line-height: 1.15; letter-spacing: -.045em; font-weight: 800; }
+.auth-story p { margin-top: 17px; max-width: 355px; font-size: 14px; line-height: 1.8; color: #4f6c5e; }
+.auth-story-copy > a { display: inline-flex; align-items: center; gap: 11px; margin-top: 23px; padding-block: 5px; font-size: 12px; font-weight: 650; color: var(--forest); }
+.auth-story-copy > a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.auth-story-image { position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; height: 57%; background: url('./assets/jakarta-hero-3d.webp') 30% bottom / auto 100% no-repeat; mask-image: linear-gradient(transparent, black 30%); }
+.auth-story-note { position: absolute; bottom: 28px; left: 28px; right: 28px; display: flex; align-items: center; gap: 12px; border-radius: 13px; background: #fffffff2; padding: 17px; color: var(--primary); }
+.auth-story-note strong { display: block; color: var(--forest); font-size: 12px; }
+.auth-story-note small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+.auth-form-area { display: flex; justify-content: center; min-width: 0; }
+.auth-card { padding: 30px; background: #fff; border: 1px solid #dcebe2; border-radius: 21px; }
+.auth-card > .text-center { text-align: left; }
+.auth-card > .text-center > div:first-child { margin-left: 0; margin-right: 0; border-radius: 50%; width: 48px; height: 48px; box-shadow: none; --tw-ring-shadow: 0 0 #0000; }
+.auth-card h1 { margin-top: 17px; font-size: 29px; color: var(--text); font-weight: 800; letter-spacing: -.04em; }
+.auth-card .input { min-height: 47px; }
+.auth-card .text-center > span + a { margin-left: 4px; }
+.auth-card form > .btn-primary { min-height: 47px; margin-top: 24px; }
+.dashboard-root { background: var(--neutral); color: var(--text); }
+.dashboard-main { padding-top: 23px; padding-bottom: 48px; }
+.workspace-context { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 23px; }
+.workspace-context > a { display: inline-flex; align-items: center; gap: 6px; color: var(--forest); font-size: 12px; padding-block: 7px; }
+.workspace-context > a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.dashboard-heading h1 { font-size: 27px; color: var(--text); font-weight: 800; letter-spacing: -.035em; }
+.dashboard-heading h1 > svg { color: var(--primary); }
+.dashboard-root .btn-primary { background: var(--primary); }
+.dashboard-root .btn-primary:hover { background: var(--deep); }
+.dashboard-root .input:focus { border-color: var(--primary); }
+.dashboard-stats { gap: 15px; margin-bottom: 25px; }
+.dashboard-stats > * { border-color: #dcebe3; border-radius: 15px; padding: 21px; }
+.dashboard-stat-value { color: var(--text); font-weight: 750; }
+.dashboard-stat-label { color: #62776c; }
+.dashboard-stat-icon { background: #edf6f1; color: #537363; }
+.dashboard-stat-icon[data-tone="green"] { background: #e0f2e7; color: var(--primary); }
+.workspace-panel { border-color: #dcebe3; border-radius: 16px; }
+.workspace-panel-heading h2, .workspace-detail-title h2, .citizen-report-content h3 { color: var(--text); }
+.workspace-tabs > button[aria-pressed="true"] { color: var(--forest); border-bottom-color: var(--primary); }
+.workspace-tabs > button > span { color: #527060; background: #edf6f1; }
+.workspace-report-row[aria-pressed="true"] { background: #edf8f2; box-shadow: inset 3px 0 var(--primary); }
+.workspace-report-row:hover { background: #f5fbf7; }
+.workspace-detail { top: 104px; padding: 23px; }
+.workspace-cover { border-radius: 11px; }
+.workspace-refresh:hover { background: var(--soft); }
+.workspace-action-form, .citizen-help { border-color: #dcebe2; background: #f1f8f4; border-radius: 12px; }
+.report-progress > li[data-complete="true"] > span { background: var(--primary); border-color: var(--primary); }
+.report-progress > li[aria-current="step"] > span { border-color: var(--primary); background: #e4f4eb; }
+.report-progress > li[aria-current="step"] { color: var(--forest); }
+.landing-footer { border-top: 1px solid #e5efe9; }
+.landing-footer-brand > p { font-size: 11px; }
+.landing-footer-grid > div:not(:first-child) > a { font-size: 12px; }
+.landing-footer-grid h2 { font-size: 12px; }
+.landing-footer-bottom { font-size: 11px; }
+@media (max-width: 1023px) {
+  .container-civix { padding-inline: 26px; }
+  .auth-shell { gap: 30px; }
+  .auth-story { padding: 28px; min-height: 570px; }
+  .auth-story h2 { font-size: 31px; }
+  .auth-card { padding: 25px; }
+  .map-workspace { width: calc(100% - 52px); }
+  .page-heading { padding: 26px; }
+  .workspace-detail { padding: 20px; }
+}
+@media (max-width: 767px) {
+  .container-civix { padding-inline: 22px; }
+  .civix-navbar > .container-civix > div:first-child { height: 70px; }
+  .civix-nav-auth { margin-left: auto; margin-right: 8px; }
+  .civix-navbar .civix-nav-auth .btn-ghost, .civix-navbar .civix-nav-auth .btn-primary { padding-inline: 13px; min-height: 39px; }
+  .page-heading { align-items: flex-start; flex-direction: column; gap: 20px; padding: 24px 22px; border-radius: 16px; }
+  .page-heading h1 { font-size: 28px; }
+  .page-heading p { font-size: 13px; }
+  .page-heading::before { background-size: auto 210px; opacity: .16; }
+  .app-page > .container-civix { padding-top: 24px; padding-bottom: 35px; }
+  .auth-shell { display: block; padding-top: 27px; padding-bottom: 35px; }
+  .auth-story { display: none; }
+  .auth-card { padding: 26px 23px; }
+  .auth-card h1 { font-size: 27px; }
+  .auth-form-area { max-width: 450px; margin-inline: auto; }
+  .map-page > .container-civix { padding-bottom: 0; }
+  .map-page .page-heading { padding: 20px; margin-bottom: 18px; }
+  .map-page .page-heading h1 { font-size: 26px; }
+  .map-workspace { width: calc(100% - 32px); margin-bottom: 18px; border-radius: 15px; }
+  .map-canvas { min-height: 520px; height: calc(100dvh - 265px); }
+  .map-workspace > .absolute:first-child { right: 12px; left: 12px; top: 12px; flex-wrap: nowrap; padding: 9px; }
+  .map-workspace > .absolute:first-child .input { min-width: 0; width: 50%; font-size: 11px; }
+  .map-workspace > .absolute:nth-child(2) { right: 12px; bottom: 16px; max-width: 220px; padding: 12px; }
+  .dashboard-heading { gap: 16px; }
+  .dashboard-heading h1 { font-size: 24px; }
+  .dashboard-stats { gap: 9px; }
+  .dashboard-stats > * { padding: 14px 10px; border-radius: 12px; }
+  .workspace-context { margin-bottom: 20px; }
+  .workspace-detail { padding: 18px; }
+  .create-report-page form > .card, .report-detail-page .card { padding: 20px; }
+  .landing-footer-brand > p, .landing-footer-bottom { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-workspace .marker-pulse-red, .map-workspace .marker-pulse-halo { animation: none; }
+}

@@ -45,5 +45,5 @@ export function getStatusBadgeClasses(status: StatusLaporan): string {
 }
 
 export function getStatusColor(status: StatusLaporan): string {
-  return { diterima: '#dc2626', diverifikasi: '#d97706', ditugaskan: '#facc15', dikerjakan: '#facc15', selesai: '#65a30d', ditolak: '#be123c', duplikat: '#7e22ce' }[status];
+  return { diterima: '#dc2626', diverifikasi: '#d97706', ditugaskan: '#facc15', dikerjakan: '#facc15', selesai: '#008358', ditolak: '#be123c', duplikat: '#7e22ce' }[status];
 }

@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
+import PageHeading from '@/components/PageHeading';
+import { ArrowRight } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
@@ -34,15 +36,12 @@ export default function PublicReportsPage() {
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="app-page reports-page flex min-h-screen flex-col bg-civix-neutral">
       <Navbar />
 
       <div className="container-civix flex-1 py-12">
         <Reveal>
-          <div className="mb-8">
-            <h1 className="text-3xl font-extrabold text-civix-navy">Daftar Laporan Publik</h1>
-            <p className="mt-2 text-slate-600">Laporan yang telah terverifikasi di wilayah DKI Jakarta</p>
-          </div>
+          <PageHeading label="Laporan warga" title="Lihat laporan, pantau perubahan." description="Laporan yang telah terverifikasi di wilayah DKI Jakarta. Temukan kondisi di sekitar Anda dan ikuti perkembangannya." action={<Link to="/citizen/create-report" className="btn-primary">Buat Laporan <ArrowRight size={16} /></Link>} />
         </Reveal>
 
         {/* Filter Bar */}
@@ -115,7 +114,7 @@ export default function PublicReportsPage() {
         {/* Report List */}
         <Reveal delay="delay-2">
           {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="skeleton h-64" />
               ))}
@@ -129,7 +128,7 @@ export default function PublicReportsPage() {
               <p className="mt-1 text-sm text-slate-500">Coba ubah filter kategori, status, atau waktu.</p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {reports.map((report) => (
                 <Link
                   key={report.id}

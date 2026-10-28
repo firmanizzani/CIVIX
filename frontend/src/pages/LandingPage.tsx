@@ -5,7 +5,6 @@ import {
   ArrowRight,
   MapPin,
   ShieldCheck,
-  Activity,
   CheckCircle2,
   AlertTriangle,
   Building2,
@@ -19,6 +18,8 @@ import {
   ChevronRight,
   PencilLine,
   Settings,
+  Search,
+  ChartNoAxesColumnIncreasing,
 } from 'lucide-react';
 import LandingMap from '@/components/LandingMap';
 import CivixLogo from '@/components/CivixLogo';
@@ -71,9 +72,14 @@ function LandingPage() {
               <div className="landing-actions"><Link to="/citizen/create-report" className="btn landing-button">Buat Laporan <ArrowRight size={17} /></Link><Link to="/map" className="btn landing-button-outline"><MapIcon size={18} /> Jelajahi Peta</Link></div>
             </div>
             <div className="landing-product animate-in-up-delay-1">
-              <div className="landing-browser" data-ui>
-                <div className="landing-browser-bar"><CivixLogo size="sm" /><span>Peta laporan</span><span>Laporan publik</span><MapIcon size={16} /></div>
-                <LandingMap points={mapPoints} loading={mapLoading} error={mapError} retry={retryMap} fetching={mapFetching} />
+              <div className="landing-device">
+                <div className="landing-browser" data-ui>
+                  <aside className="landing-browser-sidebar"><CivixLogo size="sm" /><span><MapPin size={13} /> DKI Jakarta</span><div className="landing-device-trees" aria-hidden="true" /></aside>
+                  <div className="landing-browser-main">
+                    <div className="landing-browser-bar"><Link to="/map" className="landing-browser-active"><MapIcon size={13} /> Peta Laporan</Link><Link to="/reports">Laporan</Link><a href="#cara-kerja">Tentang</a><Link to="/map" className="landing-browser-search" aria-label="Cari lokasi atau laporan di peta"><Search size={12} /><span>Cari lokasi atau laporan…</span></Link></div>
+                    <LandingMap points={mapPoints} loading={mapLoading} error={mapError} retry={retryMap} fetching={mapFetching} />
+                  </div>
+                </div>
               </div>
               <div className="landing-report-float" data-ui>
                 {recentReports[0] ? <><Link to={`/reports/${recentReports[0].id}`} className="landing-float-report">
@@ -83,7 +89,7 @@ function LandingPage() {
                 </> : <><span className="landing-float-label"><ShieldCheck size={17} /> Proses yang transparan</span><h2>Setiap laporan,<br />bisa Anda pantau.</h2><p className="landing-float-description">Dari laporan diterima hingga penanganan selesai.</p></>}
                 <div className="landing-mini-progress" aria-label="Tahapan penanganan laporan">{['Diterima', 'Verifikasi', 'Ditangani', 'Selesai'].map((label, index) => <span key={label} data-complete={previewProgress >= index}><i />{label}</span>)}</div>
               </div>
-              <Link to="/stats" className="landing-count-float" data-ui><div><strong>{statsLoading || !stats ? '—' : stats.totalLaporan.toLocaleString('id-ID')}</strong><span>Laporan publik<br />di Jakarta</span></div><Activity size={36} /></Link>
+              <Link to="/stats" className="landing-count-float" data-ui><div><strong>{statsLoading || !stats ? '—' : stats.totalLaporan.toLocaleString('id-ID')}</strong><span>Laporan publik<br />di Jakarta</span></div><ChartNoAxesColumnIncreasing size={55} strokeWidth={2.5} aria-hidden="true" /></Link>
             </div>
           </div>
         </section>
@@ -97,7 +103,7 @@ function LandingPage() {
             ].map(item => <Link to="/stats" key={item.label}><span className="landing-stat-icon"><item.icon size={24} /></span><div><strong>{item.value === undefined ? '—' : <AnimatedCounter value={item.value} />}</strong><span>{item.label}</span></div></Link>)}
         </div></section>
         <Reveal><section className="landing-map-section"><div className="container-civix landing-map-grid">
-              <div className="landing-map-frame"><LandingMap points={mapPoints} loading={mapLoading} error={mapError} retry={retryMap} fetching={mapFetching} />
+              <div className="landing-map-frame"><LandingMap interactive points={mapPoints} loading={mapLoading} error={mapError} retry={retryMap} fetching={mapFetching} />
                 <div className="landing-map-legend"><strong>Status laporan</strong>{(['diterima', 'diverifikasi', 'dikerjakan', 'selesai'] as const).map(status => <span key={status}><i style={{ background: getStatusColor(status) }} />{STATUS_LABEL[status]}</span>)}</div>
                 <Link to="/map" className="landing-map-caption"><MapPin size={25} /><span><strong>Lihat laporan di sekitar Anda</strong><small>Temukan dan pantau laporan dari warga lain.</small></span><ArrowRight size={17} /></Link>
               </div>

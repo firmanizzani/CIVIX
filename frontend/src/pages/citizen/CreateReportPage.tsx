@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
+import PageHeading from '@/components/PageHeading';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { KATEGORI_LABEL, KategoriLaporan } from '@/types';
@@ -240,17 +241,12 @@ export default function CreateReportPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="app-page create-report-page flex min-h-screen flex-col bg-civix-neutral">
       <Navbar />
 
       <div className="container-civix flex-1 py-12">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-extrabold text-civix-navy">Buat Laporan Baru</h1>
-            <p className="mt-2 text-slate-600">
-              Laporkan masalah infrastruktur atau lingkungan di wilayah DKI Jakarta. Laporan akan diverifikasi oleh admin sebelum ditindaklanjuti.
-            </p>
-          </div>
+          <PageHeading label="Suara warga" title="Mulai dari satu laporan." description="Laporkan masalah infrastruktur atau lingkungan di Jakarta. Tambahkan foto dan lokasi yang jelas agar laporan dapat ditindaklanjuti." />
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (

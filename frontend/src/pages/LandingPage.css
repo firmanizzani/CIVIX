@@ -26,38 +26,56 @@
 .landing-page .landing-button:hover { background: #006d49; transform: translateY(-2px); }
 .landing-page .landing-button-outline { background: #ffffff40; border: 1px solid #8dcdb3; color: var(--landing-dark); padding: 12px 23px; }
 .landing-page .landing-button-outline:hover { background: #e2f6eb; }
-.landing-product { position: relative; min-width: 0; padding: 10px 0 20px 12px; perspective: 1200px; }
-.landing-browser { position: relative; height: 380px; border: 8px solid #f6fffa; border-left-width: 12px; border-bottom-width: 12px; border-radius: 23px; overflow: hidden; transform: perspective(1200px) rotateY(-16deg) rotateX(6deg) rotateZ(2deg); box-shadow: -4px 3px 0 #c4e4d3, -8px 7px 0 #a3d1b9, -12px 11px 0 #77b59b, -20px 28px 45px #07533e30, inset 0 0 0 1px #c0dfce; background: #e2ede7; }
-.landing-browser-bar { display: flex; align-items: center; gap: 23px; height: 48px; background: #fff; padding: 8px 14px; font-size: 9px; color: #425d52; }
-.landing-browser-bar > div { margin-right: auto; font-size: 13px; color: var(--landing-dark); }
-.landing-browser-bar .h-8 { height: 25px; width: 25px; }
-.landing-browser-bar > svg { flex-shrink: 0; }
+.landing-product { position: relative; min-width: 0; padding: 10px 0 26px 12px; perspective: 1500px; }
+.landing-device { position: relative; isolation: isolate; padding: 9px; border-radius: 28px; background: linear-gradient(145deg, #e2eee7 0%, #fafffc 28%, #d0e6d9 68%, #c1dfce 100%); transform: perspective(1500px) rotateY(-13deg) rotateX(3deg) rotateZ(1deg); box-shadow: inset 0 2px 1px #fff, inset 2px 0 2px #ffffffc9, 0 0 0 1px #bed6c8, -2px 4px 0 #aacbbb, -5px 8px 0 #c3dfce, -7px 12px 0 #a5cbb6, -12px 24px 35px #14583e24; }
+.landing-device::before { content: ''; position: absolute; z-index: -1; inset: -5px; border: 2px solid #f7fffa9c; border-radius: 33px; pointer-events: none; }
+.landing-browser { position: relative; display: grid; grid-template-columns: 87px minmax(0, 1fr); height: 405px; border: 1px solid #b7d5c3; border-radius: 20px; overflow: hidden; background: #e7f1e9; box-shadow: 0 1px 0 #fff, inset 0 0 5px #123d2520; }
+.landing-browser-sidebar { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 14px 9px; background: #074b35; color: #fff; }
+.landing-browser-sidebar > .inline-flex { position: relative; z-index: 1; gap: 5px; font-size: 12px; }
+.landing-browser-sidebar > .inline-flex > span { color: #fff !important; }
+.landing-browser-sidebar svg { width: 16px; height: 23px; }
+.landing-browser-sidebar > span { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; font-size: 8px; color: #d5e8dc; }
+.landing-browser-sidebar > span svg { width: 12px; height: 12px; }
+.landing-device-trees { position: absolute; inset: 65px 0 0; background: linear-gradient(#074b3570, transparent 40%), url('../assets/jakarta-hero-3d.webp') 36% bottom / auto 100% no-repeat; opacity: .85; }
+.landing-browser-main { min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.landing-browser-bar { display: flex; flex-shrink: 0; align-items: center; gap: 17px; height: 47px; background: #fff; padding: 0 13px; font-size: 8px; color: #425d52; }
+.landing-browser-bar > a { display: inline-flex; align-items: center; gap: 5px; height: 100%; white-space: nowrap; }
+.landing-browser-bar > a:hover { color: var(--landing-green); }
+.landing-browser-active { position: relative; font-weight: 700; color: var(--landing-dark); }
+.landing-browser-active::after { content: ''; position: absolute; left: 0; right: 0; bottom: 8px; height: 2px; background: #53af88; }
+.landing-browser-bar .landing-browser-search { margin-left: auto; height: 25px; padding: 0 8px; border-radius: 7px; background: #f3f6f4; color: #7c8a83; font-size: 7px; gap: 5px; }
+.landing-browser-search svg { flex-shrink: 0; }
 .landing-map { height: 100%; width: 100%; position: relative; isolation: isolate; background: #e5f0e8; }
-.landing-browser .landing-map { height: calc(100% - 48px); }
+.landing-browser .landing-map { flex: 1; min-height: 0; height: auto; }
+.landing-browser .leaflet-tile-pane { filter: saturate(.5) brightness(1.045); }
 .landing-map .leaflet-container { background: #dcebe2; font-family: inherit; }
+.landing-map .marker-pulse-red, .landing-map .marker-pulse-halo { animation-iteration-count: infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-map .marker-pulse-red, .landing-map .marker-pulse-halo { animation: none; }
+}
 .landing-map-notice { position: absolute; bottom: 7px; left: 8px; right: 8px; z-index: 450; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; padding: 6px 8px; background: #fffffff0; color: #436353; border-radius: 6px; font-size: 10px; }
 .landing-map-notice button { text-decoration: underline; font-weight: 700; }
 .landing-map-notice button:disabled { opacity: .5; }
-.landing-report-float { position: absolute; left: -48px; top: 92px; width: 270px; padding: 18px; border-radius: 17px; border: 1px solid #ffffff; background: #fff; transform: perspective(900px) rotateY(-8deg) rotateZ(-2deg); box-shadow: 0 3px 0 #d9eae1, 0 7px 0 #bbd8c9, 0 22px 40px #1a51432b; z-index: 2; }
+.landing-report-float { position: absolute; left: -44px; top: 102px; width: 278px; padding: 19px; border-radius: 17px; border: 1px solid #e8f3ec; background: linear-gradient(135deg, #fff, #fcfffd); transform: rotate(-.6deg); box-shadow: 0 2px 1px #ffffff, 0 8px 15px #124c3510, 0 22px 38px #124c3526; z-index: 2; }
 .landing-float-report { display: flex; gap: 11px; align-items: flex-start; }
-.landing-float-report > img { width: 75px; height: 100px; object-fit: cover; border-radius: 7px; }
+.landing-float-report > img { width: 82px; height: 109px; object-fit: cover; border-radius: 9px; }
 .landing-float-report > div { min-width: 0; }
-.landing-float-report span { font-size: 9px; color: #6e7774; }
+.landing-float-report span { display: inline-block; padding: 3px 6px; border-radius: 5px; background: #f1f7f3; font-size: 9px; font-weight: 650; color: #406151; }
 .landing-float-report h2 { font-size: 12px; font-weight: 750; margin: 5px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .landing-float-report p { display: flex; align-items: flex-start; gap: 3px; font-size: 9px; color: #6f7b77; }
 .landing-float-report small { font-size: 8px; color: #7a8781; }
-.landing-float-status { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: var(--landing-green); margin-top: 13px; }
+.landing-float-status { display: flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 7px; border-radius: 5px; background: #edf9f1; font-size: 10px; font-weight: 700; color: var(--landing-green); margin-top: 14px; }
 .landing-float-status > span { width: 7px; height: 7px; border-radius: 50%; }
 .landing-float-label { display: flex; align-items: center; gap: 6px; color: var(--landing-green); font-size: 10px; font-weight: 650; }
 .landing-report-float > h2 { font-size: 22px; font-weight: 750; line-height: 1.2; letter-spacing: -.04em; margin: 13px 0 8px; }
 .landing-float-description { font-size: 11px; line-height: 1.6; color: var(--landing-muted); }
 .landing-mini-progress { display: flex; margin-top: 20px; }
 .landing-mini-progress > span { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 8px; color: #71847a; }
-.landing-mini-progress > span::before { content: ''; position: absolute; top: 4px; left: 0; right: 0; height: 3px; background: #e1e8e4; }
-.landing-mini-progress i { position: relative; width: 10px; height: 10px; border-radius: 50%; background: #bdc9c2; border: 2px solid #eef3f0; }
+.landing-mini-progress > span::before { content: ''; position: absolute; top: 5px; left: 0; right: 0; height: 4px; background: #e1e8e4; }
+.landing-mini-progress i { position: relative; width: 13px; height: 13px; border-radius: 50%; background: #c7d3cc; border: 2px solid #eef3f0; }
 .landing-mini-progress > span[data-complete="true"] i { background: #008358; }
 .landing-mini-progress > span[data-complete="true"]::before { background: #9bd2b8; }
-.landing-count-float { position: absolute; bottom: -4px; right: -15px; display: flex; align-items: center; gap: 25px; background: white; border-radius: 14px; padding: 16px 21px; transform: rotate(2deg); box-shadow: 0 3px 0 #d6e7dc, 0 7px 0 #b9d2c4, 0 18px 30px #07533e22; }
+.landing-count-float { position: absolute; bottom: 0; right: 8px; display: flex; align-items: center; gap: 23px; background: linear-gradient(135deg, #fff, #fbfefc); border: 1px solid #e6f1e9; border-radius: 16px; padding: 17px 22px; transform: rotate(.5deg); box-shadow: 0 2px 0 #ffffffb3, 0 12px 26px #164f3626; }
 .landing-count-float strong { display: block; font-size: 26px; line-height: 1.2; font-weight: 800; }
 .landing-count-float span { display: block; font-size: 10px; color: var(--landing-muted); line-height: 1.5; margin-top: 5px; }
 .landing-count-float > svg { color: #3eaa7b; }
@@ -135,9 +153,12 @@
   .landing-hero h1 { font-size: 39px; }
   .landing-hero-copy > p { font-size: 13px; }
   .landing-product { padding-left: 10px; }
-  .landing-browser { height: 330px; }
-  .landing-browser-bar { gap: 10px; }
-  .landing-browser-bar > span { display: none; }
+  .landing-browser { height: 350px; grid-template-columns: 64px minmax(0, 1fr); }
+  .landing-browser-sidebar { padding-inline: 6px; }
+  .landing-browser-sidebar > .inline-flex { gap: 3px; font-size: 9px; }
+  .landing-browser-sidebar > span { font-size: 7px; }
+  .landing-browser-bar { gap: 10px; padding-inline: 9px; }
+  .landing-browser-search span { display: none; }
   .landing-report-float { left: -15px; width: 225px; padding: 15px; }
   .landing-count-float { right: -3px; padding: 13px 15px; }
   .landing-map-grid { gap: 35px; }
@@ -165,9 +186,14 @@
   .landing-hero .landing-actions { gap: 10px; }
   .landing-page .landing-button, .landing-page .landing-button-outline { font-size: 12px; padding: 12px 17px; }
   .landing-product { width: 100%; max-width: 540px; margin-inline: auto; padding-left: 18px; padding-right: 4px; }
-  .landing-browser { height: 310px; transform: perspective(900px) rotateY(-7deg) rotateX(3deg) rotateZ(2deg); border-width: 5px; box-shadow: -3px 3px 0 #c4e4d3, -6px 6px 0 #a3d1b9, -9px 9px 0 #77b59b, -10px 17px 25px #07533e22; }
-  .landing-browser-bar > span { display: block; }
-  .landing-report-float { left: 0; top: 85px; width: 218px; }
+  .landing-device { padding: 6px; border-radius: 23px; transform: perspective(1100px) rotateY(-9deg) rotateX(2deg) rotateZ(1deg); box-shadow: inset 0 2px 1px #fff, 0 0 0 1px #bed6c8, -2px 4px 0 #aacbbb, -4px 8px 0 #c3dfce, -6px 11px 0 #a5cbb6, -9px 20px 25px #14583e24; }
+  .landing-browser { height: 325px; border-radius: 17px; }
+  .landing-browser-bar { gap: 8px; font-size: 7px; padding-inline: 8px; }
+  .landing-browser-bar > a { gap: 3px; }
+  .landing-browser-bar .landing-browser-search { padding-inline: 5px; }
+  .landing-browser-active > svg { display: none; }
+  .landing-report-float { left: 0; top: 85px; width: 218px; padding: 14px; }
+  .landing-float-report > img { width: 61px; height: 87px; }
   .landing-report-float > h2 { font-size: 21px; }
   .landing-count-float { right: 0; bottom: 0; gap: 15px; }
   .landing-city-art { background-size: auto 100%; background-position: 27% bottom; }

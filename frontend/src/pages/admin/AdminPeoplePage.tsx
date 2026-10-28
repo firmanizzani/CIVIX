@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { AlertCircle, Building2, KeyRound, Plus, Search, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import PageHeading from '@/components/PageHeading';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { AdminAgency, AdminDashboard, AdminResident } from '@/types';
@@ -78,13 +79,10 @@ export default function AdminPeoplePage() {
   const filteredResidents = residents.filter((resident) => `${resident.nama} ${resident.email}`.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="app-page people-page flex min-h-screen flex-col bg-civix-neutral">
       <Navbar />
       <main className="container-civix flex-1 py-10">
-        <div className="mb-7">
-          <h1 className="text-3xl font-extrabold text-civix-navy">Kelola Warga & Instansi</h1>
-          <p className="mt-1 text-slate-600">Kelola data warga dan akun instansi. Password tidak pernah ditampilkan.</p>
-        </div>
+        <PageHeading label="Ruang admin" title="Kelola Warga & Instansi" description="Kelola data warga dan akun instansi yang menindaklanjuti laporan di Jakarta. Password tidak pernah ditampilkan." />
         <div className="mb-6 flex gap-2 border-b border-slate-200">
           <button onClick={() => { setSection('warga'); setError(''); }} className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold ${section === 'warga' ? 'border-civix-navy text-civix-navy' : 'border-transparent text-slate-500'}`}><Users size={17} /> Warga</button>
           <button onClick={() => { setSection('instansi'); setError(''); }} className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold ${section === 'instansi' ? 'border-civix-navy text-civix-navy' : 'border-transparent text-slate-500'}`}><Building2 size={17} /> Instansi & Akun</button>
@@ -97,7 +95,7 @@ export default function AdminPeoplePage() {
             <div className="text-xs font-medium text-slate-500">Total Warga</div>
           </div>
           <div className="card p-4">
-            <div className="mb-2 inline-flex rounded-lg bg-indigo-100 p-2 text-indigo-700"><Building2 size={18} /></div>
+            <div className="mb-2 inline-flex rounded-lg bg-civix-mint p-2 text-civix-primary"><Building2 size={18} /></div>
             <div className="text-2xl font-extrabold text-civix-navy">{stats?.totalInstansi ?? 0}</div>
             <div className="text-xs font-medium text-slate-500">Total Instansi</div>
           </div>

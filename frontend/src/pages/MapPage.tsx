@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import PageHeading from '@/components/PageHeading';
 import apiClient from '@/lib/api';
-import { MapPoint, STATUS_LABEL, KATEGORI_LABEL, STATUS_MAP_COLOR, KategoriLaporan, StatusLaporan } from '@/types';
+import { MapPoint, STATUS_LABEL, KATEGORI_LABEL, STATUS_MAP_COLOR, StatusLaporan } from '@/types';
 import { MapContainer, TileLayer, CircleMarker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Filter, Layers, Info } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
 
@@ -20,7 +20,7 @@ const getColor = (status: StatusLaporan) => {
     case 'kuning':
       return '#facc15';
     case 'hijau':
-      return '#65a30d';
+      return '#008358';
     default:
       return '#64748b';
   }
@@ -30,7 +30,7 @@ export default function MapPage() {
   const [selectedKategori, setSelectedKategori] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
-  const { data: points = [], isLoading } = useQuery<MapPoint[]>({
+  const { data: points = [] } = useQuery<MapPoint[]>({
     queryKey: ['map-points-full'],
     queryFn: async () => (await apiClient.get('/reports/map')).data,
   });
@@ -43,13 +43,15 @@ export default function MapPage() {
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="app-page map-page flex min-h-screen flex-col bg-civix-neutral">
       <Navbar />
+      <div className="container-civix"><PageHeading label="Peta laporan" title="Jakarta, dalam satu peta." description="Jelajahi titik laporan warga dan pantau status penanganannya." /></div>
 
-      <div className="relative flex flex-1 flex-col">
+      <div className="map-workspace relative flex flex-1 flex-col">
         {/* Floating Filter Controls */}
         <div className="absolute top-4 left-4 z-[1000] flex flex-wrap gap-2 rounded-xl bg-white/95 p-3 shadow-lg backdrop-blur border border-slate-200 animate-in-up">
           <select
+            aria-label="Kategori laporan di peta"
             value={selectedKategori}
             onChange={(e) => setSelectedKategori(e.target.value)}
             className="input text-xs py-1.5 min-w-[140px]"
@@ -61,6 +63,7 @@ export default function MapPage() {
           </select>
 
           <select
+            aria-label="Status laporan di peta"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="input text-xs py-1.5 min-w-[140px]"
@@ -102,7 +105,7 @@ export default function MapPage() {
         </div>
 
         {/* The Map */}
-        <div className="h-[calc(100vh-64px)] w-full">
+        <div className="map-canvas w-full">
           <MapContainer center={DKI_CENTER} zoom={12} zoomControl={false} className="h-full w-full">
             <ZoomControl position="bottomleft" />
             <TileLayer

@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { getLoginDestination } from '@/lib/authRedirect';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import AuthLayout from '@/components/AuthLayout';
 import { AlertCircle, Loader2, Eye, EyeOff, Mail, Lock, ShieldCheck, ArrowRight, X, FlaskConical } from 'lucide-react';
 
 export default function LoginPage() {
@@ -31,12 +30,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-civix-neutral">
-      <Navbar />
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
+    <AuthLayout>
         <div className="w-full max-w-md">
           {/* Card Utama */}
-          <div className="rounded-2xl border border-civix-border bg-white p-6 shadow-xl shadow-civix-forest/5 sm:p-8">
+          <div className="auth-card">
             <div className="mb-6 text-center">
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-civix-soft text-civix-primary ring-8 ring-civix-mint/30">
                 <ShieldCheck size={26} />
@@ -131,7 +128,6 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
-      </div>
 
       {showDemo && (
         <div
@@ -190,7 +186,6 @@ export default function LoginPage() {
           </div>
         </div>
       )}
-      <Footer />
-    </div>
+    </AuthLayout>
   );
 }

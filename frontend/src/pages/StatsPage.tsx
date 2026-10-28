@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
+import PageHeading from '@/components/PageHeading';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
@@ -16,7 +17,7 @@ const CATEGORY_COLORS: Record<KategoriLaporan, string> = {
   drainase: '#2563EB',
   sampah: '#0D9488',
   penerangan: '#D97706',
-  fasilitas_umum: '#4D7C0F',
+  fasilitas_umum: '#008358',
   lainnya: '#64748B',
 };
 
@@ -65,18 +66,12 @@ export default function StatsPage() {
     .sort((a, b) => Number(a.rataRataHari) - Number(b.rataRataHari))[0];
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="app-page stats-page flex min-h-screen flex-col bg-civix-neutral">
       <Navbar />
 
       <div className="container-civix flex-1 py-12">
         <Reveal>
-          <div className="mb-10">
-            <p className="mb-2 text-sm font-bold uppercase tracking-widest text-civix-orange">Data-driven insight</p>
-            <h1 className="text-3xl font-extrabold text-civix-navy sm:text-4xl">Statistik Penanganan Laporan</h1>
-            <p className="mt-2 max-w-2xl text-slate-600">
-              Ringkasan kinerja penanganan laporan warga di DKI Jakarta, dihitung langsung dari data CIVIX.
-            </p>
-          </div>
+          <PageHeading label="Transparansi penanganan" title="Perubahan yang bisa diukur." description="Ringkasan kinerja penanganan laporan warga di DKI Jakarta, dihitung langsung dari data CIVIX." />
         </Reveal>
 
         {isEmpty && (
