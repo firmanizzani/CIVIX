@@ -1,225 +1,134 @@
-import { useState, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Building2, HardHat, CheckCircle2, ClipboardList, FileText, Play, Search, Upload, X } from 'lucide-react';
+import DashboardFrame from '@/components/DashboardFrame';
+import QueryError from '@/components/QueryError';
+import { DashboardStats, DetailBack, DetailPreview, FilterTabs, StatusBadge, WorkspacePagination, WorkspaceRefresh, lastUpdate, relativeTime, reportCover } from '@/components/ReportWorkspaceUI';
+import { getActionError, useDesktop, useReportWorkspace } from '@/hooks/useReportWorkspace';
 import apiClient from '@/lib/api';
-import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
-import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
-import { Play, CheckCircle2, Upload, X, Loader2, Wrench, Image as ImageIcon, Search } from 'lucide-react';
+import { Report } from '@/types';
+
+const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export default function AgencyAssignmentsPage({ embedded = false }: { embedded?: boolean }) {
-  const queryClient = useQueryClient();
-  const [selected, setSelected] = useState<Report | null>(null);
+  const w = useReportWorkspace('agency');
+  const desktop = useDesktop();
+  const listScroll = useRef(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const selectedId = w.params.get('laporan') || (desktop ? w.data?.items[0]?.id : null);
   const [note, setNote] = useState('');
-  const [proofFiles, setProofFiles] = useState<File[]>([]);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const { data: assignments = [], isLoading } = useQuery<Report[]>({
-    queryKey: ['agency-assignments'],
-    queryFn: async () => (await apiClient.get('/agency/assignments')).data,
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [fileError, setFileError] = useState('');
+  const [success, setSuccess] = useState('');
+  useEffect(() => {
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [files]);
+  const detail = useQuery<Report>({
+    queryKey: ['workspace-detail', 'agency', w.user?.id, selectedId],
+    queryFn: async () => (await apiClient.get('/agency/assignments/' + selectedId)).data,
+    enabled: !!selectedId, staleTime: 10000, refetchInterval: 30000,
   });
-
-  const progressMutation = useMutation({
-    mutationFn: async ({ id, status, catatan }: { id: string; status: string; catatan: string }) =>
-      (await apiClient.post(`/agency/assignments/${id}/progress`, { status, catatan })).data,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['agency-assignments'] });
-      queryClient.invalidateQueries({ queryKey: ['agency-dashboard'] });
-      setSelected(null);
-      setNote('');
+  const mutation = useMutation({
+    mutationFn: async (action: 'progress' | 'complete') => {
+      if (action === 'complete') {
+        const form = new FormData();
+        form.append('catatan', note);
+        files.forEach((file) => form.append('bukti', file));
+        return (await apiClient.post('/agency/assignments/' + selectedId + '/complete', form, { headers: { 'Content-Type': 'multipart/form-data' } })).data;
+      }
+      return (await apiClient.post('/agency/assignments/' + selectedId + '/progress', { status: 'dikerjakan', catatan: note })).data;
     },
-  });
-
-  const completeMutation = useMutation({
-    mutationFn: async ({ id, formData }: { id: string; formData: FormData }) =>
-      (await apiClient.post(`/agency/assignments/${id}/complete`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['agency-assignments'] });
-      queryClient.invalidateQueries({ queryKey: ['agency-dashboard'] });
-      setSelected(null);
-      setNote('');
-      setProofFiles([]);
+    onSuccess: async (result) => {
+      setSuccess(result.message || 'Perubahan berhasil disimpan.');
+      setNote(''); setFiles([]); setFileError('');
+      if (inputRef.current) inputRef.current.value = '';
+      await w.refreshReports();
     },
+    onError: async () => { await w.refreshReports(); },
   });
-
-  const chooseProof = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length + proofFiles.length > 3) return alert('Maksimal 3 foto bukti.');
-    setProofFiles((prev) => [...prev, ...files]);
+  useEffect(() => { setNote(''); setFiles([]); setFileError(''); setSuccess(''); mutation.reset(); }, [selectedId]);
+  const addFiles = (incoming: File[]) => {
+    if (mutation.isPending) return;
+    setFileError('');
+    const unique = incoming.filter((file) => !files.some((existing) => existing.name === file.name && existing.size === file.size && existing.lastModified === file.lastModified));
+    if (files.length + unique.length > 3) { setFileError('Maksimal 3 foto bukti. Hapus salah satu foto untuk menggantinya.'); return; }
+    if (unique.some((file) => !imageTypes.includes(file.type))) { setFileError('Gunakan foto JPG, PNG, WebP, atau GIF.'); return; }
+    if (unique.some((file) => file.size > 5 * 1024 * 1024)) { setFileError('Ukuran setiap foto maksimal 5 MB.'); return; }
+    setFiles((previous) => [...previous, ...unique]);
   };
-
-  const submitComplete = () => {
-    if (!selected || proofFiles.length === 0) return;
-    const formData = new FormData();
-    formData.append('catatan', note);
-    proofFiles.forEach((file) => formData.append('bukti', file));
-    completeMutation.mutate({ id: selected.id, formData });
+  const choose = (report: Report) => {
+    if (mutation.isPending) return;
+    listScroll.current = window.scrollY;
+    w.update({ laporan: report.id }, false);
+    if (!desktop) window.scrollTo({ top: 0, behavior: 'instant' });
   };
-
-  const filteredAssignments = assignments.filter((task) => {
-    const matchesSearch =
-      task.judul.toLowerCase().includes(search.toLowerCase()) ||
-      task.kodeTiket.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter ? task.status === statusFilter : true;
-    return matchesSearch && matchesStatus;
-  });
-
-  const content = (
-    <div className={embedded ? '' : 'container-civix flex-1 py-12'}>
-      <div className="mb-8">
-        <h2 className="text-2xl font-extrabold text-civix-navy">Daftar Tugas Instansi</h2>
-        <p className="mt-1 text-slate-600">Mulai penanganan, tambah progres, dan unggah bukti penyelesaian.</p>
-      </div>
-
-      <div className="card mb-6 p-4">
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari kode tiket atau judul..."
-              className="input pl-10"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="input w-auto min-w-[190px]"
-          >
-            <option value="">Semua Status</option>
-            <option value="ditugaskan">Menunggu Ditangani</option>
-            <option value="dikerjakan">Sedang Dikerjakan</option>
-            <option value="selesai">Selesai</option>
-          </select>
+  const back = () => {
+    w.update({ laporan: null }, false);
+    requestAnimationFrame(() => window.scrollTo({ top: listScroll.current, behavior: 'instant' }));
+  };
+  const counts = w.data?.counts;
+  const active = (counts?.ditugaskan || 0) + (counts?.dikerjakan || 0);
+  const report = detail.data;
+  const proofs = report?.photos?.filter((photo) => photo.jenis === 'bukti_perbaikan') || [];
+  const body = <div>
+    <header className="dashboard-heading"><div><h1><Building2 size={25} aria-hidden="true" />Dashboard Instansi</h1><p>{w.user?.agencyNama || 'Kelola tugas penanganan instansi Anda.'}</p></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></header>
+    <DashboardStats loading={!w.data} items={[
+      { label: 'Belum Ditangani', icon: ClipboardList, tone: 'red', value: counts?.ditugaskan || 0, onClick: () => w.update({ status: 'ditugaskan' }) },
+      { label: 'Sedang Dikerjakan', icon: HardHat, tone: 'amber', value: counts?.dikerjakan || 0, onClick: () => w.update({ status: 'dikerjakan' }) },
+      { label: 'Selesai', icon: CheckCircle2, tone: 'green', value: counts?.selesai || 0, onClick: () => w.update({ status: 'selesai' }) },
+    ]} />
+    <div className="workspace-grid" data-detail={!!w.params.get('laporan')}>
+      <section className="workspace-panel workspace-list" aria-label="Daftar tugas instansi">
+        <div className="workspace-panel-heading"><h2>Tugas Penanganan</h2><span className="workspace-muted">{active} tugas aktif</span></div>
+        <FilterTabs value={w.status} onChange={(status) => w.update({ status })} tabs={[
+          { value: 'aktif', label: 'Aktif', count: active },
+          { value: 'ditugaskan', label: 'Belum Ditangani', count: counts?.ditugaskan || 0 },
+          { value: 'dikerjakan', label: 'Dikerjakan', count: counts?.dikerjakan || 0 },
+          { value: 'selesai', label: 'Selesai', count: counts?.selesai || 0 },
+        ]} />
+        <div className="workspace-filters workspace-filters-compact">
+          <div className="workspace-search"><Search size={16} aria-hidden="true" /><input className="input" aria-label="Cari tugas" maxLength={150} placeholder="Cari tiket, judul, atau lokasi" value={w.search} onChange={(event) => w.update({ q: event.target.value || null })} /></div>
+          <select className="input" aria-label="Urutan tugas" value={w.sort} onChange={(event) => w.update({ sort: event.target.value })}><option value="oldest">Terlama dahulu</option><option value="newest">Terbaru dahulu</option></select>
         </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="card overflow-hidden">
-          {isLoading ? (
-            <div className="space-y-3 p-6">
-              <div className="skeleton h-24" />
-              <div className="skeleton h-24" />
-            </div>
-          ) : filteredAssignments.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">
-              {assignments.length === 0 ? 'Belum ada tugas yang ditugaskan.' : 'Tidak ada tugas pada filter ini.'}
-            </div>
-          ) : (
-            <div className="max-h-[68vh] divide-y divide-slate-100 overflow-y-auto pr-1">
-              {filteredAssignments.map((task) => (
-                <button
-                  key={task.id}
-                  onClick={() => {
-                    setSelected(task);
-                    setNote('');
-                    setProofFiles([]);
-                  }}
-                  className={`flex w-full gap-4 p-5 text-left transition hover:bg-slate-50 ${
-                    selected?.id === task.id ? 'bg-lime-50/60 border-l-4 border-civix-blue' : ''
-                  }`}
-                >
-                  {task.photos?.[0] ? (
-                    <img src={task.photos[0].url} alt="" className="h-20 w-24 rounded-lg object-cover" />
-                  ) : (
-                    <div className="flex h-20 w-24 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
-                      <ImageIcon size={20} />
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="mono text-xs text-slate-400">{task.kodeTiket}</span>
-                      <span className="text-xs text-civix-blue">{KATEGORI_LABEL[task.kategori]}</span>
-                    </div>
-                    <h2 className="mt-1 font-bold text-civix-navy">{task.judul}</h2>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span>{formatDate(task.dibuatPada)}</span>
-                      <span className={`rounded-full px-2 py-0.5 font-semibold ${getStatusBadgeClasses(task.status)}`}>
-                        {STATUS_LABEL[task.status]}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <aside className="card h-fit p-6 lg:sticky lg:top-24">
-          {!selected ? (
-            <div className="py-10 text-center text-sm text-slate-500">
-              <Wrench className="mx-auto mb-3 text-slate-300" size={30} />
-              Pilih tugas untuk memperbarui progres.
-            </div>
-          ) : (
-            <div>
-              <span className="mono text-xs text-slate-400">{selected.kodeTiket}</span>
-              <h2 className="mt-1 font-bold text-civix-navy">{selected.judul}</h2>
-              <p className="mt-2 text-xs text-slate-500">
-                Status: <strong>{STATUS_LABEL[selected.status]}</strong>
-              </p>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Catatan penanganan untuk timeline publik..."
-                className="input mt-5 min-h-24"
-              />
-
-              {selected.status === 'ditugaskan' && (
-                <button
-                  onClick={() => progressMutation.mutate({ id: selected.id, status: 'dikerjakan', catatan: note })}
-                  disabled={progressMutation.isPending}
-                  className="btn-primary mt-4 w-full"
-                >
-                  {progressMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}{' '}
-                  Mulai Pengerjaan
-                </button>
-              )}
-
-              {selected.status === 'dikerjakan' && (
-                <div className="mt-4 space-y-3">
-                  <input ref={fileRef} type="file" multiple accept="image/*" className="hidden" onChange={chooseProof} />
-                  <button type="button" onClick={() => fileRef.current?.click()} className="btn-outline w-full">
-                    <Upload size={16} /> Tambah Bukti ({proofFiles.length}/3)
-                  </button>
-                  {proofFiles.map((file, i) => (
-                    <div key={i} className="flex items-center justify-between rounded bg-slate-50 p-2 text-xs">
-                      <span className="truncate">{file.name}</span>
-                      <button onClick={() => setProofFiles((p) => p.filter((_, n) => n !== i))}>
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  <p className="text-xs text-slate-500">Minimal 1 foto bukti wajib sebelum menyelesaikan laporan.</p>
-                  <button
-                    onClick={submitComplete}
-                    disabled={completeMutation.isPending || proofFiles.length === 0}
-                    className="btn bg-lime-600 text-white hover:bg-lime-700 w-full"
-                  >
-                    {completeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}{' '}
-                    Tandai Selesai
-                  </button>
+        {w.isLoading ? <div className="workspace-loading" role="status">Memuat tugas penanganan…</div> : w.isError ? <div className="p-5"><QueryError subject="Daftar tugas" retry={w.refetch} pending={w.isFetching} /></div> : !w.data?.items.length ? <div className="workspace-empty"><ClipboardList size={28} /><h3>Tidak ada tugas pada filter ini</h3><p>Pilih status lain atau ubah pencarian untuk melihat tugas Anda.</p><button className="btn-outline" onClick={() => w.update({ status: 'aktif', q: null })}>Lihat tugas aktif</button></div> :
+          <div className="workspace-rows">{w.data.items.map((task) => <button type="button" key={task.id} className="workspace-report-row" aria-pressed={selectedId === task.id} onClick={() => choose(task)}>
+            {reportCover(task) ? <img src={reportCover(task)} alt="" /> : <div className="workspace-thumb-placeholder"><FileText size={22} /></div>}
+            <div className="workspace-row-content"><p className="workspace-ticket">{task.kodeTiket}</p><h3>{task.judul}</h3><p>{task.namaJalan || task.region?.nama || 'Alamat belum tersedia'}</p><span className="workspace-row-age">Diperbarui {relativeTime(lastUpdate(task))}</span></div>
+            <StatusBadge status={task.status} />
+          </button>)}</div>}
+        <WorkspacePagination data={w.data} onPage={(page) => w.update({ page: String(page), laporan: null }, false)} />
+      </section>
+      <aside className="workspace-panel workspace-detail" aria-label="Detail tugas dan penanganan">
+        <DetailBack onClick={back} />
+        {!selectedId ? <div className="workspace-empty"><ClipboardList size={28} /><h2>Detail Tugas</h2><p>Pilih tugas untuk melihat lokasi, riwayat, dan tindakan penanganan.</p></div> : detail.isLoading ? <div className="workspace-loading" role="status">Memuat detail tugas…</div> : detail.isError ? <QueryError subject="Detail tugas" retry={detail.refetch} pending={detail.isFetching} /> : report && <>
+          <DetailPreview report={report} />
+          {success && <p className="workspace-success" role="status"><CheckCircle2 size={16} />{success}</p>}
+          {mutation.isError && <p className="workspace-error" role="alert">{getActionError(mutation.error)}</p>}
+          {report.status !== 'selesai' ? <form className="workspace-task-form" onSubmit={(event) => { event.preventDefault(); mutation.mutate('progress'); }}>
+            <label className="label" htmlFor="agency-progress-note">Catatan Penanganan {report.status === 'ditugaskan' && '(opsional)'}</label>
+            <textarea id="agency-progress-note" className="input" rows={3} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Tulis perkembangan atau hasil penanganan di lokasi…" disabled={mutation.isPending} />
+            {report.status === 'ditugaskan' ? <button className="btn-primary mt-3 w-full" disabled={mutation.isPending}><Play size={16} />{mutation.isPending ? 'Menyimpan…' : 'Mulai Pengerjaan'}</button> : <>
+              <button className="btn-outline mt-3 w-full" disabled={mutation.isPending || !note.trim()}>{mutation.isPending ? 'Menyimpan…' : 'Simpan Catatan Progres'}</button>
+              <div className="workspace-upload-section">
+                <label className="label" htmlFor="agency-proof-files">Foto Bukti Penyelesaian</label>
+                <input id="agency-proof-files" ref={inputRef} type="file" multiple accept={imageTypes.join(',')} className="sr-only" disabled={mutation.isPending || files.length >= 3} onChange={(event) => { addFiles(Array.from(event.target.files || [])); event.target.value = ''; }} />
+                <div className="workspace-proof-grid">{files.map((file, index) => <div className="workspace-proof" key={file.name + file.lastModified}><img src={previews[index]} alt={'Bukti penyelesaian ' + (index + 1)} /><button type="button" aria-label={'Hapus foto ' + file.name} disabled={mutation.isPending} onClick={() => setFiles((previous) => previous.filter((_, item) => item !== index))}><X size={14} /></button></div>)}
+                  {files.length < 3 && <button type="button" className="workspace-upload-button" disabled={mutation.isPending} onClick={() => inputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); addFiles(Array.from(event.dataTransfer.files)); }}><Upload size={20} /><span>Tambah Foto</span></button>}
                 </div>
-              )}
-            </div>
-          )}
-        </aside>
-      </div>
+                <p className="workspace-muted">Minimal 1 foto, maksimal 3. JPG, PNG, WebP, atau GIF hingga 5 MB per foto.</p>
+                {fileError && <p className="workspace-error" role="alert">{fileError}</p>}
+                <button type="button" className="btn-primary mt-4 w-full" disabled={mutation.isPending || !files.length} onClick={() => mutation.mutate('complete')}><CheckCircle2 size={16} />{mutation.isPending ? 'Menyimpan…' : 'Tandai Selesai'}</button>
+              </div>
+            </>}
+          </form> : <section className="workspace-completion"><h3>Bukti Penyelesaian</h3>{proofs.length ? <div className="workspace-proof-grid">{proofs.map((photo) => <a key={photo.id} href={photo.url} target="_blank" rel="noreferrer"><img src={photo.url} alt="Foto bukti penyelesaian laporan" /></a>)}</div> : <p className="workspace-muted">Belum ada foto bukti penyelesaian yang tersimpan.</p>}</section>}
+          <Link className="workspace-text-link" to={'/reports/' + report.id}>Lihat laporan lengkap <ArrowRight size={14} /></Link>
+        </>}
+      </aside>
     </div>
-  );
-
-  if (embedded) {
-    return content;
-  }
-
-  return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <Navbar />
-      {content}
-      <Footer />
-    </div>
-  );
+  </div>;
+  return embedded ? body : <DashboardFrame>{body}</DashboardFrame>;
 }

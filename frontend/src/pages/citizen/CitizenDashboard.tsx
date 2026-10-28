@@ -1,113 +1,44 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { ArrowRight, UserRound, Clock, CheckCircle2, FileText, HelpCircle, MapPin, MessageSquare, PlusCircle, Search } from 'lucide-react';
+import DashboardFrame from '@/components/DashboardFrame';
 import QueryError from '@/components/QueryError';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import apiClient from '@/lib/api';
-import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
-import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
-import { useAuthStore } from '@/stores/authStore';
-import { PlusCircle, FileText, Clock, CheckCircle2, AlertCircle, UserRound } from 'lucide-react';
+import { DashboardStats, FilterTabs, ReportProgress, StatusBadge, WorkspacePagination, WorkspaceRefresh, lastUpdate, relativeTime, reportCover } from '@/components/ReportWorkspaceUI';
+import { useReportWorkspace } from '@/hooks/useReportWorkspace';
+import { formatDateTime } from '@/lib/utils';
+import { STATUS_LABEL } from '@/types';
 
 export default function CitizenDashboard() {
-  const { user } = useAuthStore();
-
-  const { data: myReports = [], isLoading, isError, refetch, isFetching } = useQuery<Report[]>({
-    queryKey: ['my-reports'],
-    queryFn: async () => (await apiClient.get('/reports/me/reports')).data,
-    enabled: !!user,
-  });
-
-  const total = myReports.length;
-  const pending = myReports.filter((r) => ['diterima', 'diverifikasi'].includes(r.status)).length;
-  const inProgress = myReports.filter((r) => ['ditugaskan', 'dikerjakan'].includes(r.status)).length;
-  const completed = myReports.filter((r) => r.status === 'selesai').length;
-
-  return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <Navbar />
-
-      <div className="container-civix flex-1 py-12">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-civix-navy p-3 text-white">
-              <UserRound size={24} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-extrabold text-civix-navy">Dashboard Warga</h1>
-              <p className="mt-1 text-slate-600">Selamat datang, {user?.nama}</p>
-            </div>
-          </div>
-          <Link to="/citizen/create-report" className="btn-primary">
-            <PlusCircle size={18} /> Buat Laporan Baru
-          </Link>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: 'Total Laporan', value: total, icon: FileText, color: 'text-civix-navy bg-slate-100' },
-            { label: 'Menunggu Tindak Lanjut', value: pending, icon: Clock, color: 'text-amber-700 bg-amber-100' },
-            { label: 'Dalam Proses', value: inProgress, icon: AlertCircle, color: 'text-amber-800 bg-amber-100' },
-            { label: 'Selesai', value: completed, icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
-          ].map((stat, i) => (
-            <div key={i} className="card p-5">
-              <div className={`mb-3 inline-flex rounded-lg p-2.5 ${stat.color}`}>
-                <stat.icon size={20} />
-              </div>
-              <div className="text-2xl font-extrabold text-civix-navy">{isLoading || isError ? "—" : stat.value}</div>
-              <div className="mt-1 text-xs font-medium text-slate-500">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* My Reports List */}
-        <div className="card p-6">
-          <h2 className="mb-5 text-lg font-bold text-civix-navy">Laporan Saya</h2>
-
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="skeleton h-20" />
-              ))}
-            </div>
-          ) : isError ? <QueryError subject="Laporan Anda" retry={refetch} pending={isFetching} /> : myReports.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 py-12 text-center">
-              <FileText className="mx-auto mb-3 text-slate-300" size={32} />
-              <p className="font-semibold text-slate-700">Belum ada laporan</p>
-              <p className="mt-1 text-sm text-slate-500">Mulai laporkan masalah infrastruktur di sekitarmu</p>
-              <Link to="/citizen/create-report" className="btn-primary mt-4">
-                Buat Laporan Pertama
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {myReports.map((report) => (
-                <Link
-                  key={report.id}
-                  to={`/reports/${report.id}`}
-                  className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4 transition hover:border-civix-blue hover:shadow-md"
-                >
-                  <div className="flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <span className="mono text-xs font-bold text-slate-500">{report.kodeTiket}</span>
-                      <span className="text-xs text-slate-400">•</span>
-                      <span className="text-xs font-semibold text-civix-blue">{KATEGORI_LABEL[report.kategori]}</span>
-                    </div>
-                    <h3 className="font-bold text-civix-navy">{report.judul}</h3>
-                    <p className="mt-1 text-xs text-slate-500">{formatDate(report.dibuatPada)}</p>
-                  </div>
-                  <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${getStatusBadgeClasses(report.status)}`}>
-                    {STATUS_LABEL[report.status]}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+  const w = useReportWorkspace('citizen');
+  const counts = w.data?.counts;
+  const active = (counts?.diterima || 0) + (counts?.diverifikasi || 0) + (counts?.ditugaskan || 0) + (counts?.dikerjakan || 0);
+  return <DashboardFrame>
+    <header className="dashboard-heading">
+      <div><h1><UserRound size={25} aria-hidden="true" />Halo, {w.user?.nama || 'Warga'}</h1><p>Pantau perkembangan laporan Anda dan tindak lanjutnya.</p></div>
+      <Link to="/citizen/create-report" className="btn-primary"><PlusCircle size={17} aria-hidden="true" />Buat Laporan Baru</Link>
+    </header>
+    <DashboardStats loading={!w.data} items={[
+      { label: 'Total Laporan', icon: FileText, value: w.data?.totalAll || 0, onClick: () => w.update({ status: '' }) },
+      { label: 'Dalam Proses', icon: Clock, tone: 'amber', value: active, onClick: () => w.update({ status: 'aktif' }) },
+      { label: 'Selesai', icon: CheckCircle2, tone: 'green', value: counts?.selesai || 0, onClick: () => w.update({ status: 'selesai' }) },
+    ]} />
+    <section className="citizen-workspace" aria-labelledby="my-reports-heading">
+      <div className="workspace-panel-heading citizen-panel-heading"><h2 id="my-reports-heading">Laporan Saya</h2><div className="citizen-heading-tools"><div className="workspace-search"><Search size={16} aria-hidden="true" /><input className="input" aria-label="Cari laporan saya" placeholder="Cari laporan saya" maxLength={150} value={w.search} onChange={(event) => w.update({ q: event.target.value || null })} /></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></div></div>
+      <div className="citizen-list-controls">
+        <FilterTabs value={w.status} onChange={(status) => w.update({ status })} tabs={[
+          { value: '', label: 'Semua', count: w.data?.totalAll || 0 },
+          { value: 'aktif', label: 'Dalam Proses', count: active },
+          { value: 'selesai', label: 'Selesai', count: counts?.selesai || 0 },
+        ]} />
+        <select className="input" aria-label="Urutan laporan saya" value={w.sort} onChange={(event) => w.update({ sort: event.target.value })}><option value="newest">Terbaru dahulu</option><option value="oldest">Terlama dahulu</option></select>
       </div>
-
-      <Footer />
-    </div>
-  );
+      {w.isLoading ? <div className="workspace-panel workspace-loading" role="status">Memuat laporan Anda…</div> : w.isError ? <QueryError subject="Laporan Anda" retry={w.refetch} pending={w.isFetching} /> : !w.data?.items.length ? <div className="workspace-panel workspace-empty"><FileText size={32} /><h3>{w.data?.totalAll ? 'Tidak ada laporan pada filter ini' : 'Belum ada laporan'}</h3><p>{w.data?.totalAll ? 'Coba ubah pencarian atau pilih status lain.' : 'Laporkan masalah infrastruktur atau lingkungan di sekitar Anda.'}</p>{w.data?.totalAll ? <button className="btn-outline" onClick={() => w.update({ status: '', q: null })}>Lihat semua laporan</button> : <Link className="btn-primary" to="/citizen/create-report">Buat Laporan Pertama</Link>}</div> :
+        <div className="citizen-report-list">{w.data.items.map((report) => <article key={report.id} className="workspace-panel citizen-report">
+          <Link className="citizen-report-photo" to={'/reports/' + report.id}>{reportCover(report) ? <img src={reportCover(report)} alt={report.judul} /> : <span><MapPin size={26} aria-hidden="true" />Belum ada foto</span>}</Link>
+          <div className="citizen-report-content"><p className="workspace-ticket">{report.kodeTiket}</p><h3><Link to={'/reports/' + report.id}>{report.judul}</Link></h3><StatusBadge status={report.status} /><p className="workspace-location"><MapPin size={14} aria-hidden="true" />{report.namaJalan || report.region?.nama || 'Alamat belum dicantumkan'}</p><p className="workspace-muted">{report.assignedAgency?.nama || 'Menunggu penugasan ke instansi terkait'}</p><p className="citizen-latest-update"><MessageSquare size={14} aria-hidden="true" />{report.statusLogs?.[0]?.catatan || STATUS_LABEL[report.status]}</p><time className="workspace-row-age" dateTime={lastUpdate(report)} title={formatDateTime(lastUpdate(report))}>Diperbarui {relativeTime(lastUpdate(report))}</time></div>
+          <div className="citizen-report-progress"><ReportProgress status={report.status} /><Link className="btn-outline" to={'/reports/' + report.id}>Lihat Detail <ArrowRight size={15} /></Link></div>
+        </article>)}</div>}
+      <WorkspacePagination data={w.data} onPage={(page) => w.update({ page: String(page) }, false)} />
+    </section>
+    <details className="citizen-help"><summary><HelpCircle size={18} aria-hidden="true" /><span>Memahami status laporan Anda</span></summary><div><p><strong>Menunggu verifikasi:</strong> admin sedang memeriksa kelengkapan laporan.</p><p><strong>Terverifikasi:</strong> laporan disetujui dan menunggu penugasan.</p><p><strong>Menunggu ditangani:</strong> instansi sudah menerima tugas.</p><p><strong>Sedang dikerjakan:</strong> instansi sedang menangani laporan.</p><p><CheckCircle2 size={14} aria-hidden="true" /><strong>Selesai:</strong> lihat riwayat dan bukti penyelesaian pada halaman detail.</p></div></details>
+  </DashboardFrame>;
 }

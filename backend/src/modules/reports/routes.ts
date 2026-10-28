@@ -1,3 +1,4 @@
+import { getReportWorkspace } from './workspace.js';
 import { Router, Response } from 'express';
 import { z } from 'zod';
 import multer from 'multer';
@@ -25,6 +26,7 @@ const router = Router();
 // GET /me/reports - Laporan milik user yang login (warga)
 router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    if (req.query.view === 'workspace') return res.json(await getReportWorkspace(req.query, eq(reports.userId, req.user!.id)));
     const userReports = await db.query.reports.findMany({
       where: eq(reports.userId, req.user!.id),
       orderBy: [desc(reports.dibuatPada)],
@@ -40,6 +42,7 @@ router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response
 
     res.json(userReports);
   } catch (err) {
+    if (err instanceof z.ZodError) return res.status(400).json({ error: 'Filter laporan tidak valid' });
     res.status(500).json({ error: 'Gagal mengambil laporan warga' });
   }
 });

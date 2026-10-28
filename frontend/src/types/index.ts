@@ -100,6 +100,15 @@ export interface MapPoint {
   photos?: { url: string }[];
 }
 
+export interface ReportWorkspace {
+  items: Report[];
+  total: number;
+  totalAll: number;
+  page: number;
+  pageSize: number;
+  counts: Record<StatusLaporan, number>;
+}
+
 export interface AdminDashboard {
   total: number;
   pending: number;

@@ -1,3 +1,4 @@
+import { getReportWorkspace } from '../reports/workspace.js';
 import { transitionReport, ReportTransitionError } from '../reports/status.js';
 import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
@@ -17,7 +18,7 @@ router.get('/dashboard', async (_req, res: Response) => {
     const totalReports = await db.select({ count: count() }).from(reports);
     const pendingReports = await db.select({ count: count() }).from(reports).where(eq(reports.status, 'diterima'));
     const verifiedReports = await db.select({ count: count() }).from(reports).where(eq(reports.status, 'diverifikasi'));
-    const inProgressReports = await db.select({ count: count() }).from(reports).where(eq(reports.status, 'dikerjakan'));
+    const inProgressReports = await db.select({ count: count() }).from(reports).where(or(eq(reports.status, 'ditugaskan'), eq(reports.status, 'dikerjakan')));
     const completedReports = await db.select({ count: count() }).from(reports).where(eq(reports.status, 'selesai'));
 
     const totalWarga = await db.select({ count: count() }).from(users).where(eq(users.peran, 'warga'));
@@ -42,6 +43,7 @@ router.get('/dashboard', async (_req, res: Response) => {
 // GET /admin/reports - Semua laporan untuk admin
 router.get('/reports', async (req, res: Response) => {
   try {
+    if (req.query.view === 'workspace') return res.json(await getReportWorkspace(req.query));
     const { status, limit = 50, page = 1 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
@@ -64,8 +66,22 @@ router.get('/reports', async (req, res: Response) => {
 
     res.json(allReports);
   } catch (err) {
+    if (err instanceof z.ZodError) return res.status(400).json({ error: 'Filter laporan tidak valid' });
     res.status(500).json({ error: 'Gagal memuat daftar laporan admin' });
   }
+});
+
+router.get('/reports/:id', async (req, res: Response) => {
+  try {
+    const report = await db.query.reports.findFirst({
+      where: eq(reports.id, req.params.id),
+      with: { photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
+        region: true, assignedAgency: true,
+        statusLogs: { orderBy: [desc(reportStatusLogs.waktu), desc(reportStatusLogs.id)] } },
+    });
+    if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
+    res.json(report);
+  } catch { res.status(500).json({ error: 'Gagal memuat detail laporan' }); }
 });
 
 const sendTransitionError = (res: Response, error: unknown) => {

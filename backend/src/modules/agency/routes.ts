@@ -1,3 +1,4 @@
+import { getReportWorkspace } from '../reports/workspace.js';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { transitionReport, ReportTransitionError } from '../reports/status.js';
@@ -12,8 +13,8 @@ import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.j
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Hanya gambar yang diperbolehkan'));
+    if (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.mimetype)) cb(null, true);
+    else cb(new ReportTransitionError(400, 'Gunakan foto JPG, PNG, WebP, atau GIF.'));
   },
 });
 
@@ -86,6 +87,7 @@ router.get('/assignments', async (req: AuthRequest, res: Response) => {
   try {
     const scope = await getAgencyScope(req, res);
     if (!scope) return;
+    if (req.query.view === 'workspace') return res.json(await getReportWorkspace(req.query, scopeCondition(scope.agencyId), ['ditugaskan', 'dikerjakan', 'selesai']));
     const { status, limit = 30, page = 1 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
@@ -102,6 +104,7 @@ router.get('/assignments', async (req: AuthRequest, res: Response) => {
 
     res.json(tasks);
   } catch (err) {
+    if (err instanceof z.ZodError) return res.status(400).json({ error: 'Filter tugas tidak valid' });
     res.status(500).json({ error: 'Gagal memuat daftar tugas' });
   }
 });
