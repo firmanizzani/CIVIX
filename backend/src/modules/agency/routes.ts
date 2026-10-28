@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { z } from 'zod';
+import { transitionReport, ReportTransitionError } from '../reports/status.js';
 import { Router, Response } from 'express';
 import multer from 'multer';
 import { db } from '../../db/index.js';
@@ -18,7 +21,7 @@ const router = Router();
 router.use(authMiddleware);
 router.use(requireRole(['instansi', 'admin']));
 
-const ALLOWED_PROGRESS: string[] = ['dikerjakan', 'selesai'];
+
 
 const getAgencyScope = async (req: AuthRequest, res: Response): Promise<{ agencyId: string } | null> => {
   if (req.user!.peran === 'admin') return { agencyId: '' };
@@ -127,81 +130,46 @@ router.get('/assignments/:id', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// POST /agency/assignments/:id/progress - Update progres (mulai atau dalam pengerjaan)
+const sendTransitionError = (res: Response, error: unknown) => {
+  if (error instanceof ReportTransitionError) return res.status(error.statusCode).json({ error: error.message });
+  if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0]?.message || 'Data tidak valid' });
+  return res.status(500).json({ error: 'Gagal memperbarui tugas. Silakan coba lagi.' });
+};
+
 router.post('/assignments/:id/progress', async (req: AuthRequest, res: Response) => {
   try {
     const scope = await getAgencyScope(req, res);
     if (!scope) return;
-    if (!(await assertOwnsReport(req.params.id, scope.agencyId))) {
-      return res.status(403).json({ error: 'Tugas ini tidak ditugaskan ke instansi Anda' });
-    }
-
-    const { status, catatan } = req.body;
-    if (!ALLOWED_PROGRESS.includes(status)) {
-      return res.status(400).json({ error: `Status harus salah satu dari: ${ALLOWED_PROGRESS.join(', ')}` });
-    }
-
-    const report = await db.query.reports.findFirst({ where: eq(reports.id, req.params.id) });
-    if (!report) return res.status(404).json({ error: 'Tugas tidak ditemukan' });
-    if (!['ditugaskan', 'dikerjakan'].includes(report.status)) {
-      return res.status(400).json({ error: `Tugas dengan status ${report.status} tidak dapat diperbarui progres` });
-    }
-
-    await db.update(reports).set({ status: status as any }).where(eq(reports.id, req.params.id));
-
-    await db.insert(reportStatusLogs).values({
-      reportId: req.params.id,
-      diubahOleh: req.user!.id,
-      status: status as any,
-      catatan: catatan || (status === 'dikerjakan' ? 'Pekerjaan mulai dikerjakan' : 'Progres diperbarui'),
+    const { catatan } = z.object({ status: z.literal('dikerjakan', { errorMap: () => ({ message: 'Untuk menyelesaikan laporan, unggah foto bukti melalui tindakan penyelesaian.' }) }), catatan: z.string().trim().max(2000).optional() }).parse(req.body);
+    const result = await transitionReport({
+      reportId: req.params.id, actorId: req.user!.id, status: 'dikerjakan', allowedFrom: ['ditugaskan', 'dikerjakan'],
+      requiredAgencyId: scope.agencyId, allowNoteUpdate: true, note: catatan || 'Pekerjaan mulai dikerjakan',
     });
-
-    res.json({ success: true, message: 'Progres berhasil diperbarui' });
-  } catch (err) {
-    res.status(500).json({ error: 'Gagal memperbarui progres' });
-  }
+    res.json({ success: true, changed: result.changed, message: 'Progres berhasil diperbarui' });
+  } catch (error) { sendTransitionError(res, error); }
 });
 
-// POST /agency/assignments/:id/complete - Selesaikan laporan + wajib foto bukti
 router.post('/assignments/:id/complete', upload.array('bukti', 3), async (req: AuthRequest, res: Response) => {
   try {
     const scope = await getAgencyScope(req, res);
     if (!scope) return;
-    if (!(await assertOwnsReport(req.params.id, scope.agencyId))) {
-      return res.status(403).json({ error: 'Tugas ini tidak ditugaskan ke instansi Anda' });
-    }
-
-    const files = req.files as Express.Multer.File[];
-    if (!files || files.length === 0) {
-      return res.status(400).json({ error: 'Foto bukti perbaikan wajib diunggah minimal 1' });
-    }
-
-    const report = await db.query.reports.findFirst({ where: eq(reports.id, req.params.id) });
-    if (!report) return res.status(404).json({ error: 'Tugas tidak ditemukan' });
-    if (report.status !== 'dikerjakan') {
-      return res.status(400).json({ error: 'Tugas harus berstatus "dikerjakan" terlebih dahulu' });
-    }
-
-    for (const [index, file] of files.entries()) {
-      const storagePath = buildReportPhotoPath(report.kodeTiket, 'bukti', index + 1, file.mimetype);
-      const url = await uploadImageToStorage(file.buffer, storagePath, file.mimetype);
-      await db.insert(reportPhotos).values({ reportId: req.params.id, url, jenis: 'bukti_perbaikan' });
-    }
-
-    const selesaiPada = new Date();
-    await db.update(reports).set({ status: 'selesai', selesaiPada }).where(eq(reports.id, req.params.id));
-
-    await db.insert(reportStatusLogs).values({
-      reportId: req.params.id,
-      diubahOleh: req.user!.id,
-      status: 'selesai',
-      catatan: req.body.catatan || 'Pekerjaan selesai, bukti perbaikan telah diunggah',
+    const { catatan } = z.object({ catatan: z.string().trim().max(2000).optional() }).parse(req.body || {});
+    const files = (req.files || []) as Express.Multer.File[];
+    const result = await transitionReport({
+      reportId: req.params.id, actorId: req.user!.id, status: 'selesai', allowedFrom: ['dikerjakan'],
+      requiredAgencyId: scope.agencyId, completedAt: new Date(),
+      note: catatan || 'Pekerjaan selesai, bukti perbaikan telah diunggah',
+      beforeChange: async (tx, report) => {
+        if (!files.length) throw new ReportTransitionError(400, 'Foto bukti perbaikan wajib diunggah minimal 1');
+        for (const [index, file] of files.entries()) {
+          const storagePath = buildReportPhotoPath(report.kodeTiket, 'bukti', index + 1, file.mimetype).replace(/(\.[^.]+)$/, `-${randomUUID()}$1`);
+          const url = await uploadImageToStorage(file.buffer, storagePath, file.mimetype);
+          await tx.insert(reportPhotos).values({ reportId: report.id, url, jenis: 'bukti_perbaikan' });
+        }
+      },
     });
-
-    res.json({ success: true, message: 'Laporan selesai' });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Gagal menyelesaikan laporan' });
-  }
+    res.json({ success: true, changed: result.changed, message: 'Laporan selesai' });
+  } catch (error) { sendTransitionError(res, error); }
 });
 
 export default router;

@@ -96,6 +96,11 @@ export const reportStatusLogs = pgTable(
   },
   (table) => ({
     reportWaktuIdx: index('idx_status_logs_report').on(table.reportId, table.waktu),
+    eventUnique: uniqueIndex('idx_status_logs_unique_event').on(
+      table.reportId, table.status, table.waktu,
+      sql`coalesce(${table.diubahOleh}, '')`,
+      sql`coalesce(md5(${table.catatan}), '')`
+    ),
   })
 );
 

@@ -1,7 +1,7 @@
 import { db } from './index.js';
 import { users, regions, reports, reportPhotos, reportStatusLogs, agencies, reportAssignments } from './schema.js';
 import bcrypt from 'bcrypt';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 async function seed() {
   console.log('🌱 Mulai seeding database...');
@@ -161,7 +161,7 @@ async function seed() {
       fasilitas_umum: agencyByName('Dinas Bina Marga Provinsi DKI Jakarta').id,
       lainnya: agencyByName('Dinas Bina Marga Provinsi DKI Jakarta').id,
     };
-    for (const report of allReports) {
+    for (const report of allReports.filter((item) => reportsData.some((demo) => demo.kodeTiket === item.kodeTiket))) {
       const agencyId = agencyForCategory[report.kategori];
       const requiresAssignment = ['ditugaskan', 'dikerjakan', 'selesai'].includes(report.status);
       await db.update(reports).set({ assignedAgencyId: requiresAssignment ? agencyId : null }).where(eq(reports.id, report.id));
@@ -182,7 +182,7 @@ async function seed() {
 
     // 4. Status Logs
     console.log('   → Membuat status logs...');
-    for (const report of allReports) {
+    for (const report of allReports.filter((item) => reportsData.some((demo) => demo.kodeTiket === item.kodeTiket))) {
       const logs: Array<{
         reportId: string;
         diubahOleh?: string;
@@ -239,7 +239,12 @@ async function seed() {
         });
       }
 
-      await db.insert(reportStatusLogs).values(logs).onConflictDoNothing();
+      await db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(hashtext('civix-demo-status-seed'))`);
+        const existing = await tx.query.reportStatusLogs.findFirst({ where: eq(reportStatusLogs.reportId, report.id) });
+        // Never synthesize another history over an existing report's real events.
+        if (!existing) await tx.insert(reportStatusLogs).values(logs).onConflictDoNothing();
+      });
     }
 
     console.log('   ✓ Status logs created');

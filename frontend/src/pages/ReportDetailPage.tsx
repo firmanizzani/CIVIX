@@ -223,7 +223,7 @@ export default function ReportDetailPage() {
                 {report.statusLogs?.map((log, index) => (
                   <div key={log.id} className="relative">
                     <span style={{ backgroundColor: getStatusColor(log.status) }} className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'ring-4 ring-slate-100' : ''}`} />
-                    <p className="text-xs text-slate-400">{formatDateTime(log.waktu)}</p>
+                    <p className="text-xs text-slate-500">{formatDateTime(log.waktu, true)}</p>
                     <p className="font-bold text-sm text-civix-navy">{STATUS_LABEL[log.status]}</p>
                     {log.catatan && <p className="mt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded">{log.catatan}</p>}
                   </div>

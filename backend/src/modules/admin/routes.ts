@@ -1,3 +1,4 @@
+import { transitionReport, ReportTransitionError } from '../reports/status.js';
 import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportStatusLogs, agencies, reportAssignments, users } from '../../db/schema.js';
@@ -67,65 +68,39 @@ router.get('/reports', async (req, res: Response) => {
   }
 });
 
-// POST /admin/reports/:id/verify - Verifikasi laporan
+const sendTransitionError = (res: Response, error: unknown) => {
+  if (error instanceof ReportTransitionError) return res.status(error.statusCode).json({ error: error.message });
+  if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0]?.message || 'Data tidak valid' });
+  return res.status(500).json({ error: 'Gagal memperbarui laporan' });
+};
+const NoteSchema = z.object({ catatan: z.string().trim().max(2000).optional() });
+
 router.post('/reports/:id/verify', async (req: AuthRequest, res: Response) => {
   try {
-    const { catatan } = req.body;
-    await db.update(reports).set({ status: 'diverifikasi' }).where(eq(reports.id, req.params.id));
-
-    await db.insert(reportStatusLogs).values({
-      reportId: req.params.id,
-      diubahOleh: req.user!.id,
-      status: 'diverifikasi',
-      catatan: catatan || 'Laporan telah diverifikasi oleh administrator',
-    });
-
-    res.json({ success: true, message: 'Laporan diverifikasi' });
-  } catch (err) {
-    res.status(500).json({ error: 'Gagal memverifikasi laporan' });
-  }
+    const { catatan } = NoteSchema.parse(req.body || {});
+    const result = await transitionReport({ reportId: req.params.id, actorId: req.user!.id,
+      status: 'diverifikasi', allowedFrom: ['diterima'], note: catatan || 'Laporan telah diverifikasi oleh administrator' });
+    res.json({ success: true, changed: result.changed, message: 'Laporan diverifikasi' });
+  } catch (error) { sendTransitionError(res, error); }
 });
 
-// POST /admin/reports/:id/reject - Tolak laporan
 router.post('/reports/:id/reject', async (req: AuthRequest, res: Response) => {
   try {
-    const { alasan } = req.body;
-    if (!alasan) return res.status(400).json({ error: 'Alasan penolakan wajib diisi' });
-
-    await db.update(reports).set({ status: 'ditolak' }).where(eq(reports.id, req.params.id));
-
-    await db.insert(reportStatusLogs).values({
-      reportId: req.params.id,
-      diubahOleh: req.user!.id,
-      status: 'ditolak',
-      catatan: alasan,
-    });
-
-    res.json({ success: true, message: 'Laporan ditolak' });
-  } catch (err) {
-    res.status(500).json({ error: 'Gagal menolak laporan' });
-  }
+    const { alasan } = z.object({ alasan: z.string().trim().min(1, 'Alasan penolakan wajib diisi').max(2000) }).parse(req.body);
+    const result = await transitionReport({ reportId: req.params.id, actorId: req.user!.id,
+      status: 'ditolak', allowedFrom: ['diterima'], note: alasan });
+    res.json({ success: true, changed: result.changed, message: 'Laporan ditolak' });
+  } catch (error) { sendTransitionError(res, error); }
 });
 
-// POST /admin/reports/:id/duplicate - Tandai duplikat
 router.post('/reports/:id/duplicate', async (req: AuthRequest, res: Response) => {
   try {
-    const { targetTicket } = req.body;
-    const catatan = targetTicket ? `Duplikat dari tiket ${targetTicket}` : 'Laporan terindikasi duplikat';
-
-    await db.update(reports).set({ status: 'duplikat' }).where(eq(reports.id, req.params.id));
-
-    await db.insert(reportStatusLogs).values({
-      reportId: req.params.id,
-      diubahOleh: req.user!.id,
-      status: 'duplikat',
-      catatan,
-    });
-
-    res.json({ success: true, message: 'Laporan ditandai duplikat' });
-  } catch (err) {
-    res.status(500).json({ error: 'Gagal menandai duplikat' });
-  }
+    const { targetTicket } = z.object({ targetTicket: z.string().trim().max(20).optional() }).parse(req.body || {});
+    const result = await transitionReport({ reportId: req.params.id, actorId: req.user!.id,
+      status: 'duplikat', allowedFrom: ['diterima', 'diverifikasi'],
+      note: targetTicket ? `Duplikat dari tiket ${targetTicket}` : 'Laporan terindikasi duplikat' });
+    res.json({ success: true, changed: result.changed, message: 'Laporan ditandai duplikat' });
+  } catch (error) { sendTransitionError(res, error); }
 });
 
 const AgencySchema = z.object({ nama: z.string().trim().min(2).max(150), deskripsi: z.string().trim().max(2000).optional().nullable() });
@@ -202,70 +177,29 @@ router.get('/agencies', async (_req, res: Response) => {
   }
 });
 
-// POST /admin/reports/:id/restore - Pulihkan laporan ke antrean verifikasi
 router.post('/reports/:id/restore', async (req: AuthRequest, res: Response) => {
   try {
-    const report = await db.query.reports.findFirst({ where: eq(reports.id, req.params.id) });
-    if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
-    if (!['duplikat', 'diverifikasi'].includes(report.status)) {
-      return res.status(400).json({ error: 'Hanya laporan duplikat atau terverifikasi yang dapat dikembalikan ke antrean verifikasi' });
-    }
-
-    await db.update(reports).set({ status: 'diterima', assignedAgencyId: null }).where(eq(reports.id, report.id));
-    await db.insert(reportStatusLogs).values({
-      reportId: report.id,
-      diubahOleh: req.user!.id,
-      status: 'diterima',
-      catatan: 'Laporan dipulihkan oleh admin dan dikembalikan ke antrean verifikasi',
-    });
-
-    res.json({ success: true, message: 'Laporan dipulihkan ke antrean verifikasi' });
-  } catch (err) {
-    res.status(500).json({ error: 'Gagal memulihkan laporan' });
-  }
+    const result = await transitionReport({ reportId: req.params.id, actorId: req.user!.id,
+      status: 'diterima', allowedFrom: ['duplikat', 'diverifikasi'], agencyId: null, completedAt: null,
+      note: 'Laporan dipulihkan oleh admin dan dikembalikan ke antrean verifikasi' });
+    res.json({ success: true, changed: result.changed, message: 'Laporan dipulihkan ke antrean verifikasi' });
+  } catch (error) { sendTransitionError(res, error); }
 });
 
-// POST /admin/reports/:id/assign - Tugaskan ke instansi
 router.post('/reports/:id/assign', async (req: AuthRequest, res: Response) => {
   try {
-    const { agencyId, catatan } = req.body;
-    if (!agencyId) return res.status(400).json({ error: 'Pilih instansi penerima tugas' });
-
+    const { agencyId, catatan } = z.object({ agencyId: z.string().min(1, 'Pilih instansi penerima tugas'), catatan: z.string().trim().max(2000).optional() }).parse(req.body);
     const agency = await db.query.agencies.findFirst({ where: eq(agencies.id, agencyId) });
     if (!agency) return res.status(404).json({ error: 'Instansi tidak ditemukan' });
-
-    const report = await db.query.reports.findFirst({ where: eq(reports.id, req.params.id) });
-    if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
-    if (report.status !== 'diverifikasi') {
-      return res.status(400).json({ error: `Hanya laporan berstatus terverifikasi yang dapat ditugaskan (status saat ini: ${report.status})` });
-    }
-
-    const assignment = await db
-      .insert(reportAssignments)
-      .values({
-        reportId: report.id,
-        agencyId: agency.id,
-        assignedBy: req.user!.id,
-        catatan: catatan || null,
-      })
-      .returning();
-
-    await db
-      .update(reports)
-      .set({ status: 'ditugaskan', assignedAgencyId: agency.id })
-      .where(eq(reports.id, report.id));
-
-    await db.insert(reportStatusLogs).values({
-      reportId: report.id,
-      diubahOleh: req.user!.id,
-      status: 'ditugaskan',
-      catatan: `Ditugaskan ke ${agency.nama}`,
+    const result = await transitionReport({
+      reportId: req.params.id, actorId: req.user!.id, status: 'ditugaskan', allowedFrom: ['diverifikasi'],
+      agencyId, note: `Ditugaskan ke ${agency.nama}${catatan ? ': ' + catatan : ''}`,
+      beforeChange: async (tx, report) => {
+        await tx.insert(reportAssignments).values({ reportId: report.id, agencyId, assignedBy: req.user!.id, catatan: catatan || null });
+      },
     });
-
-    res.json({ success: true, assignment, agency: { id: agency.id, nama: agency.nama }, message: `Laporan ditugaskan ke ${agency.nama}` });
-  } catch (err) {
-    res.status(500).json({ error: 'Gagal menugaskan laporan' });
-  }
+    res.json({ success: true, changed: result.changed, agency: { id: agency.id, nama: agency.nama }, message: `Laporan ditugaskan ke ${agency.nama}` });
+  } catch (error) { sendTransitionError(res, error); }
 });
 
 export default router;

@@ -149,9 +149,9 @@ async function seedSeptemberReports() {
         reportId: report.id,
         diubahOleh: warga.id,
         status: item.status,
-        catatan: 'Data dummy September 2026 untuk demonstrasi statistik.',
+        catatan: null,
         waktu: item.selesaiPada ?? item.dibuatPada,
-      });
+      }).onConflictDoNothing();
     }
   }
 
