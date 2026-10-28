@@ -43,6 +43,13 @@
       "when": 1793196906581,
       "tag": "0005_prevent_duplicate_status_events",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793200659536,
+      "tag": "0006_collision_safe_status_history_ids",
+      "breakpoints": true
     }
   ]
 }

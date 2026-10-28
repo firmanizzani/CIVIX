@@ -59,7 +59,7 @@ try {
     post(`/admin/reports/${ids[1]}/verify`, adminToken),
     post(`/admin/reports/${ids[1]}/reject`, adminToken, { alasan: 'Concurrent reject test' }),
   ]);
-  assert.deepEqual(race.map((response) => response.status).sort(), [200, 409]);
+  assert.deepEqual(race.map((response) => response.status).sort(), [200, 409], JSON.stringify(race));
   const raceEvents = await sql`select id from report_status_logs where report_id=${ids[1]}`;
   assert.equal(raceEvents.length, 1, 'Only one competing state transition may commit.');
 
@@ -83,7 +83,7 @@ try {
   } catch (error) { if (error !== rollbackProbe) throw error; }
   console.log('PASS: concurrent verify/assign/progress, stale actions, agency scope, completion evidence, distinct notes, and database uniqueness.');
 } catch (error) {
-  console.error(error.message);
+  console.error(error.stack || error.message);
   process.exitCode = 1;
 } finally {
   // Only the two explicitly created test reports are removed; cascades remove their test history.

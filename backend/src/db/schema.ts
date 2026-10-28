@@ -85,7 +85,7 @@ export const reportPhotos = pgTable('report_photos', {
 export const reportStatusLogs = pgTable(
   'report_status_logs',
   {
-    id: varchar('id', { length: 40 }).primaryKey().default(sql`'rlog_' || lpad(nextval('seq_report_status_logs_id')::text, 3, '0')`),
+    id: varchar('id', { length: 40 }).primaryKey().default(sql`'rlog_' || replace(gen_random_uuid()::text, '-', '')`),
     reportId: varchar('report_id', { length: 40 })
       .notNull()
       .references(() => reports.id, { onDelete: 'cascade' }),

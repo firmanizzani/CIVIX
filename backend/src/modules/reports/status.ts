@@ -52,7 +52,7 @@ export async function transitionReport(options: Transition) {
     await tx.insert(reportStatusLogs).values({
       reportId: report.id, diubahOleh: options.actorId,
       status: options.status, catatan: options.note,
-    }).onConflictDoNothing();
+    });
     return { changed: true, report: updated };
   });
 }
