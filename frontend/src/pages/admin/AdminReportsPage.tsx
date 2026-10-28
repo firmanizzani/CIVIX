@@ -78,11 +78,6 @@ export default function AdminReportsPage({ embedded = false }: { embedded?: bool
         <FilterTabs value={w.status} onChange={(status) => w.update({ status })} tabs={[
           { value: 'diterima', label: 'Perlu Verifikasi', count: counts?.diterima || 0 },
           { value: 'diverifikasi', label: 'Perlu Ditugaskan', count: counts?.diverifikasi || 0 },
-          { value: 'ditugaskan', label: 'Menunggu Ditangani', count: counts?.ditugaskan || 0 },
-          { value: 'dikerjakan', label: 'Dikerjakan', count: counts?.dikerjakan || 0 },
-          { value: 'selesai', label: 'Selesai', count: counts?.selesai || 0 },
-          { value: 'ditolak', label: 'Ditolak', count: counts?.ditolak || 0 },
-          { value: 'duplikat', label: 'Duplikat', count: counts?.duplikat || 0 },
           { value: '', label: 'Semua', count: w.data?.totalAll || 0 },
         ]} />
         <div className="workspace-filters">
