@@ -10,6 +10,11 @@ import MapPage from '@/pages/MapPage';
 import StatsPage from '@/pages/StatsPage';
 import CitizenDashboard from '@/pages/citizen/CitizenDashboard';
 import CreateReportPage from '@/pages/citizen/CreateReportPage';
+import CitizenReportsPage from '@/pages/citizen/CitizenReportsPage';
+import CitizenReportDetail from '@/pages/citizen/CitizenReportDetail';
+import CitizenMapPage from '@/pages/citizen/CitizenMapPage';
+import CitizenSettingsPage from '@/pages/citizen/CitizenSettingsPage';
+import CitizenInformationPage from '@/pages/citizen/CitizenInformationPage';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminReportsPage from '@/pages/admin/AdminReportsPage';
 import AdminPeoplePage from '@/pages/admin/AdminPeoplePage';
@@ -40,8 +45,17 @@ function App() {
       <Route path="/stats" element={<PageTransition><StatsPage /></PageTransition>} />
 
       <Route element={<ProtectedRoute allowedRoles={['warga']} />}>
-        <Route path="/citizen" element={<CitizenDashboard />} />
-        <Route path="/citizen/create-report" element={<CreateReportPage />} />
+        <Route path="/citizen" element={<AdminLayout citizen />}>
+          <Route index element={<CitizenDashboard />} />
+          <Route path="create-report" element={<CreateReportPage />} />
+          <Route path="reports" element={<CitizenReportsPage />} />
+          <Route path="reports/:id" element={<CitizenReportDetail />} />
+          <Route path="map" element={<CitizenMapPage />} />
+          <Route path="map/:id" element={<CitizenReportDetail publicMode />} />
+          <Route path="information" element={<CitizenInformationPage />} />
+          <Route path="profile" element={<Navigate to="/citizen/settings" replace />} />
+          <Route path="settings" element={<CitizenSettingsPage />} />
+        </Route>
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['admin']} />}>

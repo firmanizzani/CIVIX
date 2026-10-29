@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ClipboardCheck, Files, Building2, Users, Settings, ChevronDown, LogOut, ExternalLink, Menu, X, Map, ChartNoAxesCombined } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Files, Building2, Users, Settings, ChevronDown, LogOut, ExternalLink, Menu, X, Map, ChartNoAxesCombined, PlusSquare, BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api';
 import CivixLogo from '@/components/CivixLogo';
+import SidebarArtwork from '@/components/SidebarArtwork';
+import CitizenSidebarAccount from '@/components/CitizenSidebarAccount';
 import { useAuthStore } from '@/stores/authStore';
 import '@/pages/admin/admin.css';
 import '@/pages/admin/admin-workspace.css';
+import '@/pages/citizen/citizen.css';
 
 const links = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,12 +32,21 @@ const agencyLinks = [
   { to: '/agency/settings', label: 'Pengaturan', icon: Settings },
 ];
 
-export default function AdminLayout({ agency = false }: { agency?: boolean }) {
+const citizenLinks = [
+  { to: '/citizen', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/citizen/create-report', label: 'Buat Laporan', icon: PlusSquare },
+  { to: '/citizen/reports', label: 'Riwayat Laporan', icon: Files },
+  { to: '/citizen/map', label: 'Peta Laporan', icon: Map },
+  { to: '/citizen/information', label: 'Informasi', icon: BookOpen },
+  { to: '/citizen/settings', label: 'Pengaturan', icon: Settings },
+];
+
+export default function AdminLayout({ agency = false, citizen = false }: { agency?: boolean; citizen?: boolean }) {
   const { user, logout } = useAuthStore();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const base = agency ? '/agency' : '/admin';
-  const roleName = agency ? 'instansi' : 'admin';
+  const base = citizen ? '/citizen' : agency ? '/agency' : '/admin';
+  const roleName = citizen ? 'warga' : agency ? 'instansi' : 'admin';
   const unit = useQuery<{ nama: string }>({ queryKey: ['agency-profile', user?.id], queryFn: async () => (await apiClient.get('/agency/profile')).data, enabled: agency && user?.peran === 'instansi', refetchInterval: 30000 });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -48,16 +60,17 @@ export default function AdminLayout({ agency = false }: { agency?: boolean }) {
     return () => { window.removeEventListener('keydown', dismiss); window.removeEventListener('pointerdown', outside); };
   }, []);
   const initials = (user?.nama || 'Admin').split(/\s+/).slice(0, 2).map(word => word[0]).join('').toUpperCase();
-  return <div className={`admin-shell agency-shell${agency ? '' : ' admin-workspace'}`}>
+  return <div className={`admin-shell agency-shell${citizen ? ' citizen-shell' : agency ? '' : ' admin-workspace'}`}>
     <div className="admin-mobile-bar"><Link to={base}><CivixLogo size="sm" /></Link><button ref={toggle} type="button" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? `Tutup navigasi ${roleName}` : `Buka navigasi ${roleName}`} aria-expanded={mobileOpen} aria-controls="admin-sidebar">{mobileOpen ? <X size={21} /> : <Menu size={21} />}</button></div>
     {mobileOpen && <button className="admin-sidebar-backdrop" onClick={() => setMobileOpen(false)} aria-label={`Tutup navigasi ${roleName}`} />}
     <aside id="admin-sidebar" className="admin-sidebar" data-open={mobileOpen}>
-      <Link to={base} className="admin-brand" aria-label={`CIVIX Dashboard ${agency ? "Instansi" : "Admin"}`}><CivixLogo />{agency && <small>Instansi</small>}</Link>
-      <nav aria-label={`Navigasi ${roleName}`}>{(agency ? agencyLinks : links).map(({ to, label, icon: Icon }) => <NavLink end={to === base} key={to} to={to} onClick={() => setMobileOpen(false)}><Icon size={17} strokeWidth={1.7} /><span>{label}</span></NavLink>)}</nav>
-      <div className="admin-profile" ref={profile}>
+      <Link to={base} className="admin-brand" aria-label={`CIVIX Dashboard ${citizen ? 'Warga' : agency ? 'Instansi' : 'Admin'}`}><CivixLogo />{(agency || citizen) && <small>{citizen ? 'Warga' : 'Instansi'}</small>}</Link>
+      <nav aria-label={`Navigasi ${roleName}`}>{(citizen ? citizenLinks : agency ? agencyLinks : links).map(({ to, label, icon: Icon }) => <NavLink end={to === base} key={to} to={to} onClick={() => setMobileOpen(false)}><Icon size={17} strokeWidth={1.7} /><span>{label}</span></NavLink>)}</nav>
+      <SidebarArtwork />
+      {citizen ? <CitizenSidebarAccount /> : <div className="admin-profile" ref={profile}>
         {profileOpen && <div className="admin-profile-menu" id="admin-profile-menu"><p>{user?.email}</p><Link to={`${base}/settings`}><Settings size={15} /> Pengaturan</Link><Link to="/"><ExternalLink size={15} /> Buka situs publik</Link><button type="button" onClick={() => { logout(); navigate('/login', { replace: true }); }}><LogOut size={15} /> Keluar</button></div>}
         <button className="admin-profile-button" type="button" onClick={() => setProfileOpen(!profileOpen)} aria-expanded={profileOpen} aria-controls="admin-profile-menu"><span className="admin-avatar">{initials}</span><span><strong title={agency ? unit.data?.nama || user?.agencyNama || user?.nama : user?.nama}>{agency ? unit.data?.nama || user?.agencyNama || user?.nama : user?.nama || 'Admin'}</strong><small>{agency ? 'Instansi · DKI Jakarta' : 'Administrator'}</small></span><ChevronDown size={15} /></button>
-      </div>
+      </div>}
     </aside>
     <main className="admin-content"><Outlet /></main>
   </div>;

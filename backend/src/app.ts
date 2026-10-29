@@ -9,6 +9,7 @@ import reportRoutes from './modules/reports/routes.js';
 import adminRoutes from './modules/admin/routes.js';
 import agencyRoutes from './modules/agency/routes.js';
 import statsRoutes from './modules/stats/routes.js';
+import citizenRoutes from './modules/citizen/routes.js';
 
 dotenv.config();
 
@@ -29,10 +30,11 @@ app.get('/api/v1/me/reports', (req, res, next) => {
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/agency', agencyRoutes);
 app.use('/api/v1/stats', statsRoutes);
+app.use('/api/v1/citizen', citizenRoutes);
 app.use((_req, res) => res.status(404).json({ error: 'Endpoint tidak ditemukan' }));
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (err instanceof multer.MulterError) {
-    return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'Ukuran setiap foto maksimal 5 MB.' : 'Maksimal 3 foto untuk setiap pengiriman.' });
+    return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? (_req.originalUrl.startsWith('/api/v1/citizen/avatar') ? 'Ukuran foto akun maksimal 2 MB.' : 'Ukuran setiap foto maksimal 5 MB.') : 'Maksimal 3 foto untuk setiap pengiriman.' });
   }
   if ('statusCode' in err && typeof err.statusCode === 'number' && err.statusCode >= 400 && err.statusCode < 500) {
     return res.status(err.statusCode).json({ error: err.message });

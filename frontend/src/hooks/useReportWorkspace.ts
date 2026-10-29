@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import apiClient from '@/lib/api';
@@ -54,14 +54,16 @@ export function useReportWorkspace(role: 'admin' | 'agency' | 'citizen', default
       return next;
     }, { replace: true });
   };
-  const refreshReports = () => queryClient.invalidateQueries({ predicate: (cached) => [
-    'workspace', 'workspace-detail', 'admin-dashboard', 'agency-dashboard', 'admin-reports',
+  const refreshReports = () => invalidateReportQueries(queryClient);
+  return { ...query, params, update, status, kategori, sort, search: rawSearch, refreshReports, user };
+}
+
+export const invalidateReportQueries = (queryClient: QueryClient) => queryClient.invalidateQueries({ predicate: (cached) => [
+    'citizen-overview', 'citizen-detail', 'citizen-map', 'citizen-updates', 'workspace', 'workspace-detail', 'admin-dashboard', 'agency-dashboard', 'admin-reports',
     'agency-assignments', 'my-reports', 'report-detail', 'recent-reports', 'public-reports',
     'stats-overview', 'stats-overview-full', 'stats-trend', 'stats-regions', 'stats-category',
     'map-points-full', 'map-points-preview', 'admin-map', 'admin-overview', 'admin-agencies', 'agency-overview', 'admin-operational-overview',
   ].includes(String(cached.queryKey[0])) });
-  return { ...query, params, update, status, kategori, sort, search: rawSearch, refreshReports, user };
-}
 
 export function getActionError(error: unknown) {
   if (isAxiosError(error) && typeof error.response?.data?.error === 'string') return error.response.data.error;

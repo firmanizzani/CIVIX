@@ -1,0 +1,18 @@
+import { Link } from 'react-router-dom';
+import { Search, FileText } from 'lucide-react';
+import { useReportWorkspace } from '@/hooks/useReportWorkspace';
+import { FilterTabs, StatusBadge, WorkspacePagination, WorkspaceRefresh, reportCover } from '@/components/ReportWorkspaceUI';
+import QueryError from '@/components/QueryError';
+import { formatDateTime } from '@/lib/utils';
+import { KATEGORI_LABEL, Report } from '@/types';
+
+export function CitizenReportRows({ reports }: { reports: Report[] }) {
+  return <div className="warga-report-rows">{reports.map(report => <Link className="warga-report-row" key={report.id} to={'/citizen/reports/' + report.id}>{reportCover(report) ? <img src={reportCover(report)} alt="" /> : <span className="warga-no-photo"><FileText size={21} /></span>}<div className="warga-row-title"><strong>{report.judul}</strong><small>{report.namaJalan || report.region?.nama || 'Alamat belum dicantumkan'}</small></div><time dateTime={report.dibuatPada}>{formatDateTime(report.dibuatPada).split(',')[0]}</time><StatusBadge status={report.status} /></Link>)}</div>;
+}
+
+export default function CitizenReportsPage() {
+  const w = useReportWorkspace('citizen');
+  const c = w.data?.counts;
+  const active = (c?.diterima || 0) + (c?.diverifikasi || 0) + (c?.ditugaskan || 0) + (c?.dikerjakan || 0);
+  return <><header className="admin-page-header"><div><h1>Riwayat Laporan</h1><p>Lihat seluruh laporan Anda dan ikuti perkembangannya.</p></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></header><section className="admin-panel warga-history"><FilterTabs value={w.status} onChange={status => w.update({ status })} tabs={[{ value: '', label: 'Semua', count: w.data?.totalAll || 0 }, { value: 'aktif', label: 'Sedang Diproses', count: active }, { value: 'selesai', label: 'Selesai', count: c?.selesai || 0 }, { value: 'ditolak_duplikat', label: 'Ditolak / Duplikat', count: (c?.ditolak || 0) + (c?.duplikat || 0) }]} /><div className="warga-history-filters"><div className="workspace-search"><Search size={16} /><input className="input" aria-label="Cari laporan saya" placeholder="Cari judul, lokasi, atau kode laporan…" value={w.search} maxLength={150} onChange={event => w.update({ q: event.target.value || null })} /></div><select className="input" aria-label="Kategori laporan saya" value={w.kategori} onChange={event => w.update({ kategori: event.target.value || null })}><option value="">Semua kategori</option>{Object.entries(KATEGORI_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select><select className="input" aria-label="Urutan laporan saya" value={w.sort} onChange={event => w.update({ sort: event.target.value })}><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select></div>{w.isError ? <QueryError subject="Laporan Anda" retry={w.refetch} /> : w.isLoading ? <p className="admin-loading">Memuat laporan Anda…</p> : w.data?.items.length ? <CitizenReportRows reports={w.data.items} /> : <div className="workspace-empty"><FileText size={30} /><h2>{w.data?.totalAll ? 'Tidak ada laporan pada filter ini' : 'Belum ada laporan'}</h2><p>{w.data?.totalAll ? 'Ubah status, kategori, atau kata pencarian.' : 'Mulai dengan melaporkan masalah di sekitar Anda.'}</p>{w.data?.totalAll ? <button className="btn-outline" onClick={() => w.update({ status: '', kategori: null, q: null })}>Reset filter</button> : <Link className="btn-primary" to="/citizen/create-report">Buat Laporan</Link>}</div>}<WorkspacePagination data={w.data} onPage={page => w.update({ page: String(page) }, false)} /></section></>;
+}

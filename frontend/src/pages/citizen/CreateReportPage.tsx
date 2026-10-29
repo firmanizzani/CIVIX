@@ -1,460 +1,78 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import Navbar from '@/components/Navbar';
-import PageHeading from '@/components/PageHeading';
-import Footer from '@/components/Footer';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MapContainer, TileLayer, CircleMarker, useMap, useMapEvents } from 'react-leaflet';
+import { CheckCircle2, Crosshair, Loader2, Search, Upload, X } from 'lucide-react';
 import apiClient from '@/lib/api';
-import { KATEGORI_LABEL, KategoriLaporan } from '@/types';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
+import { getActionError, invalidateReportQueries } from '@/hooks/useReportWorkspace';
+import { KATEGORI_LABEL, Region } from '@/types';
 import 'leaflet/dist/leaflet.css';
-import {
-  Upload,
-  X,
-  MapPin,
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-  Search,
-  Crosshair,
-} from 'lucide-react';
-
-const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
-
-// Fix Leaflet default marker icon
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-type GeocodingResult = {
-  place_id: number;
-  lat: string;
-  lon: string;
-  display_name: string;
-};
-
-const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
-const DKI_VIEWBOX = '106.68,-5.2,106.98,-6.38';
-
-function MapController({ position }: { position: [number, number] | null }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (position) map.flyTo(position, 16, { duration: 0.7 });
-  }, [map, position]);
-
-  return null;
+type Position = [number, number];
+function MapPicker({ position, select }: { position: Position | null; select: (position: Position) => void }) {
+  const map = useMapEvents({ click: event => select([event.latlng.lat, event.latlng.lng]) });
+  useEffect(() => { if (position) map.setView(position, Math.max(14, map.getZoom())); }, [map, position]);
+  return position ? <CircleMarker center={position} radius={10} pathOptions={{ color: 'white', fillColor: '#009766', fillOpacity: 1, weight: 3 }} /> : null;
 }
-
-function LocationPicker({
-  position,
-  onSelect,
-}: {
-  position: [number, number] | null;
-  onSelect: (pos: [number, number]) => void;
-}) {
-  useMapEvents({
-    click(e) {
-      onSelect([e.latlng.lat, e.latlng.lng]);
-    },
-  });
-  return position ? <Marker position={position} /> : null;
+function ResizeMap() { const map = useMap(); useEffect(() => { const observer = new ResizeObserver(() => map.invalidateSize({ pan: false })); observer.observe(map.getContainer()); return () => observer.disconnect(); }, [map]); return null; }
+function PhotoPreviews({ files, remove }: { files: File[]; remove?: (index: number) => void }) {
+  const [urls, setUrls] = useState<string[]>([]);
+  useEffect(() => { const next = files.map(file => URL.createObjectURL(file)); setUrls(next); return () => next.forEach(url => URL.revokeObjectURL(url)); }, [files]);
+  return <div className="warga-photo-grid">{urls.map((url, index) => <div key={url}><img src={url} alt={'Foto bukti ' + (index + 1)} />{remove && <button type="button" onClick={() => remove(index)} aria-label={'Hapus foto ' + (index + 1)}><X size={15} /></button>}</div>)}</div>;
 }
-
 export default function CreateReportPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const kategoriFromUrl = searchParams.get('kategori') || '';
-
-  const [judul, setJudul] = useState('');
-  const [deskripsi, setDeskripsi] = useState('');
-  const [namaJalan, setNamaJalan] = useState('');
-  const [kategori, setKategori] = useState(
-    kategoriFromUrl in KATEGORI_LABEL ? (kategoriFromUrl as KategoriLaporan) : ''
-  );
-  const [anonim, setAnonim] = useState(false);
+  const cache = useQueryClient();
+  const [params] = useSearchParams();
+  const initialCategory = params.get('kategori') || '';
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState({ kategori: initialCategory in KATEGORI_LABEL ? initialCategory : '', judul: '', deskripsi: '', namaJalan: '', regionId: '', anonim: false });
+  const [position, setPosition] = useState<Position | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
-  const [position, setPosition] = useState<[number, number] | null>(null);
   const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const fetchAddressFromCoords = useCallback(async (lat: number, lng: number) => {
-    setIsReverseGeocoding(true);
-    try {
-      const url = `${NOMINATIM_BASE_URL}/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=id`;
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if (!res.ok) throw new Error('Gagal reverse geocode');
-      const data = await res.json();
-      const addr = data.address || {};
-      const road = addr.road || addr.pedestrian || addr.street || addr.neighbourhood || addr.suburb || '';
-      const area = addr.suburb || addr.village || addr.city_district || addr.city || '';
-      const fullLabel = [road, area].filter(Boolean).join(', ') || data.display_name?.split(',').slice(0, 3).join(',') || '';
-      if (fullLabel) {
-        setNamaJalan(fullLabel);
-      }
-    } catch {
-      // Fallback jika API Nominatim gagal/rate-limited: jangan crash
-    } finally {
-      setIsReverseGeocoding(false);
-    }
-  }, []);
-
-  const handleMapClick = useCallback((pos: [number, number]) => {
-    setPosition(pos);
-    fetchAddressFromCoords(pos[0], pos[1]);
-  }, [fetchAddressFromCoords]);
-
-  const handleSearchAddress = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const q = (searchQuery || namaJalan).trim();
-    if (!q) return;
-
-    setIsSearching(true);
-    setSearchResults([]);
-    try {
-      const queryWithContext = q.toLowerCase().includes('jakarta') ? q : `${q}, Jakarta`;
-      const url = `${NOMINATIM_BASE_URL}/search?q=${encodeURIComponent(queryWithContext)}&format=json&limit=5&viewbox=${DKI_VIEWBOX}&bounded=1&addressdetails=1&accept-language=id`;
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if (!res.ok) throw new Error('Gagal mencari alamat');
-      const data = await res.json();
-      setSearchResults(data || []);
-      if (data && data.length > 0) {
-        const top = data[0];
-        const newPos: [number, number] = [parseFloat(top.lat), parseFloat(top.lon)];
-        setPosition(newPos);
-        setNamaJalan(q);
-      }
-    } catch {
-      // Biarkan user tetap bisa input manual jika rate limited
-    } finally {
-      setIsSearching(false);
-    }
+  const [locationMessage, setLocationMessage] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const regions = useQuery<Region[]>({ queryKey: ['public-regions'], queryFn: async () => (await apiClient.get('/reports/regions')).data });
+  const patch = (changes: Partial<typeof form>) => setForm(previous => ({ ...previous, ...changes }));
+  const create = useMutation({ mutationFn: async (data: FormData) => (await apiClient.post('/reports', data, { headers: { 'Content-Type': undefined } })).data, onSuccess: async data => { await invalidateReportQueries(cache); navigate('/citizen/reports/' + data.id); }, onError: err => setError(getActionError(err)) });
+  const validate = (index: number) => {
+    if (index === 0 && (!form.kategori || form.judul.trim().length < 3 || form.deskripsi.trim().length < 10)) return 'Pilih kategori, isi judul minimal 3 karakter, dan deskripsi minimal 10 karakter.';
+    if (index === 1 && (!form.regionId || !form.namaJalan.trim() || !position)) return 'Pilih wilayah, isi alamat, dan tandai titik kejadian di peta.';
+    if (index === 2 && !photos.length) return 'Unggah minimal satu foto bukti.';
+    return '';
   };
-
-  const handleSelectSearchResult = (result: GeocodingResult) => {
-    const lat = parseFloat(result.lat);
-    const lon = parseFloat(result.lon);
-    setPosition([lat, lon]);
-    const simplified = result.display_name.split(',').slice(0, 3).join(', ');
-    setNamaJalan(simplified);
-    setSearchResults([]);
+  const next = () => { const message = validate(step); setError(message); if (!message) setStep(step + 1); };
+  const search = async () => {
+    if (!form.namaJalan.trim()) return;
+    setSearching(true); setLocationMessage('');
+    try { const response = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&bounded=1&viewbox=106.68,-5.2,106.98,-6.38&q=' + encodeURIComponent(form.namaJalan + ', Jakarta'), { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) }); if (!response.ok) throw new Error(); const result = await response.json(); if (!result.length) return setLocationMessage('Alamat belum ditemukan. Pilih titik secara langsung di peta.'); setPosition([Number(result[0].lat), Number(result[0].lon)]); } catch { setLocationMessage('Pencarian alamat belum tersedia. Pilih titik secara langsung di peta.'); } finally { setSearching(false); }
   };
-
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Browser Anda tidak mendukung geolokasi');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        setPosition(coords);
-        fetchAddressFromCoords(coords[0], coords[1]);
-      },
-      () => {
-        alert('Tidak dapat mengakses lokasi Anda. Pastikan izin lokasi aktif.');
-      },
-      { timeout: 8000 }
-    );
+  const locate = () => {
+    if (!navigator.geolocation) return setLocationMessage('Lokasi perangkat tidak didukung. Pilih titik di peta.');
+    setLocating(true); setLocationMessage('');
+    navigator.geolocation.getCurrentPosition(location => { setPosition([location.coords.latitude, location.coords.longitude]); setLocating(false); }, () => { setLocationMessage('Lokasi perangkat tidak dapat diakses. Anda tetap dapat memilih titik di peta.'); setLocating(false); }, { timeout: 10000 });
   };
-
-  const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: async (formData: FormData) => (await apiClient.post('/reports', formData, { headers: { 'Content-Type': undefined } })).data,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['my-reports'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['agency-dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['public-reports'] });
-      queryClient.invalidateQueries({ queryKey: ['recent-reports'] });
-      queryClient.invalidateQueries({ queryKey: ['map-points'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      navigate(`/reports/${data.id}`);
-    },
-    onError: (err: any) => {
-      setError(err.response?.data?.error || 'Gagal mengirim laporan');
-    },
-  });
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (photos.length + files.length > 3) {
-      alert('Maksimal 3 foto');
-      return;
-    }
-    for (const f of files) {
-      if (f.size > 5 * 1024 * 1024) {
-        alert(`File ${f.name} terlalu besar. Maksimal 5MB per foto.`);
-        return;
-      }
-    }
-    setPhotos((prev) => [...prev, ...files]);
+  const choosePhotos = (files: FileList | null) => {
+    const selected = Array.from(files || []).filter(file => !photos.some(existing => existing.name === file.name && existing.size === file.size && existing.lastModified === file.lastModified));
+    if (photos.length + selected.length > 3) return setError('Maksimal tiga foto bukti.');
+    if (selected.some(file => !['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 5 * 1024 * 1024)) return setError('Gunakan JPG, PNG, WebP, atau GIF dengan ukuran maksimal 5 MB per foto.');
+    setPhotos(previous => [...previous, ...selected]); setError('');
   };
-
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (step < 3) return next();
+    for (let index = 0; index < 3; index++) { const message = validate(index); if (message) { setError(message); setStep(index); return; } }
+    if (create.isPending || !position) return;
+    const data = new FormData();
+    for (const [key, value] of Object.entries(form)) data.append(key, String(value).trim());
+    data.append('latitude', String(position[0])); data.append('longitude', String(position[1])); photos.forEach(photo => data.append('photos', photo));
+    setError(''); create.mutate(data);
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!namaJalan.trim()) {
-      setError('Masukkan nama jalan atau alamat lokasi');
-      return;
-    }
-
-    if (!position) {
-      setError('Pilih lokasi kejadian di peta');
-      return;
-    }
-
-    if (photos.length === 0) {
-      setError('Unggah minimal 1 foto bukti');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('judul', judul);
-    formData.append('deskripsi', deskripsi);
-    formData.append('namaJalan', namaJalan.trim());
-    formData.append('kategori', kategori);
-    formData.append('latitude', position[0].toString());
-    formData.append('longitude', position[1].toString());
-    formData.append('anonim', anonim.toString());
-    formData.append('regionId', 'region_001'); // Demo: default region
-    for (const photo of photos) {
-      formData.append('photos', photo);
-    }
-
-    createMutation.mutate(formData);
-  };
-
-  return (
-    <div className="app-page create-report-page flex min-h-screen flex-col bg-civix-neutral">
-      <Navbar />
-
-      <div className="container-civix flex-1 py-12">
-        <div className="mx-auto max-w-3xl">
-          <PageHeading label="Suara warga" title="Mulai dari satu laporan." description="Laporkan masalah infrastruktur atau lingkungan di Jakarta. Tambahkan foto dan lokasi yang jelas agar laporan dapat ditindaklanjuti." />
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                <AlertCircle size={18} className="mt-0.5 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <div className="card p-6 space-y-5">
-              <div>
-                <label className="label">Judul Laporan *</label>
-                <input
-                  type="text"
-                  value={judul}
-                  onChange={(e) => setJudul(e.target.value)}
-                  placeholder="Contoh: Jalan berlubang di Jl. Sudirman"
-                  className="input"
-                  maxLength={150}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="label">Kategori Masalah *</label>
-                <select value={kategori} onChange={(e) => setKategori(e.target.value)} className="input" required>
-                  <option value="">Pilih kategori</option>
-                  {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="label">Deskripsi Lengkap *</label>
-                <textarea
-                  value={deskripsi}
-                  onChange={(e) => setDeskripsi(e.target.value)}
-                  placeholder="Jelaskan kondisi masalah secara detail..."
-                  className="input min-h-[120px]"
-                  required
-                />
-                <p className="mt-1 text-xs text-slate-500">Jelaskan kondisi, lokasi spesifik, dan dampak yang dirasakan.</p>
-              </div>
-
-              <div>
-                <label className="label">Foto Bukti * (1-3 foto, max 5MB per foto)</label>
-                <div className="space-y-3">
-                  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handlePhotoChange} className="hidden" />
-                  
-                  {photos.length > 0 && (
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      {photos.map((file, i) => (
-                        <div key={i} className="group relative overflow-hidden rounded-lg border border-slate-200">
-                          <img src={URL.createObjectURL(file)} alt={`Preview ${i + 1}`} className="h-32 w-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => removePhoto(i)}
-                            className="absolute right-2 top-2 rounded-full bg-red-500 p-1.5 text-white opacity-0 transition group-hover:opacity-100"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {photos.length < 3 && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-8 text-sm font-medium text-slate-600 transition hover:border-civix-blue hover:bg-lime-50 hover:text-civix-blue"
-                    >
-                      <Upload size={18} />
-                      Pilih Foto ({photos.length}/3)
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="card p-6">
-              <label className="label flex items-center gap-2">
-                <MapPin size={16} /> Lokasi Kejadian *
-              </label>
-              <p className="mb-4 text-xs leading-relaxed text-slate-500">
-                Ketik nama jalan untuk mencari lokasi, gunakan lokasi perangkat, atau klik peta. Nama alamat akan terisi otomatis saat memilih titik peta.
-              </p>
-
-              <div className="relative">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={namaJalan}
-                    onChange={(e) => {
-                      setNamaJalan(e.target.value);
-                      setSearchQuery(e.target.value);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSearchAddress();
-                      }
-                    }}
-                    placeholder="Cari jalan atau alamat, contoh: Jl. MH Thamrin"
-                    className="input"
-                    maxLength={200}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleSearchAddress()}
-                    disabled={isSearching || !namaJalan.trim()}
-                    className="btn-primary shrink-0"
-                  >
-                    {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-                    <span className="hidden sm:inline">Cari</span>
-                  </button>
-                </div>
-
-                {searchResults.length > 0 && (
-                  <div className="absolute z-[1100] mt-2 w-full overflow-hidden rounded-lg border border-civix-border bg-white shadow-xl">
-                    <p className="border-b border-civix-border px-3 py-2 text-xs font-semibold text-civix-muted">Pilih lokasi hasil pencarian</p>
-                    {searchResults.map((result) => (
-                      <button
-                        key={result.place_id}
-                        type="button"
-                        onClick={() => handleSelectSearchResult(result)}
-                        className="flex w-full items-start gap-2 border-b border-civix-border px-3 py-3 text-left text-sm text-civix-text transition last:border-0 hover:bg-civix-soft"
-                      >
-                        <MapPin size={15} className="mt-0.5 shrink-0 text-civix-primary" />
-                        <span>{result.display_name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <button type="button" onClick={handleUseCurrentLocation} className="btn-outline text-xs">
-                  <Crosshair size={15} /> Gunakan lokasi saya
-                </button>
-                {isReverseGeocoding && (
-                  <span className="flex items-center gap-1.5 text-xs text-civix-muted">
-                    <Loader2 size={14} className="animate-spin" /> Mencari nama jalan...
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-4 overflow-hidden rounded-lg border-2 border-civix-border">
-                <div className="h-[400px]">
-                  <MapContainer center={DKI_CENTER} zoom={12} className="h-full w-full">
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      maxZoom={19}
-                    />
-                    <MapController position={position} />
-                    <LocationPicker position={position} onSelect={handleMapClick} />
-                  </MapContainer>
-                </div>
-              </div>
-              {position && (
-                <div className="mt-3 rounded-lg bg-civix-soft p-3 text-xs">
-                  <p className="font-semibold text-civix-forest">Lokasi dipilih:</p>
-                  <p className="mt-1 text-civix-text">{namaJalan || 'Nama jalan sedang dicari...'}</p>
-                  <p className="mono mt-1 text-civix-muted">
-                    Lat: {position[0].toFixed(6)}, Lng: {position[1].toFixed(6)}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="card p-6">
-              <label className="flex cursor-pointer items-start gap-3">
-                <input type="checkbox" checked={anonim} onChange={(e) => setAnonim(e.target.checked)} className="mt-1" />
-                <div className="text-sm">
-                  <span className="font-semibold text-slate-800">Kirim sebagai anonim</span>
-                  <p className="text-xs text-slate-500">
-                    Identitas Anda tidak akan ditampilkan secara publik. Admin tetap dapat melihat informasi pelapor untuk keperluan verifikasi.
-                  </p>
-                </div>
-              </label>
-            </div>
-
-            <div className="flex gap-3">
-              <button type="button" onClick={() => navigate('/citizen')} className="btn-outline flex-1">
-                Batal
-              </button>
-              <button type="submit" disabled={createMutation.isPending} className="btn-primary flex-1">
-                {createMutation.isPending ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" /> Mengirim...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 size={16} /> Kirim Laporan
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <Footer />
-    </div>
-  );
+  return <><header className="admin-page-header"><div><h1>Buat Laporan</h1><p>Isi detail permasalahan yang Anda temukan di Jakarta.</p></div></header><div className="warga-create-grid"><form noValidate className="admin-panel warga-wizard" onSubmit={submit}><nav className="warga-stepper" aria-label="Tahapan membuat laporan">{['Informasi', 'Lokasi', 'Foto', 'Tinjau'].map((label, index) => <button type="button" key={label} aria-current={index === step ? 'step' : undefined} disabled={index > step || create.isPending} onClick={() => { setStep(index); setError(''); }}><span>{index + 1}</span>{label}</button>)}</nav>{error && <p className="warga-form-error" role="alert">{error}</p>}<fieldset disabled={create.isPending}>
+    {step === 0 && <><h2>Informasi Laporan</h2><label htmlFor="report-category">Kategori laporan</label><select id="report-category" className="input" value={form.kategori} onChange={event => patch({ kategori: event.target.value })}><option value="">Pilih kategori</option>{Object.entries(KATEGORI_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select><label htmlFor="report-title">Judul laporan</label><input id="report-title" className="input" maxLength={150} value={form.judul} placeholder="Contoh: Jalan berlubang di depan sekolah" onChange={event => patch({ judul: event.target.value })} /><label htmlFor="report-description">Deskripsi laporan</label><textarea id="report-description" className="input" rows={5} maxLength={5000} value={form.deskripsi} placeholder="Jelaskan kondisi, lokasi spesifik, dan dampak masalah…" onChange={event => patch({ deskripsi: event.target.value })} /><small className="warga-counter">{form.deskripsi.length}/5.000</small></>}
+    {step === 1 && <><h2>Lokasi Kejadian</h2><label htmlFor="report-region">Wilayah administrasi</label><select id="report-region" className="input" value={form.regionId} onChange={event => patch({ regionId: event.target.value })}><option value="">{regions.isLoading ? 'Memuat wilayah…' : 'Pilih wilayah'}</option>{regions.data?.map(region => <option key={region.id} value={region.id}>{region.nama}</option>)}</select>{regions.isError && <button className="workspace-text-link" type="button" onClick={() => regions.refetch()}>Gagal memuat wilayah. Coba lagi</button>}<label htmlFor="report-address">Nama jalan atau alamat</label><div className="warga-location-search"><input id="report-address" className="input" maxLength={200} value={form.namaJalan} placeholder="Contoh: Jl. MH Thamrin" onChange={event => patch({ namaJalan: event.target.value })} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); search(); } }} /><button type="button" className="btn-outline" disabled={searching || !form.namaJalan.trim()} onClick={search}>{searching ? <Loader2 className="animate-spin" size={15} /> : <Search size={15} />}Cari</button></div><p className="warga-location-help">Klik peta untuk menandai titik kejadian. Laporan hanya diterima dalam wilayah DKI Jakarta.</p><button type="button" className="btn-outline" disabled={locating} onClick={locate}><Crosshair size={15} />{locating ? 'Mencari lokasi…' : 'Gunakan lokasi saya'}</button>{locationMessage && <p role="status" className="warga-location-help">{locationMessage}</p>}<div className="warga-location-map"><MapContainer center={position || [-6.2088, 106.8456]} zoom={12} className="h-full w-full"><TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' /><ResizeMap /><MapPicker position={position} select={setPosition} /></MapContainer></div><p className="warga-location-help">{position ? `Titik dipilih: ${position[0].toFixed(6)}, ${position[1].toFixed(6)}` : 'Belum ada titik dipilih.'}</p></>}
+    {step === 2 && <><h2>Foto Bukti</h2><p className="warga-location-help">Unggah satu hingga tiga foto yang memperlihatkan kondisi masalah. JPG, PNG, WebP, GIF · maksimal 5 MB per foto.</p><input ref={input} className="sr-only" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Foto bukti laporan" onChange={event => { choosePhotos(event.target.files); event.target.value = ''; }} /><PhotoPreviews files={photos} remove={index => setPhotos(previous => previous.filter((_, i) => i !== index))} />{photos.length < 3 && <button className="warga-upload" type="button" onClick={() => input.current?.click()}><Upload size={20} />Pilih Foto ({photos.length}/3)</button>}</>}
+    {step === 3 && <><h2>Tinjau Laporan</h2><dl className="warga-review"><div><dt>Kategori</dt><dd>{KATEGORI_LABEL[form.kategori as keyof typeof KATEGORI_LABEL]}</dd></div><div><dt>Judul</dt><dd>{form.judul}</dd></div><div><dt>Deskripsi</dt><dd>{form.deskripsi}</dd></div><div><dt>Lokasi</dt><dd>{form.namaJalan}<br />{regions.data?.find(region => region.id === form.regionId)?.nama}<br />{position?.map(number => number.toFixed(6)).join(', ')}</dd></div></dl><PhotoPreviews files={photos} /><label className="warga-anon"><input type="checkbox" checked={form.anonim} onChange={event => patch({ anonim: event.target.checked })} /><span>Kirim sebagai anonim<small>Identitas Anda disembunyikan pada detail publik. Admin tetap dapat melihat pelapor untuk verifikasi.</small></span></label></>}
+    </fieldset><div className="warga-wizard-actions"><button type="button" className="btn-outline" disabled={create.isPending} onClick={() => navigate('/citizen')}>Batal</button>{step > 0 && <button type="button" className="btn-outline" disabled={create.isPending} onClick={() => { setStep(step - 1); setError(''); }}>Kembali</button>}<button className="btn-primary" type="submit" disabled={create.isPending}>{create.isPending ? 'Mengirim…' : step === 3 ? 'Kirim Laporan' : 'Lanjutkan'}</button></div></form><aside className="admin-panel warga-tips"><h2>Tips Membuat Laporan</h2><ul>{['Pilih kategori yang sesuai', 'Berikan judul yang jelas', 'Jelaskan detail lokasi dan kondisi', 'Unggah foto yang relevan', 'Pastikan titik lokasi sesuai peta'].map(tip => <li key={tip}><CheckCircle2 size={15} />{tip}</li>)}</ul></aside></div></>;
 }

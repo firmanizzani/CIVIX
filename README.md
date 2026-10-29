@@ -433,3 +433,17 @@ Jalankan pemeriksaan dari folder backend dengan environment `CIVIX_TEST_EMAIL` d
 
 - `node scripts/check-agency-api.mjs`: filter, jumlah, paginasi, sinkronisasi publik, validasi, dan simpan profil dengan isi yang sama. Tambahkan `CIVIX_OTHER_EMAIL` (dan bila berbeda `CIVIX_OTHER_PASSWORD`) untuk menguji pemisahan dua instansi.
 - `node scripts/check-agency-workflow.mjs`: pengujian integrasi pada server pengembangan menggunakan laporan dan satu akun QA sementara. Menguji penyelesaian beserta foto, pengiriman ulang, penolakan, dan pembuatan petugas. Script memakai `backend/.env`, lalu membersihkan data serta file QA yang dibuatnya. Jangan jalankan pada server produksi.
+
+## Ruang kerja Warga
+
+Halaman `/citizen` memakai sidebar CIVIX yang sama dengan ruang Admin dan Instansi. Menu Warga terdiri dari Dashboard, Buat Laporan, Riwayat Laporan, Peta Laporan, Informasi, dan Pengaturan. Akun serta tombol keluar berada pada dropdown kiri bawah; tidak ada lonceng atau akun tambahan di kanan atas. Tautan lama `/citizen/profile` diarahkan ke Pengaturan.
+
+Jalankan `npm run db:migrate` dari folder backend setelah menarik perubahan untuk menambahkan tabel `citizen_profiles` (migrasi `0008`). Informasi akun, nomor telepon, alamat, serta foto akun disimpan pada database dan penyimpanan gambar yang sama. Halaman Pengaturan mengikuti susunan panel Admin tanpa tab Profil atau Preferensi. Email tetap hanya baca; perubahan kredensial ditangani administrator.
+
+Pembuatan laporan memiliki empat tahap: Informasi, Lokasi, Foto, dan Tinjau. Wilayah diambil dari database, bukan wilayah contoh tetap. Foto wajib 1–3 berkas JPG/PNG/WebP/GIF, maksimal 5 MB per foto. Penyimpanan laporan, foto, dan riwayat awal berada dalam satu transaksi database. Pencarian alamat bersifat bantuan; penandaan langsung di peta tetap tersedia. Pengiriman berhasil membuka detail laporan milik pengguna.
+
+Dashboard, riwayat, dan detail mengambil laporan pengguna yang sedang masuk dan memperbarui data setiap 30 detik. Filter dan paginasi diproses pada API. Peta Warga memperlihatkan laporan publik sesuai durasi Admin serta seluruh laporan milik pengguna, termasuk laporan selesai yang sudah melewati durasi peta publik. Informasi menampilkan panduan penggunaan, kategori, privasi, lokasi, dan status yang sesuai fitur CIVIX.
+
+Ilustrasi sidebar ketiga peran memakai `frontend/public/jakarta-sidebar-mint.webp`, dibuat dengan imagegen bawaan dan dioptimalkan menjadi WebP transparan. Prompt aset: "Polished mint and sage Jakarta city park illustration, slim centered Monas and flame in muted sage-gray, pale layered skyscrapers, softly rounded trees, winding park path, low-contrast flat illustration, transparent sky, no gold, text or UI."
+
+Uji integrasi pengembangan: `node scripts/check-citizen-workflow.mjs` dari backend. Script membuat akun/laporan QA sementara, menguji pembuatan beserta foto, informasi akun, pemisahan akses, filter, jumlah, paginasi, dan peta, lalu membersihkan tepat data serta file QA tersebut. Tambahkan `CIVIX_TEST_ADMIN_EMAIL` dan `CIVIX_TEST_ADMIN_PASSWORD` untuk menguji perubahan status Admin yang tersinkron di Warga dan halaman publik. Jangan jalankan pada server produksi.

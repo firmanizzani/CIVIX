@@ -57,6 +57,13 @@
       "when": 1793250000000,
       "tag": "0007_platform_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793278800000,
+      "tag": "0008_citizen_profiles",
+      "breakpoints": true
     }
   ]
 }

@@ -14,15 +14,20 @@ import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.j
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Hanya gambar yang diperbolehkan'));
+      cb(Object.assign(new Error('Gunakan foto JPG, PNG, WebP, atau GIF.'), { statusCode: 400 }));
     }
   },
 });
 
 const router = Router();
+
+router.get('/regions', async (_req, res: Response) => {
+  try { res.json(await db.select().from(regions).orderBy(asc(regions.nama))); }
+  catch { res.status(500).json({ error: 'Gagal memuat wilayah Jakarta' }); }
+});
 
 // GET /me/reports - Laporan milik user yang login (warga)
 router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -126,6 +131,7 @@ router.get('/map', async (_req, res: Response) => {
         kodeTiket: true,
         judul: true,
         namaJalan: true,
+        regionId: true,
         kategori: true,
         status: true,
         latitude: true,
@@ -134,6 +140,7 @@ router.get('/map', async (_req, res: Response) => {
       },
       with: {
         photos: { limit: 1, orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
+        region: true,
       },
     });
 
@@ -179,6 +186,10 @@ router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequ
     if (namaJalan.trim().length > 200) {
       return res.status(400).json({ error: 'Nama jalan maksimal 200 karakter' });
     }
+    if (!z.enum(['jalan_rusak', 'drainase', 'sampah', 'penerangan', 'fasilitas_umum', 'lainnya']).safeParse(kategori).success || judul.trim().length > 150 || deskripsi.trim().length > 5000) {
+      return res.status(400).json({ error: 'Kategori tidak valid, judul maksimal 150 karakter, dan deskripsi maksimal 5.000 karakter.' });
+    }
+    if (regionId && !await db.query.regions.findFirst({ where: eq(regions.id, String(regionId)) })) return res.status(400).json({ error: 'Wilayah laporan tidak ditemukan' });
 
     if (!isWithinDKIJakarta(lat, lng)) {
       return res.status(400).json({
@@ -193,8 +204,9 @@ router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequ
 
     const kodeTiket = generateTicket();
 
-    // Insert Report
-    const [newReport] = await db
+    // Commit the report, evidence and first status together.
+    const newReport = await db.transaction(async tx => {
+    const [created] = await tx
       .insert(reports)
       .values({
         kodeTiket,
@@ -215,19 +227,21 @@ router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequ
     for (const [index, file] of files.entries()) {
       const storagePath = buildReportPhotoPath(kodeTiket, 'awal', index + 1, file.mimetype);
       const url = await uploadImageToStorage(file.buffer, storagePath, file.mimetype);
-      await db.insert(reportPhotos).values({
-        reportId: newReport.id,
+      await tx.insert(reportPhotos).values({
+        reportId: created.id,
         url,
         jenis: 'awal',
       });
     }
 
     // Status Log awal
-    await db.insert(reportStatusLogs).values({
-      reportId: newReport.id,
+    await tx.insert(reportStatusLogs).values({
+      reportId: created.id,
       diubahOleh: req.user!.id,
       status: 'diterima',
       catatan: 'Laporan berhasil dibuat dan masuk antrean verifikasi',
+    });
+    return created;
     });
 
     res.status(201).json(newReport);
@@ -246,6 +260,7 @@ router.get('/:id', async (req, res: Response) => {
         photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         statusLogs: { orderBy: [desc(reportStatusLogs.waktu)] },
         region: true,
+        assignedAgency: { columns: { id: true, nama: true } },
         upvotes: true,
         comments: {
           orderBy: [desc(comments.waktu)],

@@ -50,6 +50,15 @@ export const regions = pgTable('regions', {
   tipe: varchar('tipe', { length: 30 }).notNull().default('kecamatan'),
 });
 
+export const citizenProfiles = pgTable('citizen_profiles', {
+  userId: varchar('user_id', { length: 40 }).primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  telepon: varchar('telepon', { length: 30 }).notNull().default(''),
+  alamat: text('alamat').notNull().default(''),
+  avatarUrl: text('avatar_url'),
+  notifyReportUpdates: boolean('notify_report_updates').notNull().default(true),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const reports = pgTable(
   'reports',
   {

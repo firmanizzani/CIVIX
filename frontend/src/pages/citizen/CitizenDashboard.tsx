@@ -1,44 +1,17 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, UserRound, Clock, CheckCircle2, FileText, HelpCircle, MapPin, MessageSquare, PlusCircle, Search } from 'lucide-react';
-import DashboardFrame from '@/components/DashboardFrame';
+import { ClipboardList, HardHat, CheckCircle2, XCircle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
+import { ReportWorkspace } from '@/types';
 import QueryError from '@/components/QueryError';
-import { DashboardStats, FilterTabs, ReportProgress, StatusBadge, WorkspacePagination, WorkspaceRefresh, lastUpdate, relativeTime, reportCover } from '@/components/ReportWorkspaceUI';
-import { useReportWorkspace } from '@/hooks/useReportWorkspace';
-import { formatDateTime } from '@/lib/utils';
-import { STATUS_LABEL } from '@/types';
+import { WorkspaceRefresh } from '@/components/ReportWorkspaceUI';
+import { CitizenReportRows } from './CitizenReportsPage';
 
 export default function CitizenDashboard() {
-  const w = useReportWorkspace('citizen');
-  const counts = w.data?.counts;
-  const active = (counts?.diterima || 0) + (counts?.diverifikasi || 0) + (counts?.ditugaskan || 0) + (counts?.dikerjakan || 0);
-  return <DashboardFrame>
-    <header className="dashboard-heading">
-      <div><h1><UserRound size={25} aria-hidden="true" />Halo, {w.user?.nama || 'Warga'}</h1><p>Pantau perkembangan laporan Anda dan tindak lanjutnya.</p></div>
-      <Link to="/citizen/create-report" className="btn-primary"><PlusCircle size={17} aria-hidden="true" />Buat Laporan Baru</Link>
-    </header>
-    <DashboardStats loading={!w.data} items={[
-      { label: 'Total Laporan', icon: FileText, value: w.data?.totalAll || 0, onClick: () => w.update({ status: '' }) },
-      { label: 'Dalam Proses', icon: Clock, tone: 'amber', value: active, onClick: () => w.update({ status: 'aktif' }) },
-      { label: 'Selesai', icon: CheckCircle2, tone: 'green', value: counts?.selesai || 0, onClick: () => w.update({ status: 'selesai' }) },
-    ]} />
-    <section className="citizen-workspace" aria-labelledby="my-reports-heading">
-      <div className="workspace-panel-heading citizen-panel-heading"><h2 id="my-reports-heading">Laporan Saya</h2><div className="citizen-heading-tools"><div className="workspace-search"><Search size={16} aria-hidden="true" /><input className="input" aria-label="Cari laporan saya" placeholder="Cari laporan saya" maxLength={150} value={w.search} onChange={(event) => w.update({ q: event.target.value || null })} /></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></div></div>
-      <div className="citizen-list-controls">
-        <FilterTabs value={w.status} onChange={(status) => w.update({ status })} tabs={[
-          { value: '', label: 'Semua', count: w.data?.totalAll || 0 },
-          { value: 'aktif', label: 'Dalam Proses', count: active },
-          { value: 'selesai', label: 'Selesai', count: counts?.selesai || 0 },
-        ]} />
-        <select className="input" aria-label="Urutan laporan saya" value={w.sort} onChange={(event) => w.update({ sort: event.target.value })}><option value="newest">Terbaru dahulu</option><option value="oldest">Terlama dahulu</option></select>
-      </div>
-      {w.isLoading ? <div className="workspace-panel workspace-loading" role="status">Memuat laporan Anda…</div> : w.isError ? <QueryError subject="Laporan Anda" retry={w.refetch} pending={w.isFetching} /> : !w.data?.items.length ? <div className="workspace-panel workspace-empty"><FileText size={32} /><h3>{w.data?.totalAll ? 'Tidak ada laporan pada filter ini' : 'Belum ada laporan'}</h3><p>{w.data?.totalAll ? 'Coba ubah pencarian atau pilih status lain.' : 'Laporkan masalah infrastruktur atau lingkungan di sekitar Anda.'}</p>{w.data?.totalAll ? <button className="btn-outline" onClick={() => w.update({ status: '', q: null })}>Lihat semua laporan</button> : <Link className="btn-primary" to="/citizen/create-report">Buat Laporan Pertama</Link>}</div> :
-        <div className="citizen-report-list">{w.data.items.map((report) => <article key={report.id} className="workspace-panel citizen-report">
-          <Link className="citizen-report-photo" to={'/reports/' + report.id}>{reportCover(report) ? <img src={reportCover(report)} alt={report.judul} /> : <span><MapPin size={26} aria-hidden="true" />Belum ada foto</span>}</Link>
-          <div className="citizen-report-content"><p className="workspace-ticket">{report.kodeTiket}</p><h3><Link to={'/reports/' + report.id}>{report.judul}</Link></h3><StatusBadge status={report.status} /><p className="workspace-location"><MapPin size={14} aria-hidden="true" />{report.namaJalan || report.region?.nama || 'Alamat belum dicantumkan'}</p><p className="workspace-muted">{report.assignedAgency?.nama || 'Menunggu penugasan ke instansi terkait'}</p><p className="citizen-latest-update"><MessageSquare size={14} aria-hidden="true" />{report.statusLogs?.[0]?.catatan || STATUS_LABEL[report.status]}</p><time className="workspace-row-age" dateTime={lastUpdate(report)} title={formatDateTime(lastUpdate(report))}>Diperbarui {relativeTime(lastUpdate(report))}</time></div>
-          <div className="citizen-report-progress"><ReportProgress status={report.status} /><Link className="btn-outline" to={'/reports/' + report.id}>Lihat Detail <ArrowRight size={15} /></Link></div>
-        </article>)}</div>}
-      <WorkspacePagination data={w.data} onPage={(page) => w.update({ page: String(page) }, false)} />
-    </section>
-    <details className="citizen-help"><summary><HelpCircle size={18} aria-hidden="true" /><span>Memahami status laporan Anda</span></summary><div><p><strong>Menunggu verifikasi:</strong> admin sedang memeriksa kelengkapan laporan.</p><p><strong>Terverifikasi:</strong> laporan disetujui dan menunggu penugasan.</p><p><strong>Menunggu ditangani:</strong> instansi sudah menerima tugas.</p><p><strong>Sedang dikerjakan:</strong> instansi sedang menangani laporan.</p><p><CheckCircle2 size={14} aria-hidden="true" /><strong>Selesai:</strong> lihat riwayat dan bukti penyelesaian pada halaman detail.</p></div></details>
-  </DashboardFrame>;
+  const user = useAuthStore(state => state.user);
+  const query = useQuery<ReportWorkspace>({ queryKey: ['citizen-overview', user?.id], queryFn: async () => (await apiClient.get('/reports/me/reports', { params: { view: 'workspace', limit: 3, sort: 'newest' } })).data, refetchInterval: 30000 });
+  const c = query.data?.counts;
+  const metrics = [{ label: 'Total Laporan', value: query.data?.totalAll, status: '', icon: ClipboardList, tone: 'rose' }, { label: 'Sedang Diproses', value: c ? c.diterima + c.diverifikasi + c.ditugaskan + c.dikerjakan : undefined, status: 'aktif', icon: HardHat, tone: 'amber' }, { label: 'Selesai', value: c?.selesai, status: 'selesai', icon: CheckCircle2, tone: 'green' }, { label: 'Ditolak / Duplikat', value: c ? c.ditolak + c.duplikat : undefined, status: 'ditolak_duplikat', icon: XCircle, tone: 'rose' }];
+  return <><header className="admin-page-header"><div><h1>Dashboard</h1><p>Pantau laporan Anda dan lihat perkembangan penanganannya.</p></div><WorkspaceRefresh refreshing={query.isFetching} onClick={() => query.refetch()} /></header>{query.isError ? <QueryError subject="Ringkasan laporan Anda" retry={query.refetch} /> : <><div className="warga-summary">{metrics.map(({ label, value, status, icon: Icon, tone }) => <Link key={label} to={'/citizen/reports?status=' + status} data-tone={tone} className="admin-panel"><span><Icon size={22} /></span><div><small>{label}</small><strong>{value === undefined ? '—' : value}</strong></div></Link>)}</div><div className="warga-overview-grid"><section className="admin-panel warga-recent"><header><h2>Laporan Terbaru</h2><Link to="/citizen/reports">Lihat semua →</Link></header>{query.isLoading ? <p className="admin-loading">Memuat laporan Anda…</p> : query.data?.items.length ? <CitizenReportRows reports={query.data.items} /> : <div className="workspace-empty"><ClipboardList size={30} /><h2>Belum ada laporan</h2><p>Masalah di sekitar Anda dapat menjadi awal perubahan.</p><Link to="/citizen/create-report" className="btn-outline">Buat Laporan Pertama</Link></div>}</section><aside className="admin-panel warga-invitation"><img src="/citizen-community.svg" alt="Ilustrasi warga bersama di ruang hijau kota" /><h2>Bersama wujudkan<br />Jakarta yang lebih baik</h2><p>Laporkan permasalahan di sekitar Anda dengan mudah dan jelas.</p><Link to="/citizen/create-report" className="btn-primary">Buat Laporan Sekarang</Link></aside></div></>}</>;
 }
