@@ -416,3 +416,14 @@ Setelah menarik pembaruan, jalankan `cd backend` lalu `npm run db:migrate` untuk
 Halaman admin tersedia di `/admin`, `/admin/verification`, `/admin/reports`, `/admin/agencies`, `/admin/people`, dan `/admin/settings`. Profil administrator dan tombol keluar berada di bawah sidebar.
 
 Untuk pemeriksaan integrasi API pada server pengembangan yang berjalan, isi environment `CIVIX_TEST_EMAIL` dan `CIVIX_TEST_PASSWORD` dengan akun admin pengujian yang sudah ada, lalu jalankan `node scripts/check-admin-api.mjs` dari folder backend. Pemeriksaan ini tidak memproses laporan atau mengganti akun/password; pengaturan peta hanya disimpan ulang dengan nilai yang sama.
+
+## Ruang kerja instansi
+
+Halaman `/agency` menyediakan dashboard, `/agency/assignments` untuk tugas, `/agency/reports` untuk seluruh laporan milik unit, `/agency/map`, `/agency/stats`, `/agency/people`, dan `/agency/settings`. Semua data dibatasi oleh instansi akun yang sedang masuk. Pengguna baru selalu mendapat peran petugas pada unit yang sama; pilihan peran lain dan status aktif/nonaktif tidak ditampilkan karena belum ada dalam model akun.
+
+Penyelesaian tugas menggunakan satu tombol **Tandai Selesai** yang mengirim catatan dan 1–3 foto bukti sekaligus. Tugas berstatus `ditugaskan` atau `dikerjakan` dapat diselesaikan langsung. Alasan penolakan wajib diisi dan tercatat pada riwayat yang sama dengan halaman publik/admin. Dashboard dan statistik memakai periode tanggal pembuatan laporan yang dipilih; angka tidak menggunakan data contoh.
+
+Jalankan pemeriksaan dari folder backend dengan environment `CIVIX_TEST_EMAIL` dan `CIVIX_TEST_PASSWORD` berisi akun instansi pengujian yang sudah ada:
+
+- `node scripts/check-agency-api.mjs`: filter, jumlah, paginasi, sinkronisasi publik, validasi, dan simpan profil dengan isi yang sama. Tambahkan `CIVIX_OTHER_EMAIL` (dan bila berbeda `CIVIX_OTHER_PASSWORD`) untuk menguji pemisahan dua instansi.
+- `node scripts/check-agency-workflow.mjs`: pengujian integrasi pada server pengembangan menggunakan laporan dan satu akun QA sementara. Menguji penyelesaian beserta foto, pengiriman ulang, penolakan, dan pembuatan petugas. Script memakai `backend/.env`, lalu membersihkan data serta file QA yang dibuatnya. Jangan jalankan pada server produksi.

@@ -5,7 +5,8 @@ import { transitionReport, ReportTransitionError } from '../reports/status.js';
 import { Router, Response } from 'express';
 import multer from 'multer';
 import { db } from '../../db/index.js';
-import { reports, reportPhotos, reportStatusLogs, agencies, users } from '../../db/schema.js';
+import { reports, reportPhotos, reportStatusLogs, agencies, users, regions } from '../../db/schema.js';
+import bcrypt from 'bcrypt';
 import { asc, eq, desc, count, inArray, and, sql } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.js';
@@ -47,6 +48,63 @@ const assertOwnsReport = async (reportId: string, agencyId: string): Promise<boo
   return !!report && report.assignedAgencyId === agencyId;
 };
 
+// Every screen uses this same assignment scope, including completed/rejected work.
+router.get('/overview', async (req: AuthRequest, res: Response) => {
+  try {
+    const scope = await getAgencyScope(req, res);
+    if (!scope) return;
+    const items = await db.query.reports.findMany({
+      where: scopeCondition(scope.agencyId), orderBy: [desc(reports.dibuatPada)],
+      with: { region: true, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } },
+    });
+    const wilayah = await db.select().from(regions).orderBy(asc(regions.nama));
+    res.json({ items, regions: wilayah });
+  } catch { res.status(500).json({ error: 'Gagal memuat ringkasan instansi' }); }
+});
+
+router.get('/profile', async (req: AuthRequest, res: Response) => {
+  try {
+    const scope = await getAgencyScope(req, res);
+    if (!scope) return;
+    if (!scope.agencyId) return res.status(400).json({ error: 'Masuk dengan akun instansi untuk membuka profil unit.' });
+    const agency = await db.query.agencies.findFirst({ where: eq(agencies.id, scope.agencyId),
+      with: { users: { columns: { id: true, nama: true, email: true, peran: true, dibuatPada: true }, orderBy: [asc(users.nama)] } } });
+    if (!agency) return res.status(404).json({ error: 'Instansi tidak ditemukan' });
+    res.json(agency);
+  } catch { res.status(500).json({ error: 'Gagal memuat profil instansi' }); }
+});
+
+router.patch('/profile', async (req: AuthRequest, res: Response) => {
+  try {
+    const scope = await getAgencyScope(req, res);
+    if (!scope) return;
+    if (!scope.agencyId) return res.status(400).json({ error: 'Masuk dengan akun instansi untuk mengubah profil unit.' });
+    const body = z.object({ nama: z.string().trim().min(2).max(150), deskripsi: z.string().trim().max(2000) }).strict().parse(req.body);
+    const [agency] = await db.update(agencies).set(body).where(eq(agencies.id, scope.agencyId)).returning();
+    res.json(agency);
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Nama wajib 2–150 karakter dan deskripsi maksimal 2.000 karakter.' });
+    res.status(500).json({ error: 'Profil instansi belum berhasil disimpan' });
+  }
+});
+
+router.post('/members', async (req: AuthRequest, res: Response) => {
+  try {
+    const scope = await getAgencyScope(req, res);
+    if (!scope) return;
+    if (!scope.agencyId) return res.status(400).json({ error: 'Masuk dengan akun instansi untuk menambah petugas.' });
+    const body = z.object({ nama: z.string().trim().min(3).max(100), email: z.string().trim().email().max(150), password: z.string().min(8).max(128) }).strict().parse(req.body);
+    const passwordHash = await bcrypt.hash(body.password, 12);
+    const [member] = await db.insert(users).values({ nama: body.nama, email: body.email, passwordHash, peran: 'instansi', agencyId: scope.agencyId })
+      .onConflictDoNothing({ target: users.email }).returning({ id: users.id, nama: users.nama, email: users.email, peran: users.peran, dibuatPada: users.dibuatPada });
+    if (!member) return res.status(409).json({ error: 'Email sudah terdaftar' });
+    res.status(201).json(member);
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Periksa nama, alamat email, dan kata sandi minimal 8 karakter.' });
+    res.status(500).json({ error: 'Petugas belum berhasil ditambahkan' });
+  }
+});
+
 // GET /agency/dashboard - Ringkasan instansi
 router.get('/dashboard', async (req: AuthRequest, res: Response) => {
   try {
@@ -87,7 +145,7 @@ router.get('/assignments', async (req: AuthRequest, res: Response) => {
   try {
     const scope = await getAgencyScope(req, res);
     if (!scope) return;
-    if (req.query.view === 'workspace') return res.json(await getReportWorkspace(req.query, scopeCondition(scope.agencyId), ['ditugaskan', 'dikerjakan', 'selesai']));
+    if (req.query.view === 'workspace') return res.json(await getReportWorkspace(req.query, scopeCondition(scope.agencyId)));
     const { status, limit = 30, page = 1 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
@@ -152,6 +210,18 @@ router.post('/assignments/:id/progress', async (req: AuthRequest, res: Response)
   } catch (error) { sendTransitionError(res, error); }
 });
 
+router.post('/assignments/:id/reject', async (req: AuthRequest, res: Response) => {
+  try {
+    const scope = await getAgencyScope(req, res);
+    if (!scope) return;
+    const { alasan } = z.object({ alasan: z.string().trim().min(1, 'Alasan penolakan wajib diisi').max(2000) }).strict().parse(req.body);
+    const result = await transitionReport({ reportId: req.params.id, actorId: req.user!.id,
+      status: 'ditolak', allowedFrom: ['ditugaskan', 'dikerjakan'], requiredAgencyId: scope.agencyId,
+      note: `Ditolak oleh instansi: ${alasan}` });
+    res.json({ success: true, changed: result.changed, message: 'Laporan ditolak dan alasan tercatat di riwayat.' });
+  } catch (error) { sendTransitionError(res, error); }
+});
+
 router.post('/assignments/:id/complete', upload.array('bukti', 3), async (req: AuthRequest, res: Response) => {
   try {
     const scope = await getAgencyScope(req, res);
@@ -159,7 +229,7 @@ router.post('/assignments/:id/complete', upload.array('bukti', 3), async (req: A
     const { catatan } = z.object({ catatan: z.string().trim().max(2000).optional() }).parse(req.body || {});
     const files = (req.files || []) as Express.Multer.File[];
     const result = await transitionReport({
-      reportId: req.params.id, actorId: req.user!.id, status: 'selesai', allowedFrom: ['dikerjakan'],
+      reportId: req.params.id, actorId: req.user!.id, status: 'selesai', allowedFrom: ['ditugaskan', 'dikerjakan'],
       requiredAgencyId: scope.agencyId, completedAt: new Date(),
       note: catatan || 'Pekerjaan selesai, bukti perbaikan telah diunggah',
       beforeChange: async (tx, report) => {

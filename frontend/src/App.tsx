@@ -17,6 +17,9 @@ import AdminLayout from '@/components/AdminLayout';
 import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
 import AgencyDashboard from '@/pages/agency/AgencyDashboard';
 import AgencyAssignmentsPage from '@/pages/agency/AgencyAssignmentsPage';
+import AgencyMapPage from '@/pages/agency/AgencyMapPage';
+import AgencyPeoplePage from '@/pages/agency/AgencyPeoplePage';
+import AgencySettingsPage from '@/pages/agency/AgencySettingsPage';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 function App() {
@@ -48,8 +51,15 @@ function App() {
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['instansi', 'admin']} />}>
-        <Route path="/agency" element={<AgencyDashboard />} />
-        <Route path="/agency/assignments" element={<AgencyAssignmentsPage />} />
+        <Route path="/agency" element={<AdminLayout agency />}>
+          <Route index element={<AgencyDashboard />} />
+          <Route path="assignments" element={<AgencyAssignmentsPage />} />
+          <Route path="reports" element={<AgencyAssignmentsPage all />} />
+          <Route path="map" element={<AgencyMapPage />} />
+          <Route path="stats" element={<AgencyDashboard statistics />} />
+          <Route path="people" element={<AgencyPeoplePage />} />
+          <Route path="settings" element={<AgencySettingsPage />} />
+        </Route>
       </Route>
     </Routes>
   );
