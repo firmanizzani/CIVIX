@@ -9,7 +9,7 @@ const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 });
 const querySchema = z.object({
-  status: z.enum([...statusLaporanEnum.enumValues, 'aktif', 'proses']).optional(),
+  status: z.enum([...statusLaporanEnum.enumValues, 'aktif', 'proses', 'ditolak_duplikat']).optional(),
   kategori: z.enum(kategoriLaporanEnum.enumValues).optional(),
   search: z.string().trim().max(150).optional(),
   regionId: z.string().max(40).optional(),
@@ -27,6 +27,7 @@ export async function getReportWorkspace(input: unknown, scope?: SQL, allowedSta
   const authorized = and(scope, allowedStatuses ? inArray(reports.status, allowedStatuses) : undefined);
   const status = query.status === 'aktif' ? inArray(reports.status, [...activeStatuses])
     : query.status === 'proses' ? inArray(reports.status, ['ditugaskan', 'dikerjakan'])
+    : query.status === 'ditolak_duplikat' ? inArray(reports.status, ['ditolak', 'duplikat'])
     : query.status ? eq(reports.status, query.status) : undefined;
   const where = and(authorized, status,
     query.regionId ? eq(reports.regionId, query.regionId) : undefined,

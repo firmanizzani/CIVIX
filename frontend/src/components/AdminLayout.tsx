@@ -4,7 +4,6 @@ import { LayoutDashboard, ClipboardCheck, Files, Building2, Users, Settings, Che
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api';
 import CivixLogo from '@/components/CivixLogo';
-import AdminTopbar from '@/components/AdminTopbar';
 import { useAuthStore } from '@/stores/authStore';
 import '@/pages/admin/admin.css';
 import '@/pages/admin/admin-workspace.css';
@@ -12,7 +11,6 @@ import '@/pages/admin/admin-workspace.css';
 const links = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/admin/verification', label: 'Verifikasi Laporan', icon: ClipboardCheck },
-  { to: '/admin/tasks', label: 'Tugas Penanganan', icon: Files },
   { to: '/admin/reports', label: 'Semua Laporan', icon: Files },
   { to: '/admin/map', label: 'Peta Laporan', icon: Map },
   { to: '/admin/stats', label: 'Statistik', icon: ChartNoAxesCombined },
@@ -61,6 +59,6 @@ export default function AdminLayout({ agency = false }: { agency?: boolean }) {
         <button className="admin-profile-button" type="button" onClick={() => setProfileOpen(!profileOpen)} aria-expanded={profileOpen} aria-controls="admin-profile-menu"><span className="admin-avatar">{initials}</span><span><strong title={agency ? unit.data?.nama || user?.agencyNama || user?.nama : user?.nama}>{agency ? unit.data?.nama || user?.agencyNama || user?.nama : user?.nama || 'Admin'}</strong><small>{agency ? 'Instansi · DKI Jakarta' : 'Administrator'}</small></span><ChevronDown size={15} /></button>
       </div>
     </aside>
-    <main className="admin-content">{!agency && <AdminTopbar />}<Outlet /></main>
+    <main className="admin-content"><Outlet /></main>
   </div>;
 }

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import PageTransition from '@/components/PageTransition';
 import LandingPage from '@/pages/LandingPage';
 import LoginPage from '@/pages/auth/LoginPage';
@@ -22,6 +22,11 @@ import AgencyPeoplePage from '@/pages/agency/AgencyPeoplePage';
 import AgencySettingsPage from '@/pages/agency/AgencySettingsPage';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
+function AdminTasksRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={'/admin/reports' + search} replace />;
+}
+
 function App() {
   return (
     <Routes>
@@ -43,7 +48,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="verification" element={<AdminReportsPage verification />} />
-          <Route path="tasks" element={<AdminReportsPage tasks />} />
+          <Route path="tasks" element={<AdminTasksRedirect />} />
           <Route path="reports" element={<AdminReportsPage />} />
           <Route path="map" element={<AgencyMapPage admin />} />
           <Route path="stats" element={<AdminDashboard statistics />} />

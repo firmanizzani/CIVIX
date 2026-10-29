@@ -59,6 +59,9 @@ assert.equal(overview.items.length, first.totalAll, 'Operational dashboard inclu
 assert.ok(overview.items.every(row => Array.isArray(row.photos)), 'Dashboard/map thumbnails come from real report photos');
 assert.deepEqual(overview.items.map(row => row.id).sort(), map.map(row => row.id).sort(), 'Dashboard, statistics and map use the same report scope');
 assert.ok(overview.regions.length > 0);
+const closed = await workspace({ status: 'ditolak_duplikat', limit: '50' });
+assert.equal(closed.total, first.counts.ditolak + first.counts.duplikat, 'Combined rejected/duplicate card matches the report list');
+assert.ok(closed.items.every(row => ['ditolak', 'duplikat'].includes(row.status)));
 const regionCounts = await get('/stats/regions');
 assert.equal(regionCounts.reduce((sum, region) => sum + Number(region.total), 0), map.filter(report => report.regionId).length, 'Empty regions do not create phantom reports');
 const original = await get('/admin/settings');

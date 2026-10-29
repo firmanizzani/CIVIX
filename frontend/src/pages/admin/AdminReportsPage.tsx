@@ -10,8 +10,8 @@ import apiClient from '@/lib/api';
 import { Report, AdminAgency, Region, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
 import { formatDateTime } from '@/lib/utils';
 
-export default function AdminReportsPage({ verification = false, tasks = false }: { verification?: boolean; tasks?: boolean }) {
-  const w = useReportWorkspace('admin', verification ? 'diterima' : tasks ? 'proses' : '');
+export default function AdminReportsPage({ verification = false }: { verification?: boolean }) {
+  const w = useReportWorkspace('admin', verification ? 'diterima' : '');
   const selectedId = w.params.get('laporan');
   const [action, setAction] = useState<'reject' | 'duplicate' | 'assign' | null>(null);
   const [note, setNote] = useState('');
@@ -84,19 +84,18 @@ export default function AdminReportsPage({ verification = false, tasks = false }
   ];
   if (selectedId) return <>
     {success && <p role="status" className="workspace-success">{success}</p>}
-    {detail.isLoading ? <div className="admin-loading">Memuat detail laporan…</div> : detail.isError ? <><button className="admin-back" onClick={back}>← Kembali ke daftar</button><QueryError subject="Detail laporan" retry={detail.refetch} pending={detail.isFetching} /></> : selected && <AdminReportDetail report={selected} onBack={back} actions={actions} backLabel={tasks ? "Tugas Penanganan" : verification ? "Verifikasi Laporan" : "Semua Laporan"} />}
+    {detail.isLoading ? <div className="admin-loading">Memuat detail laporan…</div> : detail.isError ? <><button className="admin-back" onClick={back}>← Kembali ke daftar</button><QueryError subject="Detail laporan" retry={detail.refetch} pending={detail.isFetching} /></> : selected && <AdminReportDetail report={selected} onBack={back} actions={actions} backLabel={verification ? "Verifikasi Laporan" : "Semua Laporan"} />}
   </>;
   return <>
-    <header className="admin-page-header"><div><h1>{verification ? 'Antrean Verifikasi' : tasks ? 'Tugas Penanganan' : 'Semua Laporan'}</h1><p>{verification ? 'Tinjau laporan masuk, verifikasi, tolak, atau tandai duplikat sesuai ketentuan.' : tasks ? 'Pantau tugas yang ditugaskan dan sedang dikerjakan oleh seluruh instansi.' : 'Kelola seluruh laporan yang masuk ke sistem.'}</p></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></header>
+    <header className="admin-page-header"><div><h1>{verification ? 'Antrean Verifikasi' : 'Semua Laporan'}</h1><p>{verification ? 'Tinjau laporan masuk, verifikasi, tolak, atau tandai duplikat sesuai ketentuan.' : 'Kelola seluruh laporan yang masuk ke sistem.'}</p></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></header>
     {success && <p role="status" className="workspace-success"><CheckCircle2 size={16} />{success}</p>}
     {mutation.isError && <p role="alert" className="workspace-error">{getActionError(mutation.error)}</p>}
     {verification && <div className="admin-queue-tabs">{tabs.map(({ value, label, count, icon: Icon, tone }) => <button type="button" key={label} data-tone={tone} aria-pressed={w.status === value} onClick={() => w.update({ status: value })}><Icon size={19} /><span>{label}<strong>{count === undefined ? '—' : count.toLocaleString('id-ID')}</strong></span></button>)}</div>}
-    {tasks && <div className="workspace-tabs" role="group" aria-label="Filter tugas admin">{[{ value: "proses", label: "Aktif", count: (counts?.ditugaskan || 0) + (counts?.dikerjakan || 0) }, { value: "ditugaskan", label: "Belum Ditangani", count: counts?.ditugaskan || 0 }, { value: "dikerjakan", label: "Dikerjakan", count: counts?.dikerjakan || 0 }, { value: "selesai", label: "Selesai", count: counts?.selesai || 0 }].map(tab => <button key={tab.value} aria-pressed={w.status === tab.value} onClick={() => w.update({ status: tab.value })}>{tab.label}<span>{tab.count}</span></button>)}</div>}
     <div className="admin-report-filters">
       <div className="workspace-search"><Search size={15} /><input aria-label="Cari laporan admin" className="input" placeholder="Cari tiket, judul, atau lokasi…" value={w.search} maxLength={150} onChange={event => w.update({ q: event.target.value || null })} /></div>
       <select className="input" aria-label="Kategori laporan" value={w.kategori} onChange={event => w.update({ kategori: event.target.value || null })}><option value="">Kategori</option>{Object.entries(KATEGORI_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
       <select className="input" aria-label="Wilayah laporan" value={w.params.get('regionId') || ''} onChange={event => w.update({ regionId: event.target.value || null })}><option value="">Wilayah</option>{regions.data?.map(region => <option key={region.id} value={region.id}>{region.nama}</option>)}</select>
-      <select className="input" aria-label="Status laporan" value={w.status} onChange={event => w.update({ status: event.target.value })}><option value="">Semua status</option><option value="proses">Dalam penanganan</option>{Object.entries(STATUS_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
+      <select className="input" aria-label="Status laporan" value={w.status} onChange={event => w.update({ status: event.target.value })}><option value="">Semua status</option><option value="proses">Dalam penanganan</option><option value="ditolak_duplikat">Ditolak / Duplikat</option>{Object.entries(STATUS_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
       <select className="input" aria-label="Instansi laporan" value={w.params.get('agencyId') || ''} onChange={event => w.update({ agencyId: event.target.value || null })}><option value="">Instansi</option>{agencies.data?.map(agency => <option key={agency.id} value={agency.id}>{agency.nama}</option>)}</select>
       <details className="admin-date-filter"><summary><CalendarDays size={14} />{w.params.get('dateFrom') || w.params.get('dateTo') ? 'Tanggal dipilih' : 'Tanggal'}</summary><div><label>Dari<input type="date" className="input" value={w.params.get('dateFrom') || ''} max={w.params.get('dateTo') || undefined} onChange={event => w.update({ dateFrom: event.target.value || null })} /></label><label>Sampai<input type="date" className="input" value={w.params.get('dateTo') || ''} min={w.params.get('dateFrom') || undefined} onChange={event => w.update({ dateTo: event.target.value || null })} /></label></div></details>
       <select className="input" aria-label="Urutan laporan" value={w.sort} onChange={event => w.update({ sort: event.target.value })}><option value="oldest">Terlama</option><option value="newest">Terbaru</option></select>
