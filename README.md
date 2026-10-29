@@ -19,7 +19,10 @@ Platform ini memungkinkan warga melaporkan masalah infrastruktur, admin memverif
 - Verifikasi laporan baru dari warga
 - Menolak atau menandai laporan duplikat
 - Menugaskan laporan terverifikasi ke instansi terkait
-- Melihat statistik dan dashboard administrasi
+- Dashboard sidebar: peta seluruh laporan, ringkasan status, tren, dan perbandingan wilayah
+- Antrean verifikasi dan tabel semua laporan dengan filter kategori, wilayah, status, instansi, dan tanggal
+- Manajemen pengguna lintas peran dan instansi beserta akun petugas
+- Pengaturan durasi tampilan laporan selesai di peta publik (1–90 hari, tersimpan di database)
 
 ### Instansi
 - Menerima laporan yang ditugaskan
@@ -28,7 +31,7 @@ Platform ini memungkinkan warga melaporkan masalah infrastruktur, admin memverif
 - Dashboard tugas instansi
 
 ### Fitur Publik
-- Peta interaktif DKI Jakarta dengan penanda laporan (titik hijau hilang 7 hari setelah selesai sesuai PRD)
+- Peta interaktif DKI Jakarta dengan penanda laporan (durasi titik hijau mengikuti pengaturan admin, default 7 hari)
 - Daftar laporan publik (filter kategori, status, wilayah)
 - Detail laporan dengan timeline status transparan
 - Statistik penanganan: tren, sebaran kategori, insight otomatis
@@ -405,3 +408,11 @@ Project ini dibuat untuk **Lomba Web In Action 2026 (Multimedia In Action)** den
 Untuk pertanyaan terkait project, hubungi tim pengembang atau buka issue di repository.
 
 **CIVIX** — Laporan Warga, Aksi Nyata untuk Kota.
+
+## Pembaruan dashboard admin
+
+Setelah menarik pembaruan, jalankan `cd backend` lalu `npm run db:migrate` untuk menambahkan tabel `platform_settings` dari migrasi `0007_platform_settings`. Migrasi ini tidak menghapus atau mengubah laporan yang ada. Jalankan backend dan frontend seperti biasa.
+
+Halaman admin tersedia di `/admin`, `/admin/verification`, `/admin/reports`, `/admin/agencies`, `/admin/people`, dan `/admin/settings`. Profil administrator dan tombol keluar berada di bawah sidebar.
+
+Untuk pemeriksaan integrasi API pada server pengembangan yang berjalan, isi environment `CIVIX_TEST_EMAIL` dan `CIVIX_TEST_PASSWORD` dengan akun admin pengujian yang sudah ada, lalu jalankan `node scripts/check-admin-api.mjs` dari folder backend. Pemeriksaan ini tidak memproses laporan atau mengganti akun/password; pengaturan peta hanya disimpan ulang dengan nilai yang sama.

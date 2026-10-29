@@ -13,6 +13,8 @@ import CreateReportPage from '@/pages/citizen/CreateReportPage';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminReportsPage from '@/pages/admin/AdminReportsPage';
 import AdminPeoplePage from '@/pages/admin/AdminPeoplePage';
+import AdminLayout from '@/components/AdminLayout';
+import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
 import AgencyDashboard from '@/pages/agency/AgencyDashboard';
 import AgencyAssignmentsPage from '@/pages/agency/AgencyAssignmentsPage';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -35,9 +37,14 @@ function App() {
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/reports" element={<AdminReportsPage />} />
-        <Route path="/admin/people" element={<AdminPeoplePage />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="verification" element={<AdminReportsPage verification />} />
+          <Route path="reports" element={<AdminReportsPage />} />
+          <Route path="agencies" element={<AdminPeoplePage agenciesOnly />} />
+          <Route path="people" element={<AdminPeoplePage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+        </Route>
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['instansi', 'admin']} />}>

@@ -27,6 +27,7 @@ const getColor = (status: StatusLaporan) => {
 };
 
 export default function MapPage() {
+  const { data: mapSettings } = useQuery<{ completedMapDays: number }>({ queryKey: ['map-settings'], queryFn: async () => (await apiClient.get('/reports/map-settings')).data });
   const [selectedKategori, setSelectedKategori] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
@@ -96,11 +97,11 @@ export default function MapPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="status-dot status-green" />
-              <span>Hijau: Selesai (tampil 7 hari)</span>
+              <span>Hijau: Selesai {mapSettings ? `(tampil ${mapSettings.completedMapDays} hari)` : ''}</span>
             </div>
           </div>
           <p className="mt-3 text-[10px] text-slate-400 border-t border-slate-100 pt-2">
-            Titik hijau otomatis hilang setelah 7 hari untuk menjaga keterbacaan peta.
+            Titik hijau otomatis disembunyikan {mapSettings ? `setelah ${mapSettings.completedMapDays} hari` : 'sesuai durasi platform'} untuk menjaga keterbacaan peta.
           </p>
         </div>
 

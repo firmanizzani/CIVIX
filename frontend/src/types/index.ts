@@ -140,6 +140,16 @@ export interface AdminAgency {
   deskripsi: string | null;
   dibuatPada?: string;
   users?: AgencyAccount[];
+  jumlahLaporan?: number;
+}
+
+export interface AdminUser {
+  id: string;
+  nama: string;
+  email: string;
+  peran: Peran;
+  dibuatPada: string;
+  agency?: { id: string; nama: string } | null;
 }
 
 export interface AgencyDashboard {

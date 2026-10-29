@@ -15,7 +15,7 @@ const subscribeDesktop = (notify: () => void) => {
 export const useDesktop = () => useSyncExternalStore(subscribeDesktop,
   () => window.matchMedia(desktopQuery).matches, () => false);
 
-export function useReportWorkspace(role: 'admin' | 'agency' | 'citizen') {
+export function useReportWorkspace(role: 'admin' | 'agency' | 'citizen', defaultStatus?: string) {
   const [params, setParams] = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
@@ -25,16 +25,21 @@ export function useReportWorkspace(role: 'admin' | 'agency' | 'citizen') {
     const timer = window.setTimeout(() => setSearch(rawSearch), 250);
     return () => window.clearTimeout(timer);
   }, [rawSearch]);
-  const status = params.get('status') ?? (role === 'admin' ? 'diterima' : role === 'agency' ? 'aktif' : '');
+  const status = params.get('status') ?? defaultStatus ?? (role === 'admin' ? 'diterima' : role === 'agency' ? 'aktif' : '');
   const kategori = params.get('kategori') || '';
   const sort = params.get('sort') || (role === 'citizen' ? 'newest' : 'oldest');
   const page = Number(params.get('page') || 1);
+  const regionId = params.get('regionId') || '';
+  const agencyId = params.get('agencyId') || '';
+  const dateFrom = params.get('dateFrom') || '';
+  const dateTo = params.get('dateTo') || '';
   const path = role === 'admin' ? '/admin/reports' : role === 'agency' ? '/agency/assignments' : '/reports/me/reports';
   const query = useQuery<ReportWorkspace>({
-    queryKey: ['workspace', role, user?.id, status, kategori, sort, search, page],
+    queryKey: ['workspace', role, user?.id, status, kategori, sort, search, page, regionId, agencyId, dateFrom, dateTo],
     queryFn: async () => (await apiClient.get(path, { params: {
       view: 'workspace', status: status || undefined, kategori: kategori || undefined,
       sort, search: search || undefined, page, limit: role === 'citizen' ? 8 : 10,
+      regionId: regionId || undefined, agencyId: agencyId || undefined, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined,
     } })).data,
     enabled: !!user, staleTime: 10000, refetchInterval: 30000, refetchOnWindowFocus: true,
   });
@@ -53,7 +58,7 @@ export function useReportWorkspace(role: 'admin' | 'agency' | 'citizen') {
     'workspace', 'workspace-detail', 'admin-dashboard', 'agency-dashboard', 'admin-reports',
     'agency-assignments', 'my-reports', 'report-detail', 'recent-reports', 'public-reports',
     'stats-overview', 'stats-overview-full', 'stats-trend', 'stats-regions', 'stats-category',
-    'map-points-full', 'map-points-preview',
+    'map-points-full', 'map-points-preview', 'admin-map', 'admin-overview', 'admin-agencies',
   ].includes(String(cached.queryKey[0])) });
   return { ...query, params, update, status, kategori, sort, search: rawSearch, refreshReports, user };
 }

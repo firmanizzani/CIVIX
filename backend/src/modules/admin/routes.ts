@@ -2,8 +2,9 @@ import { getReportWorkspace } from '../reports/workspace.js';
 import { transitionReport, ReportTransitionError } from '../reports/status.js';
 import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
-import { reports, reportPhotos, reportStatusLogs, agencies, reportAssignments, users } from '../../db/schema.js';
-import { eq, desc, count, asc, ilike, or } from 'drizzle-orm';
+import { reports, reportPhotos, reportStatusLogs, agencies, reportAssignments, users, regions, platformSettings } from '../../db/schema.js';
+import { eq, desc, count, asc, ilike, or, and, ne } from 'drizzle-orm';
+import { readPlatformSettings } from './settings.js';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
@@ -11,6 +12,34 @@ import { z } from 'zod';
 const router = Router();
 router.use(authMiddleware);
 router.use(requireRole(['admin']));
+
+router.get('/settings', async (_req, res: Response) => {
+  try { res.json(await readPlatformSettings()); }
+  catch { res.status(500).json({ error: 'Gagal memuat pengaturan platform' }); }
+});
+router.patch('/settings', async (req, res: Response) => {
+  try {
+    const settings = z.object({ completedMapDays: z.number().int().min(1).max(90) }).strict().parse(req.body);
+    await db.insert(platformSettings).values({ id: 'global', ...settings }).onConflictDoUpdate({ target: platformSettings.id, set: { ...settings, updatedAt: new Date() } });
+    res.json(settings);
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Durasi harus berupa bilangan bulat antara 1 dan 90 hari.' });
+    res.status(500).json({ error: 'Pengaturan belum berhasil disimpan' });
+  }
+});
+router.get('/regions', async (_req, res: Response) => {
+  try { res.json(await db.select().from(regions).orderBy(asc(regions.nama))); }
+  catch { res.status(500).json({ error: 'Gagal memuat wilayah' }); }
+});
+router.get('/map', async (_req, res: Response) => {
+  try { res.json(await db.query.reports.findMany({ columns: { id: true, kodeTiket: true, judul: true, namaJalan: true, regionId: true, kategori: true, status: true, latitude: true, longitude: true, dibuatPada: true } })); }
+  catch { res.status(500).json({ error: 'Gagal memuat peta admin' }); }
+});
+router.get('/users', async (_req, res: Response) => {
+  try {
+    res.json(await db.query.users.findMany({ columns: { id: true, nama: true, email: true, peran: true, dibuatPada: true }, with: { agency: { columns: { id: true, nama: true } } }, orderBy: [asc(users.nama)] }));
+  } catch { res.status(500).json({ error: 'Gagal memuat pengguna' }); }
+});
 
 // GET /admin/dashboard - Ringkasan admin
 router.get('/dashboard', async (_req, res: Response) => {
@@ -77,7 +106,7 @@ router.get('/reports/:id', async (req, res: Response) => {
       where: eq(reports.id, req.params.id),
       with: { photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true, assignedAgency: true,
-        statusLogs: { orderBy: [desc(reportStatusLogs.waktu), desc(reportStatusLogs.id)] } },
+        statusLogs: { orderBy: [desc(reportStatusLogs.waktu), desc(reportStatusLogs.id)] }, user: { columns: { id: true, nama: true, email: true } } },
     });
     if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
     res.json(report);
@@ -171,7 +200,7 @@ router.patch('/accounts/:id/password', async (req, res: Response) => {
   try {
     const { password } = PasswordSchema.parse(req.body);
     const [account] = await db.update(users).set({ passwordHash: await bcrypt.hash(password, 12) })
-      .where(eq(users.id, req.params.id)).returning({ id: users.id, peran: users.peran });
+      .where(and(eq(users.id, req.params.id), ne(users.peran, 'admin'))).returning({ id: users.id, peran: users.peran });
     if (!account || account.peran === 'admin') return res.status(404).json({ error: 'Akun tidak ditemukan' });
     res.json({ success: true });
   } catch (err) {
@@ -187,7 +216,8 @@ router.get('/agencies', async (_req, res: Response) => {
       orderBy: [asc(agencies.nama)],
       with: { users: { columns: { id: true, nama: true, email: true, dibuatPada: true } } },
     });
-    res.json(list);
+    const totals = await db.select({ agencyId: reports.assignedAgencyId, total: count() }).from(reports).groupBy(reports.assignedAgencyId);
+    res.json(list.map((agency: { id: string }) => ({ ...agency, jumlahLaporan: Number(totals.find((item: { agencyId: string | null }) => item.agencyId === agency.id)?.total || 0) })));
   } catch (err) {
     res.status(500).json({ error: 'Gagal memuat daftar instansi' });
   }

@@ -26,21 +26,21 @@ export function formatDateTime(dateStr: string, includeSeconds = false): string 
 export function getStatusBadgeClasses(status: StatusLaporan): string {
   switch (status) {
     case 'diterima':
-      return 'bg-red-100 text-red-800 border border-red-200';
+      return 'status-badge whitespace-nowrap shrink-0 bg-red-100 text-red-800 border border-red-200';
     case 'diverifikasi':
-      return 'bg-orange-100 text-orange-800 border border-orange-200';
+      return 'status-badge whitespace-nowrap shrink-0 bg-orange-100 text-orange-800 border border-orange-200';
     case 'ditugaskan':
-      return 'bg-amber-100 text-amber-800 border border-amber-200';
+      return 'status-badge whitespace-nowrap shrink-0 bg-amber-100 text-amber-800 border border-amber-200';
     case 'dikerjakan':
-      return 'bg-amber-100 text-amber-800 border border-amber-200';
+      return 'status-badge whitespace-nowrap shrink-0 bg-amber-100 text-amber-800 border border-amber-200';
     case 'selesai':
-      return 'bg-lime-100 text-lime-800 border border-lime-200';
+      return 'status-badge whitespace-nowrap shrink-0 bg-lime-100 text-lime-800 border border-lime-200';
     case 'ditolak':
-      return 'bg-rose-100 text-rose-800 border border-rose-200';
+      return 'status-badge whitespace-nowrap shrink-0 bg-rose-100 text-rose-800 border border-rose-200';
     case 'duplikat':
-      return 'bg-purple-100 text-purple-800 border border-purple-200';
+      return 'status-badge whitespace-nowrap shrink-0 bg-purple-100 text-purple-800 border border-purple-200';
     default:
-      return 'bg-slate-100 text-slate-700 border border-slate-200';
+      return 'status-badge whitespace-nowrap shrink-0 bg-slate-100 text-slate-700 border border-slate-200';
   }
 }
 

@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, timestamp, boolean, numeric, pgEnum, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, timestamp, boolean, numeric, integer, pgEnum, index, uniqueIndex, check } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 export const peranUserEnum = pgEnum('peran_user', ['warga', 'admin', 'instansi']);
@@ -20,6 +20,12 @@ export const statusLaporanEnum = pgEnum('status_laporan', [
   'duplikat',
 ]);
 export const jenisFotoEnum = pgEnum('jenis_foto', ['awal', 'bukti_perbaikan']);
+
+export const platformSettings = pgTable('platform_settings', {
+  id: varchar('id', { length: 20 }).primaryKey(),
+  completedMapDays: integer('completed_map_days').notNull().default(7),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, table => ({ completedMapDaysRange: check('completed_map_days_range', sql`${table.completedMapDays} BETWEEN 1 AND 90`) }));
 
 export const agencies = pgTable('agencies', {
   id: varchar('id', { length: 40 }).primaryKey().default(sql`'agency_' || lpad(nextval('seq_agency_id')::text, 3, '0')`),

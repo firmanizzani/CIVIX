@@ -1,20 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Search, Users, ShieldCheck, Clock, CheckCircle2, XCircle, Copy, Send, FileText } from 'lucide-react';
-import DashboardFrame from '@/components/DashboardFrame';
+import { ArrowRight, Search, Clock, CheckCircle2, XCircle, Copy, Send, FileText, MoreHorizontal, CalendarDays, HardHat } from 'lucide-react';
+import AdminReportDetail from '@/components/AdminReportDetail';
 import QueryError from '@/components/QueryError';
-import { DashboardStats, DetailBack, DetailPreview, FilterTabs, StatusBadge, WorkspacePagination, WorkspaceRefresh, reportCover } from '@/components/ReportWorkspaceUI';
-import { getActionError, useDesktop, useReportWorkspace } from '@/hooks/useReportWorkspace';
+import { StatusBadge, WorkspacePagination, WorkspaceRefresh, reportCover } from '@/components/ReportWorkspaceUI';
+import { getActionError, useReportWorkspace } from '@/hooks/useReportWorkspace';
 import apiClient from '@/lib/api';
-import { Report, AdminAgency, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
+import { Report, AdminAgency, Region, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
 import { formatDateTime } from '@/lib/utils';
 
-export default function AdminReportsPage({ embedded = false }: { embedded?: boolean }) {
-  const w = useReportWorkspace('admin');
-  const desktop = useDesktop();
-  const scrollPosition = useRef(0);
-  const selectedId = w.params.get('laporan') || (desktop ? w.data?.items[0]?.id : null);
+export default function AdminReportsPage({ verification = false }: { verification?: boolean }) {
+  const w = useReportWorkspace('admin', verification ? 'diterima' : '');
+  const selectedId = w.params.get('laporan');
   const [action, setAction] = useState<'reject' | 'duplicate' | 'assign' | null>(null);
   const [note, setNote] = useState('');
   const [agencyId, setAgencyId] = useState('');
@@ -29,30 +26,26 @@ export default function AdminReportsPage({ embedded = false }: { embedded?: bool
     queryKey: ['admin-agencies'], queryFn: async () => (await apiClient.get('/admin/agencies')).data,
   });
   const mutation = useMutation({
-    mutationFn: async ({ action, body }: { action: string; body?: Record<string, string> }) =>
-      (await apiClient.post('/admin/reports/' + selectedId + '/' + action, body || {})).data,
+    mutationFn: async ({ action, body, reportId }: { action: string; body?: Record<string, string>; reportId?: string }) =>
+      (await apiClient.post('/admin/reports/' + (reportId || selectedId) + '/' + action, body || {})).data,
     onSuccess: async (result) => {
       setSuccess(result.message || 'Perubahan berhasil disimpan.');
       setAction(null); setNote(''); setTargetTicket('');
-      w.update({ laporan: null }, false);
+      w.update({ laporan: null, tindakan: null }, false);
       await w.refreshReports();
     },
     onError: async () => { await w.refreshReports(); },
   });
-  useEffect(() => { setAction(null); setNote(''); setTargetTicket(''); mutation.reset(); }, [selectedId]);
+  useEffect(() => { const requested = w.params.get('tindakan'); setAction(requested === 'reject' || requested === 'duplicate' ? requested : null); setNote(''); setTargetTicket(''); mutation.reset(); }, [selectedId]);
   const counts = w.data?.counts;
   const selected = detail.data;
-  const choose = (report: Report) => {
+  const choose = (report: Report, next?: 'reject' | 'duplicate') => {
     if (mutation.isPending) return;
-    scrollPosition.current = window.scrollY;
-    w.update({ laporan: report.id }, false);
-    setSuccess('');
-    if (!desktop) window.scrollTo({ top: 0, behavior: 'instant' });
+    w.update({ laporan: report.id, tindakan: next || null }, false);
+    setSuccess(''); window.scrollTo({ top: 0, behavior: 'instant' });
   };
-  const back = () => {
-    w.update({ laporan: null }, false);
-    requestAnimationFrame(() => window.scrollTo({ top: scrollPosition.current, behavior: 'instant' }));
-  };
+  const back = () => w.update({ laporan: null, tindakan: null }, false);
+  const regions = useQuery<Region[]>({ queryKey: ['admin-regions'], queryFn: async () => (await apiClient.get('/admin/regions')).data });
   const openAction = (next: 'reject' | 'duplicate' | 'assign') => {
     setAction(next); setNote(''); setTargetTicket(''); mutation.reset();
     if (next === 'assign' && selected) {
@@ -60,45 +53,8 @@ export default function AdminReportsPage({ embedded = false }: { embedded?: bool
       setAgencyId(agencies.data?.find((agency) => agency.nama.toLowerCase().includes(keyword))?.id || '');
     }
   };
-  const body = <div>
-    <header className="dashboard-heading">
-      <div><h1><ShieldCheck size={25} aria-hidden="true" />{embedded ? 'Dashboard Admin' : 'Kelola Laporan'}</h1><p>Prioritaskan laporan yang perlu diverifikasi dan ditugaskan.</p></div>
-      <Link to="/admin/people" className="btn-primary"><Users size={16} aria-hidden="true" /> Kelola Warga & Instansi</Link>
-    </header>
-    <DashboardStats loading={!w.data} items={[
-      { label: 'Total Laporan', icon: FileText, value: w.data?.totalAll || 0, onClick: () => w.update({ status: '' }) },
-      { label: 'Perlu Verifikasi', icon: Clock, tone: 'amber', value: counts?.diterima || 0, onClick: () => w.update({ status: 'diterima' }) },
-      { label: 'Perlu Ditugaskan', icon: Send, tone: 'blue', value: counts?.diverifikasi || 0, onClick: () => w.update({ status: 'diverifikasi' }) },
-      { label: 'Selesai', icon: CheckCircle2, tone: 'green', value: counts?.selesai || 0, onClick: () => w.update({ status: 'selesai' }) },
-    ]} />
-    {success && <p role="status" className="workspace-success"><CheckCircle2 size={16} />{success}</p>}
-    <div className="workspace-grid" data-detail={!!w.params.get('laporan')}>
-      <section className="workspace-panel workspace-list" aria-label="Antrean laporan">
-        <div className="workspace-panel-heading"><h2>Antrean Laporan</h2><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></div>
-        <FilterTabs value={w.status} onChange={(status) => w.update({ status })} tabs={[
-          { value: 'diterima', label: 'Perlu Verifikasi', count: counts?.diterima || 0 },
-          { value: 'diverifikasi', label: 'Perlu Ditugaskan', count: counts?.diverifikasi || 0 },
-          { value: '', label: 'Semua', count: w.data?.totalAll || 0 },
-        ]} />
-        <div className="workspace-filters">
-          <div className="workspace-search"><Search size={16} aria-hidden="true" /><input className="input" aria-label="Cari laporan" placeholder="Cari tiket, judul, atau lokasi" maxLength={150} value={w.search} onChange={(event) => w.update({ q: event.target.value || null })} /></div>
-          <select className="input" aria-label="Kategori laporan" value={w.kategori} onChange={(event) => w.update({ kategori: event.target.value || null })}><option value="">Semua kategori</option>{Object.entries(KATEGORI_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
-          <select className="input" aria-label="Status laporan" value={w.status} onChange={(event) => w.update({ status: event.target.value })}><option value="">Semua status</option>{Object.entries(STATUS_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
-          <select className="input" aria-label="Urutan laporan" value={w.sort} onChange={(event) => w.update({ sort: event.target.value })}><option value="oldest">Terlama dahulu</option><option value="newest">Terbaru dahulu</option></select>
-        </div>
-        {w.isLoading ? <div className="workspace-loading" role="status">Memuat antrean laporan…</div> : w.isError ? <div className="p-5"><QueryError subject="Antrean laporan" retry={w.refetch} pending={w.isFetching} /></div> : !w.data?.items.length ? <div className="workspace-empty"><FileText size={28} /><h3>Tidak ada laporan pada filter ini</h3><p>Pilih status lain atau ubah pencarian.</p><button className="btn-outline" onClick={() => w.update({ status: '', q: null, kategori: null })}>Lihat semua laporan</button></div> :
-          <div className="workspace-rows">{w.data.items.map((report) => <button key={report.id} type="button" className="workspace-report-row" aria-pressed={selectedId === report.id} onClick={() => choose(report)}>
-            {reportCover(report) ? <img src={reportCover(report)} alt="" /> : <div className="workspace-thumb-placeholder"><FileText size={22} /></div>}
-            <div className="workspace-row-content"><p className="workspace-ticket">{report.kodeTiket}</p><h3>{report.judul}</h3><p>{report.namaJalan || report.region?.nama || 'Alamat belum tersedia'}</p><time className="workspace-row-age" dateTime={report.dibuatPada}>{formatDateTime(report.dibuatPada)}</time></div>
-            <StatusBadge status={report.status} />
-          </button>)}</div>}
-        <WorkspacePagination data={w.data} onPage={(page) => w.update({ page: String(page), laporan: null }, false)} />
-      </section>
-      <aside className="workspace-panel workspace-detail" aria-label="Detail laporan">
-        <DetailBack onClick={back} />
-        {!selectedId ? <div className="workspace-empty"><FileText size={28} /><h2>Detail Laporan</h2><p>Pilih laporan untuk memeriksa bukti dan menentukan tindak lanjut.</p></div> : detail.isLoading ? <div className="workspace-loading" role="status">Memuat detail laporan…</div> : detail.isError ? <QueryError subject="Detail laporan" retry={detail.refetch} pending={detail.isFetching} /> : selected && <>
-          <DetailPreview report={selected} />
-          {mutation.isError && <p role="alert" className="workspace-error">{getActionError(mutation.error)}</p>}
+  const actions = selected && <>
+    {mutation.isError && <p role="alert" className="workspace-error">{getActionError(mutation.error)}</p>}
           <div className="workspace-actions">
             {selected.status === 'diterima' && <><button className="btn-primary" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'verify' })}><CheckCircle2 size={16} />{mutation.isPending ? 'Menyimpan…' : 'Verifikasi Laporan'}</button><div className="workspace-action-pair"><button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('reject')}><XCircle size={15} />Tolak</button><button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('duplicate')}><Copy size={15} />Tandai Duplikat</button></div></>}
             {selected.status === 'diverifikasi' && <button className="btn-primary" disabled={mutation.isPending} onClick={() => openAction('assign')}><Send size={16} />Tugaskan ke Instansi</button>}
@@ -113,10 +69,45 @@ export default function AdminReportsPage({ embedded = false }: { embedded?: bool
             {action === 'duplicate' ? <><p>Pastikan laporan membahas kejadian yang sama dengan laporan lain.</p><label className="label" htmlFor="duplicate-ticket">Kode tiket rujukan (opsional)</label><input id="duplicate-ticket" className="input" maxLength={20} value={targetTicket} onChange={(event) => setTargetTicket(event.target.value.toUpperCase())} placeholder="LPR-2026-00001" /></> : <><label className="label" htmlFor="admin-note">{action === 'reject' ? 'Jelaskan alasan penolakan' : 'Catatan penugasan (opsional)'}</label><textarea id="admin-note" className="input" maxLength={2000} required={action === 'reject'} value={note} onChange={(event) => setNote(event.target.value)} rows={3} /></>}
             <div className="workspace-action-pair"><button type="button" className="btn-outline" disabled={mutation.isPending} onClick={() => setAction(null)}>Batal</button><button className="btn-primary" disabled={mutation.isPending || (action === 'assign' && !agencyId)}>{mutation.isPending ? 'Menyimpan…' : action === 'assign' ? 'Kirim Penugasan' : action === 'reject' ? 'Tolak Laporan' : 'Konfirmasi Duplikat'}</button></div>
           </form>}
-          <Link className="workspace-text-link" to={'/reports/' + selected.id}>Lihat laporan lengkap <ArrowRight size={14} /></Link>
-        </>}
-      </aside>
+  </>;
+  const tabs = [
+    { value: '', label: 'Semua', count: w.data?.totalAll, icon: FileText, tone: 'green' },
+    { value: 'diterima', label: 'Menunggu', count: counts?.diterima, icon: Clock, tone: 'amber' },
+    { value: 'diverifikasi', label: 'Terverifikasi', count: counts?.diverifikasi, icon: CheckCircle2, tone: 'green' },
+    { value: 'proses', label: 'Diproses', count: counts ? counts.ditugaskan + counts.dikerjakan : undefined, icon: HardHat, tone: 'blue' },
+    { value: 'ditolak', label: 'Ditolak', count: counts?.ditolak, icon: XCircle, tone: 'red' },
+    { value: 'duplikat', label: 'Duplikat', count: counts?.duplikat, icon: Copy, tone: 'neutral' },
+  ];
+  if (selectedId) return <>
+    {success && <p role="status" className="workspace-success">{success}</p>}
+    {detail.isLoading ? <div className="admin-loading">Memuat detail laporan…</div> : detail.isError ? <><button className="admin-back" onClick={back}>← Kembali ke daftar</button><QueryError subject="Detail laporan" retry={detail.refetch} pending={detail.isFetching} /></> : selected && <AdminReportDetail report={selected} onBack={back} actions={actions} />}
+  </>;
+  return <>
+    <header className="admin-page-header"><div><h1>{verification ? 'Antrean Verifikasi' : 'Semua Laporan'}</h1><p>{verification ? 'Tinjau laporan masuk, verifikasi, tolak, atau tandai duplikat sesuai ketentuan.' : 'Kelola seluruh laporan yang masuk ke sistem.'}</p></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></header>
+    {success && <p role="status" className="workspace-success"><CheckCircle2 size={16} />{success}</p>}
+    {mutation.isError && <p role="alert" className="workspace-error">{getActionError(mutation.error)}</p>}
+    {verification && <div className="admin-queue-tabs">{tabs.map(({ value, label, count, icon: Icon, tone }) => <button type="button" key={label} data-tone={tone} aria-pressed={w.status === value} onClick={() => w.update({ status: value })}><Icon size={19} /><span>{label}<strong>{count === undefined ? '—' : count.toLocaleString('id-ID')}</strong></span></button>)}</div>}
+    <div className="admin-report-filters">
+      <div className="workspace-search"><Search size={15} /><input aria-label="Cari laporan admin" className="input" placeholder="Cari tiket, judul, atau lokasi…" value={w.search} maxLength={150} onChange={event => w.update({ q: event.target.value || null })} /></div>
+      <select className="input" aria-label="Kategori laporan" value={w.kategori} onChange={event => w.update({ kategori: event.target.value || null })}><option value="">Kategori</option>{Object.entries(KATEGORI_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
+      <select className="input" aria-label="Wilayah laporan" value={w.params.get('regionId') || ''} onChange={event => w.update({ regionId: event.target.value || null })}><option value="">Wilayah</option>{regions.data?.map(region => <option key={region.id} value={region.id}>{region.nama}</option>)}</select>
+      <select className="input" aria-label="Status laporan" value={w.status} onChange={event => w.update({ status: event.target.value })}><option value="">Semua status</option><option value="proses">Dalam penanganan</option>{Object.entries(STATUS_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
+      <select className="input" aria-label="Instansi laporan" value={w.params.get('agencyId') || ''} onChange={event => w.update({ agencyId: event.target.value || null })}><option value="">Instansi</option>{agencies.data?.map(agency => <option key={agency.id} value={agency.id}>{agency.nama}</option>)}</select>
+      <details className="admin-date-filter"><summary><CalendarDays size={14} />{w.params.get('dateFrom') || w.params.get('dateTo') ? 'Tanggal dipilih' : 'Tanggal'}</summary><div><label>Dari<input type="date" className="input" value={w.params.get('dateFrom') || ''} max={w.params.get('dateTo') || undefined} onChange={event => w.update({ dateFrom: event.target.value || null })} /></label><label>Sampai<input type="date" className="input" value={w.params.get('dateTo') || ''} min={w.params.get('dateFrom') || undefined} onChange={event => w.update({ dateTo: event.target.value || null })} /></label></div></details>
+      <select className="input" aria-label="Urutan laporan" value={w.sort} onChange={event => w.update({ sort: event.target.value })}><option value="oldest">Terlama</option><option value="newest">Terbaru</option></select>
+      {(w.kategori || w.search || w.params.get('regionId') || w.params.get('agencyId') || w.params.get('dateFrom') || w.params.get('dateTo')) && <button className="admin-text-button" onClick={() => w.update({ kategori: null, q: null, regionId: null, agencyId: null, dateFrom: null, dateTo: null })}>Reset filter</button>}
     </div>
-  </div>;
-  return embedded ? body : <DashboardFrame>{body}</DashboardFrame>;
+    {(agencies.isError || regions.isError) && <p className="workspace-error">Sebagian filter gagal dimuat. <button onClick={() => { void agencies.refetch(); void regions.refetch(); }}>Coba lagi</button></p>}
+    <section className="admin-panel admin-report-table">
+      {w.isError ? <div className="p-5"><QueryError subject="Laporan admin" retry={w.refetch} pending={w.isFetching} /></div> : <div className="admin-table-scroll"><table className={verification ? "admin-verification-table" : "admin-all-reports-table"}><thead><tr><th>#</th><th>Foto</th><th>Judul Laporan</th><th>Kategori</th><th>Lokasi</th>{!verification && <th>Status</th>}<th>Tanggal</th><th>Aksi</th></tr></thead><tbody>
+        {w.isLoading ? <tr><td colSpan={verification ? 7 : 8} className="admin-loading">Memuat laporan…</td></tr> : !w.data?.items.length ? <tr><td colSpan={verification ? 7 : 8}><div className="workspace-empty"><FileText size={28} /><h2>Tidak ada laporan pada filter ini</h2><p>Ubah kategori, status, atau kata pencarian untuk melihat laporan lainnya.</p><button className="btn-outline" onClick={() => w.update({ status: '', kategori: null, q: null, regionId: null, agencyId: null, dateFrom: null, dateTo: null })}>Lihat semua laporan</button></div></td></tr> : w.data.items.map(report => <tr key={report.id}>
+          <td className="admin-ticket-cell">{report.kodeTiket}</td><td>{reportCover(report) ? <img className="admin-table-photo" src={reportCover(report)} alt="" /> : <span className="admin-table-photo admin-no-photo"><FileText size={18} /></span>}</td>
+          <td className="admin-title-cell"><button onClick={() => choose(report)}>{report.judul}</button>{verification && report.status !== 'diterima' && <StatusBadge status={report.status} />}</td><td><span className="admin-category" data-category={report.kategori}>{KATEGORI_LABEL[report.kategori]}</span></td><td className="admin-location-cell">{report.namaJalan || report.region?.nama || 'Alamat belum tersedia'}{report.region && <small>{report.region.nama}</small>}</td>{!verification && <td><StatusBadge status={report.status} /></td>}<td className="admin-date-cell">{formatDateTime(report.dibuatPada)}</td>
+          <td><div className="admin-row-actions">{verification && report.status === 'diterima' ? <><button className="btn-primary" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'verify', reportId: report.id })}>Verifikasi</button><button className="admin-button-danger" disabled={mutation.isPending} onClick={() => choose(report, 'reject')}>Tolak</button></> : <button className="admin-text-button" onClick={() => choose(report)}>Detail <ArrowRight size={12} /></button>}
+          <details className="admin-row-menu"><summary aria-label={`Aksi laporan ${report.kodeTiket}`}><MoreHorizontal size={18} /></summary><div><button onClick={() => choose(report)}>Lihat detail</button>{['diterima', 'diverifikasi'].includes(report.status) && <button onClick={() => choose(report, 'duplicate')}>Tandai duplikat</button>}{report.status === 'diterima' && <button onClick={() => choose(report, 'reject')}>Tolak laporan</button>}</div></details></div></td>
+        </tr>)}
+      </tbody></table></div>}
+      <WorkspacePagination data={w.data} onPage={page => w.update({ page: String(page) }, false)} />
+    </section>
+  </>;
 }

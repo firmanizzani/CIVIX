@@ -1,5 +1,6 @@
 import { getReportWorkspace } from './workspace.js';
 import { Router, Response } from 'express';
+import { readPlatformSettings } from '../admin/settings.js';
 import { z } from 'zod';
 import multer from 'multer';
 import { db } from '../../db/index.js';
@@ -106,13 +107,19 @@ router.get('/', async (req, res: Response) => {
   }
 });
 
-// GET /reports/map - Titik peta (merah, kuning, hijau 7 hari)
+router.get('/map-settings', async (_req, res: Response) => {
+  try { res.json(await readPlatformSettings()); }
+  catch { res.status(500).json({ error: 'Gagal memuat pengaturan peta' }); }
+});
+
+// Completed reports remain visible for the duration saved by an administrator.
 router.get('/map', async (_req, res: Response) => {
   try {
+    const { completedMapDays } = await readPlatformSettings();
     const activeReports = await db.query.reports.findMany({
       where: and(
         notInArray(reports.status, ['ditolak', 'duplikat']),
-        sql`(${reports.status} != 'selesai' OR (${reports.status} = 'selesai' AND ${reports.selesaiPada} >= NOW() - INTERVAL '7 days'))`
+        sql`(${reports.status} != 'selesai' OR (${reports.status} = 'selesai' AND ${reports.selesaiPada} >= NOW() - (${completedMapDays} * INTERVAL '1 day')))`
       ),
       columns: {
         id: true,

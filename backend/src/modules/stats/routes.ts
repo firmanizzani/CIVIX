@@ -66,7 +66,7 @@ router.get('/regions', async (_req, res: Response) => {
       .select({
         regionId: regions.id,
         wilayah: regions.nama,
-        total: count(),
+        total: count(reports.id),
         selesai: sql<number>`COUNT(*) FILTER (WHERE ${reports.status} = 'selesai')`,
         belumTertangani: sql<number>`COUNT(*) FILTER (WHERE ${reports.status} NOT IN ('selesai','ditolak','duplikat'))`,
         rataRataHari: sql<number | null>`ROUND(AVG(EXTRACT(EPOCH FROM (${reports.selesaiPada} - ${reports.dibuatPada})) / 86400) FILTER (WHERE ${reports.status} = 'selesai')::numeric, 1)`,
@@ -74,7 +74,7 @@ router.get('/regions', async (_req, res: Response) => {
       .from(regions)
       .leftJoin(reports, eq(reports.regionId, regions.id))
       .groupBy(regions.id, regions.nama)
-      .orderBy(desc(count()));
+      .orderBy(desc(count(reports.id)));
 
     res.json(rows);
   } catch (err) {

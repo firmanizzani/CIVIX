@@ -18,6 +18,7 @@
   --status-green: #008358;
 }
 body { background: var(--neutral); }
+.status-badge { white-space: nowrap; flex-shrink: 0; }
 .container-civix { max-width: 1240px; padding-inline: 40px; }
 .civix-navbar { background: #fafffc; border-color: #e2eee7; }
 .civix-navbar > .container-civix > div:first-child { height: 84px; }
