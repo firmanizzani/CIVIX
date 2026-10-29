@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ArrowRight, Search, Clock, CheckCircle2, XCircle, Copy, Send, FileText, MoreHorizontal, CalendarDays, HardHat } from 'lucide-react';
 import AdminReportDetail from '@/components/AdminReportDetail';
+import ReportCompletionForm from '@/components/ReportCompletionForm';
 import QueryError from '@/components/QueryError';
 import { StatusBadge, WorkspacePagination, WorkspaceRefresh, reportCover } from '@/components/ReportWorkspaceUI';
 import { getActionError, useReportWorkspace } from '@/hooks/useReportWorkspace';
@@ -9,8 +10,8 @@ import apiClient from '@/lib/api';
 import { Report, AdminAgency, Region, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
 import { formatDateTime } from '@/lib/utils';
 
-export default function AdminReportsPage({ verification = false }: { verification?: boolean }) {
-  const w = useReportWorkspace('admin', verification ? 'diterima' : '');
+export default function AdminReportsPage({ verification = false, tasks = false }: { verification?: boolean; tasks?: boolean }) {
+  const w = useReportWorkspace('admin', verification ? 'diterima' : tasks ? 'proses' : '');
   const selectedId = w.params.get('laporan');
   const [action, setAction] = useState<'reject' | 'duplicate' | 'assign' | null>(null);
   const [note, setNote] = useState('');
@@ -27,7 +28,7 @@ export default function AdminReportsPage({ verification = false }: { verificatio
   });
   const mutation = useMutation({
     mutationFn: async ({ action, body, reportId }: { action: string; body?: Record<string, string>; reportId?: string }) =>
-      (await apiClient.post('/admin/reports/' + (reportId || selectedId) + '/' + action, body || {})).data,
+      (await apiClient.post(action === 'reject-task' ? '/agency/assignments/' + (reportId || selectedId) + '/reject' : '/admin/reports/' + (reportId || selectedId) + '/' + action, body || {})).data,
     onSuccess: async (result) => {
       setSuccess(result.message || 'Perubahan berhasil disimpan.');
       setAction(null); setNote(''); setTargetTicket('');
@@ -60,9 +61,12 @@ export default function AdminReportsPage({ verification = false }: { verificatio
             {selected.status === 'diverifikasi' && <button className="btn-primary" disabled={mutation.isPending} onClick={() => openAction('assign')}><Send size={16} />Tugaskan ke Instansi</button>}
             {(selected.status === 'duplikat' || selected.status === 'diverifikasi') && !action && <button className="workspace-text-link" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'restore' })}>Kembalikan ke antrean verifikasi</button>}
           </div>
+          {['ditugaskan', 'dikerjakan'].includes(selected.status) && !action && <><ReportCompletionForm key={selected.id} reportId={selected.id} onSaved={w.refreshReports} /><button className="admin-button-danger agency-reject" disabled={mutation.isPending} onClick={() => openAction('reject')}>Tolak Laporan</button></>}
+          {selected.status === 'selesai' && <p className="workspace-muted">Penanganan sudah selesai. Foto bukti tersedia pada galeri laporan.</p>}
+          {selected.status === 'ditolak' && <p className="workspace-muted">Laporan ditolak. Alasan penolakan tercatat dalam riwayat penanganan.</p>}
           {action && <form className="workspace-action-form" onSubmit={(event) => {
             event.preventDefault();
-            mutation.mutate({ action, body: action === 'assign' ? { agencyId, catatan: note } : action === 'reject' ? { alasan: note } : targetTicket ? { targetTicket } : {} });
+            mutation.mutate({ action: action === 'reject' && selected.status !== 'diterima' ? 'reject-task' : action, body: action === 'assign' ? { agencyId, catatan: note } : action === 'reject' ? { alasan: note } : targetTicket ? { targetTicket } : {} });
           }}>
             <h3>{action === 'assign' ? 'Tugaskan ke instansi' : action === 'reject' ? 'Alasan penolakan' : 'Tandai sebagai duplikat'}</h3>
             {action === 'assign' && <><label className="label" htmlFor="assign-agency">Instansi penerima</label><select id="assign-agency" className="input" required value={agencyId} onChange={(event) => setAgencyId(event.target.value)}><option value="">Pilih instansi</option>{agencies.data?.map((agency) => <option key={agency.id} value={agency.id}>{agency.nama}</option>)}</select>{agencies.isError && <p role="alert" className="workspace-error">Daftar instansi gagal dimuat. <button type="button" onClick={() => agencies.refetch()}>Coba lagi</button></p>}</>}
@@ -80,13 +84,14 @@ export default function AdminReportsPage({ verification = false }: { verificatio
   ];
   if (selectedId) return <>
     {success && <p role="status" className="workspace-success">{success}</p>}
-    {detail.isLoading ? <div className="admin-loading">Memuat detail laporan…</div> : detail.isError ? <><button className="admin-back" onClick={back}>← Kembali ke daftar</button><QueryError subject="Detail laporan" retry={detail.refetch} pending={detail.isFetching} /></> : selected && <AdminReportDetail report={selected} onBack={back} actions={actions} />}
+    {detail.isLoading ? <div className="admin-loading">Memuat detail laporan…</div> : detail.isError ? <><button className="admin-back" onClick={back}>← Kembali ke daftar</button><QueryError subject="Detail laporan" retry={detail.refetch} pending={detail.isFetching} /></> : selected && <AdminReportDetail report={selected} onBack={back} actions={actions} backLabel={tasks ? "Tugas Penanganan" : verification ? "Verifikasi Laporan" : "Semua Laporan"} />}
   </>;
   return <>
-    <header className="admin-page-header"><div><h1>{verification ? 'Antrean Verifikasi' : 'Semua Laporan'}</h1><p>{verification ? 'Tinjau laporan masuk, verifikasi, tolak, atau tandai duplikat sesuai ketentuan.' : 'Kelola seluruh laporan yang masuk ke sistem.'}</p></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></header>
+    <header className="admin-page-header"><div><h1>{verification ? 'Antrean Verifikasi' : tasks ? 'Tugas Penanganan' : 'Semua Laporan'}</h1><p>{verification ? 'Tinjau laporan masuk, verifikasi, tolak, atau tandai duplikat sesuai ketentuan.' : tasks ? 'Pantau tugas yang ditugaskan dan sedang dikerjakan oleh seluruh instansi.' : 'Kelola seluruh laporan yang masuk ke sistem.'}</p></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></header>
     {success && <p role="status" className="workspace-success"><CheckCircle2 size={16} />{success}</p>}
     {mutation.isError && <p role="alert" className="workspace-error">{getActionError(mutation.error)}</p>}
     {verification && <div className="admin-queue-tabs">{tabs.map(({ value, label, count, icon: Icon, tone }) => <button type="button" key={label} data-tone={tone} aria-pressed={w.status === value} onClick={() => w.update({ status: value })}><Icon size={19} /><span>{label}<strong>{count === undefined ? '—' : count.toLocaleString('id-ID')}</strong></span></button>)}</div>}
+    {tasks && <div className="workspace-tabs" role="group" aria-label="Filter tugas admin">{[{ value: "proses", label: "Aktif", count: (counts?.ditugaskan || 0) + (counts?.dikerjakan || 0) }, { value: "ditugaskan", label: "Belum Ditangani", count: counts?.ditugaskan || 0 }, { value: "dikerjakan", label: "Dikerjakan", count: counts?.dikerjakan || 0 }, { value: "selesai", label: "Selesai", count: counts?.selesai || 0 }].map(tab => <button key={tab.value} aria-pressed={w.status === tab.value} onClick={() => w.update({ status: tab.value })}>{tab.label}<span>{tab.count}</span></button>)}</div>}
     <div className="admin-report-filters">
       <div className="workspace-search"><Search size={15} /><input aria-label="Cari laporan admin" className="input" placeholder="Cari tiket, judul, atau lokasi…" value={w.search} maxLength={150} onChange={event => w.update({ q: event.target.value || null })} /></div>
       <select className="input" aria-label="Kategori laporan" value={w.kategori} onChange={event => w.update({ kategori: event.target.value || null })}><option value="">Kategori</option>{Object.entries(KATEGORI_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>

@@ -5,9 +5,9 @@ import type { Report, Region, AgencyAccount } from '@/types';
 
 export interface AgencyOverview { items: Report[]; regions: Region[] }
 export interface AgencyProfile { id: string; nama: string; deskripsi: string | null; users: AgencyAccount[] }
-export function useAgencyOverview() {
+export function useAgencyOverview(role: 'agency' | 'admin' = 'agency') {
   const user = useAuthStore(state => state.user);
-  return useQuery<AgencyOverview>({ queryKey: ['agency-overview', user?.id], queryFn: async () => (await apiClient.get('/agency/overview')).data, staleTime: 10000, refetchInterval: 30000 });
+  return useQuery<AgencyOverview>({ queryKey: [role === 'admin' ? 'admin-operational-overview' : 'agency-overview', user?.id], queryFn: async () => (await apiClient.get(`/${role}/overview`)).data, staleTime: 10000, refetchInterval: 30000 });
 }
 export function useAgencyProfile() {
   const user = useAuthStore(state => state.user);

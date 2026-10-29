@@ -43,7 +43,10 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="verification" element={<AdminReportsPage verification />} />
+          <Route path="tasks" element={<AdminReportsPage tasks />} />
           <Route path="reports" element={<AdminReportsPage />} />
+          <Route path="map" element={<AgencyMapPage admin />} />
+          <Route path="stats" element={<AdminDashboard statistics />} />
           <Route path="agencies" element={<AdminPeoplePage agenciesOnly />} />
           <Route path="people" element={<AdminPeoplePage />} />
           <Route path="settings" element={<AdminSettingsPage />} />

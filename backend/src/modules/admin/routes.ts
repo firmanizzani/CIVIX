@@ -35,6 +35,14 @@ router.get('/map', async (_req, res: Response) => {
   try { res.json(await db.query.reports.findMany({ columns: { id: true, kodeTiket: true, judul: true, namaJalan: true, regionId: true, kategori: true, status: true, latitude: true, longitude: true, dibuatPada: true } })); }
   catch { res.status(500).json({ error: 'Gagal memuat peta admin' }); }
 });
+router.get('/overview', async (_req, res: Response) => {
+  try {
+    const items = await db.query.reports.findMany({ orderBy: [desc(reports.dibuatPada)],
+      with: { region: true, assignedAgency: { columns: { id: true, nama: true } }, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } } });
+    const wilayah = await db.select().from(regions).orderBy(asc(regions.nama));
+    res.json({ items, regions: wilayah });
+  } catch { res.status(500).json({ error: 'Gagal memuat ringkasan operasional admin' }); }
+});
 router.get('/users', async (_req, res: Response) => {
   try {
     res.json(await db.query.users.findMany({ columns: { id: true, nama: true, email: true, peran: true, dibuatPada: true }, with: { agency: { columns: { id: true, nama: true } } }, orderBy: [asc(users.nama)] }));

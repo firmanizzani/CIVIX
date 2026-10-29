@@ -58,7 +58,7 @@ export function useReportWorkspace(role: 'admin' | 'agency' | 'citizen', default
     'workspace', 'workspace-detail', 'admin-dashboard', 'agency-dashboard', 'admin-reports',
     'agency-assignments', 'my-reports', 'report-detail', 'recent-reports', 'public-reports',
     'stats-overview', 'stats-overview-full', 'stats-trend', 'stats-regions', 'stats-category',
-    'map-points-full', 'map-points-preview', 'admin-map', 'admin-overview', 'admin-agencies', 'agency-overview',
+    'map-points-full', 'map-points-preview', 'admin-map', 'admin-overview', 'admin-agencies', 'agency-overview', 'admin-operational-overview', 'admin-pending-notifications',
   ].includes(String(cached.queryKey[0])) });
   return { ...query, params, update, status, kategori, sort, search: rawSearch, refreshReports, user };
 }

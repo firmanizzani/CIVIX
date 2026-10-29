@@ -415,6 +415,10 @@ Setelah menarik pembaruan, jalankan `cd backend` lalu `npm run db:migrate` untuk
 
 Halaman admin tersedia di `/admin`, `/admin/verification`, `/admin/reports`, `/admin/agencies`, `/admin/people`, dan `/admin/settings`. Profil administrator dan tombol keluar berada di bawah sidebar.
 
+Ruang kerja admin juga menyediakan `/admin/tasks` untuk tugas seluruh instansi, `/admin/map` untuk peta seluruh laporan, dan `/admin/stats` untuk analisis kategori, status, tren, serta wilayah. Dashboard menampilkan ringkasan dan laporan terbaru; lonceng membuka daftar laporan yang masih menunggu verifikasi. Tautan lokasi pada detail memusatkan peta admin ke laporan tersebut. Sidebar mempertahankan identitas Admin CIVIX.
+
+Detail admin memakai foto dan riwayat yang sama dengan laporan publik. Admin dapat menyelesaikan laporan yang sudah ditugaskan/dikerjakan melalui satu tombol **Tandai Selesai**, dengan catatan opsional dan foto bukti wajib. Pemeriksaan `check-admin-api.mjs` memastikan dataset dashboard, statistik, peta, dan daftar laporan mencakup seluruh instansi. Untuk menyertakan uji penyelesaian oleh admin di `check-agency-workflow.mjs`, tambahkan `CIVIX_TEST_ADMIN_EMAIL` dan `CIVIX_TEST_ADMIN_PASSWORD` pada environment pengujian.
+
 Untuk pemeriksaan integrasi API pada server pengembangan yang berjalan, isi environment `CIVIX_TEST_EMAIL` dan `CIVIX_TEST_PASSWORD` dengan akun admin pengujian yang sudah ada, lalu jalankan `node scripts/check-admin-api.mjs` dari folder backend. Pemeriksaan ini tidak memproses laporan atau mengganti akun/password; pengaturan peta hanya disimpan ulang dengan nilai yang sama.
 
 ## Ruang kerja instansi

@@ -18,11 +18,19 @@ const memberEmail = `civix-qa-${randomUUID()}@example.invalid`;
 const auth = await fetch(`${base}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: process.env.CIVIX_TEST_EMAIL, password: process.env.CIVIX_TEST_PASSWORD }) });
 assert.equal(auth.status, 200);
 const { token, user } = await auth.json();
+let activeToken = token;
+let adminToken;
+if (process.env.CIVIX_TEST_ADMIN_EMAIL && process.env.CIVIX_TEST_ADMIN_PASSWORD) {
+  const adminLogin = await fetch(`${base}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: process.env.CIVIX_TEST_ADMIN_EMAIL, password: process.env.CIVIX_TEST_ADMIN_PASSWORD }) });
+  assert.equal(adminLogin.status, 200);
+  const admin = await adminLogin.json();
+  assert.equal(admin.user.peran, 'admin'); adminToken = admin.token;
+}
 assert.equal(user.peran, 'instansi');
 assert.ok(user.agencyId);
 const request = async (path, method = 'GET', body) => {
   const multipart = body instanceof FormData;
-  const response = await fetch(`${base}${path}`, { method, headers: { Authorization: `Bearer ${token}`, ...(!multipart ? { 'Content-Type': 'application/json' } : {}) }, body: body ? multipart ? body : JSON.stringify(body) : undefined, signal: AbortSignal.timeout(60000) });
+  const response = await fetch(`${base}${path}`, { method, headers: { Authorization: `Bearer ${activeToken}`, ...(!multipart ? { 'Content-Type': 'application/json' } : {}) }, body: body ? multipart ? body : JSON.stringify(body) : undefined, signal: AbortSignal.timeout(60000) });
   return { status: response.status, data: await response.json() };
 };
 const makeReport = async status => {
@@ -34,7 +42,8 @@ const makeReport = async status => {
 };
 try {
   // Completion accepts both assigned and in-progress work, with exactly one submit.
-  for (const status of ['ditugaskan', 'dikerjakan']) {
+  for (const [status, actorToken] of [['ditugaskan', token], ['dikerjakan', token], ...(adminToken ? [['ditugaskan', adminToken]] : [])]) {
+    activeToken = actorToken;
     const id = await makeReport(status);
     const missing = await request(`/agency/assignments/${id}/complete`, 'POST', new FormData());
     assert.equal(missing.status, 400, 'Photo evidence is required');
@@ -57,6 +66,7 @@ try {
     assert.equal(retry.data.changed, false, 'Duplicate submits do not add photos/history');
     assert.equal((await request(`/agency/assignments/${id}`)).data.photos.length, 1);
   }
+  activeToken = token;
   const rejectedId = await makeReport('ditugaskan');
   const rejected = await request(`/agency/assignments/${rejectedId}/reject`, 'POST', { alasan: 'QA temporary rejection reason' });
   assert.equal(rejected.status, 200);

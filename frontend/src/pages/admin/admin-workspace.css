@@ -1,0 +1,43 @@
+.admin-workspace .admin-brand { padding-bottom: 28px; }
+.admin-workspace .admin-sidebar nav { overflow-y: auto; min-height: 0; padding-bottom: 8px; }
+.admin-workspace .admin-content { position: relative; }
+.admin-utility-bar { display: flex; justify-content: flex-end; align-items: center; gap: 13px; min-height: 32px; margin: -8px 0 13px; }
+.admin-notifications { position: relative; z-index: 650; }
+.admin-notifications > button { display: grid; place-items: center; position: relative; width: 33px; height: 33px; color: #526f60; border-radius: 7px; }
+.admin-notifications > button:hover { background: #e7f3ec; }
+.admin-notifications > button > i { position: absolute; top: 5px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #e85665; border: 1px solid white; }
+.admin-account-link { display: flex; align-items: center; gap: 8px; padding: 5px 9px 5px 5px; background: white; border: 1px solid #e5eee8; border-radius: 7px; color: #466453; }
+.admin-account-link > span { width: 25px; height: 25px; background: #e8efeb; color: #5c7c69; border-radius: 50%; display: grid; place-items: center; font-size: 10px; }
+.admin-account-link strong { font-weight: 600; font-size: 11px; }
+.admin-notification-menu { position: absolute; top: calc(100% + 9px); right: 0; width: min(320px, calc(100vw - 70px)); background: white; border: 1px solid #dceae1; border-radius: 11px; box-shadow: 0 10px 30px #153e251f; padding: 7px; }
+.admin-notification-menu header { padding: 10px; }.admin-notification-menu header strong { display: block; font-size: 13px; color: #2c4e39; }.admin-notification-menu header span { display: block; font-size: 11px; color: #809589; margin-top: 5px; }
+.admin-notification-menu > a { display: block; padding: 11px 10px; border-radius: 6px; }.admin-notification-menu > a:hover { background: #f0f8f3; }.admin-notification-menu a strong { display: block; font-size: 12px; line-height: 1.6; color: #365843; }.admin-notification-menu a small { display: block; font-size: 10px; color: #8b9c91; margin-top: 4px; }
+.admin-notification-menu > p, .admin-notification-menu > button { padding: 15px 10px; font-size: 12px; color: #708c79; }.admin-notification-menu .admin-notification-all { font-size: 11px; color: #008358; border-top: 1px solid #edf4ef; margin-top: 6px; }
+.admin-workspace .agency-summary { margin-bottom: 22px; }
+.admin-workspace .agency-summary > a { min-height: 113px; }
+.admin-workspace .agency-recent { margin-top: 0; }
+.admin-recent-tasks > footer { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; padding: 16px 20px; border-top: 1px solid #edf3ef; }
+.admin-recent-tasks footer a { font-size: 11px; color: #23835a; }
+.admin-workspace .agency-task-photo { height: 310px; }
+.admin-workspace .agency-task-main h2 { font-size: 18px; }
+.admin-workspace .agency-task-side .workspace-actions { display: grid; gap: 10px; margin: 0; }
+.admin-workspace .agency-task-side .workspace-action-pair { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.admin-workspace .agency-task-side .workspace-action-form { margin-top: 17px; padding: 0; background: transparent; border: 0; }
+.admin-workspace .agency-task-side .workspace-action-form h3 { font-size: 13px; margin-bottom: 15px; }
+.admin-workspace .agency-task-side .workspace-action-form > p { font-size: 12px; line-height: 1.8; }
+.admin-workspace .agency-task-side .workspace-action-form .label { font-size: 12px; margin-top: 13px; }
+.admin-workspace .admin-detail-map-link { display: block; margin-top: 6px; color: #008358; font-size: 11px; }
+.admin-workspace .admin-platform-settings { grid-template-columns: 190px minmax(0, 1fr); }
+.admin-platform-settings h2 { font-size: 16px; font-weight: 700; color: #2d5039; }.admin-settings-description { font-size: 12px; color: #7c9082; line-height: 1.8; margin-top: 10px; }
+.admin-workspace .workspace-tabs { max-width: 100%; overflow-x: auto; margin-bottom: 20px; }
+.admin-workspace .admin-people-table { font-size: 12px; }
+@media (max-width: 1100px) { .admin-workspace .agency-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) {
+  .admin-utility-bar { margin: -4px 0 18px; gap: 8px; }
+  .admin-notification-menu { right: -140px; }
+  .admin-workspace .agency-task-photo { height: 280px; }
+  .admin-workspace .admin-platform-settings { grid-template-columns: 1fr; }
+  .admin-workspace .admin-sidebar nav { flex: 1; }
+  .admin-workspace .agency-summary > a { min-height: 100px; }
+  .admin-workspace .admin-page-header > .btn-primary { align-self: stretch; }
+}
