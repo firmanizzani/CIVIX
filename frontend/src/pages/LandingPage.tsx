@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   MapPin,
+  CalendarDays,
   ShieldCheck,
   CheckCircle2,
   AlertTriangle,
@@ -33,8 +34,15 @@ import AnimatedCollapse from '@/components/AnimatedCollapse';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import apiClient from '@/lib/api';
 import { MapPoint, StatsOverview, STATUS_LABEL, KATEGORI_LABEL, Report } from '@/types';
-import { formatDate, getStatusColor } from '@/lib/utils';
+import { getStatusColor } from '@/lib/utils';
 
+
+const reportDate = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' });
+
+function ReportMetadata({ report }: { report: Pick<Report, 'region' | 'dibuatPada'> }) {
+  const created = new Date(report.dibuatPada);
+  return <div className="landing-report-meta"><p><MapPin size={13} aria-hidden="true" /><span>{report.region?.nama || 'DKI Jakarta'}</span></p><time dateTime={report.dibuatPada} title="Tanggal laporan (WIB)"><CalendarDays size={13} aria-hidden="true" /><span>{reportDate.format(created)}</span></time></div>;
+}
 
 function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -84,7 +92,7 @@ function LandingPage() {
               <div className="landing-report-float" data-ui>
                 {recentReports[0] ? <><Link to={`/reports/${recentReports[0].id}`} className="landing-float-report">
                     {recentReports[0].photos?.[0] && <img src={recentReports[0].photos[0].url} alt="" />}
-                    <div><span>{KATEGORI_LABEL[recentReports[0].kategori]}</span><h2>{recentReports[0].judul}</h2><p><MapPin size={12} />{recentReports[0].namaJalan || 'DKI Jakarta'}</p><small>{formatDate(recentReports[0].dibuatPada)}</small></div>
+                    <div><span>{KATEGORI_LABEL[recentReports[0].kategori]}</span><h2>{recentReports[0].judul}</h2><ReportMetadata report={recentReports[0]} /></div>
                   </Link><p className="landing-float-status"><span style={{ background: getStatusColor(recentReports[0].status) }} />{STATUS_LABEL[recentReports[0].status]}</p>
                 </> : <><span className="landing-float-label"><ShieldCheck size={17} /> Proses yang transparan</span><h2>Setiap laporan,<br />bisa Anda pantau.</h2><p className="landing-float-description">Dari laporan diterima hingga penanganan selesai.</p></>}
                 <div className="landing-mini-progress" aria-label="Tahapan penanganan laporan">{['Diterima', 'Verifikasi', 'Ditangani', 'Selesai'].map((label, index) => <span key={label} data-complete={previewProgress >= index}><i />{label}</span>)}</div>
@@ -275,7 +283,7 @@ function LandingPage() {
                       <h3 className="line-clamp-2 font-bold text-civix-forest transition-colors group-hover:text-civix-primary">
                         {report.judul}
                       </h3>
-                      <p className="mt-2 text-xs text-civix-muted">{formatDate(report.dibuatPada)}</p>
+                      <ReportMetadata report={report} />
                     </div>
                   </Link>
                 ))}

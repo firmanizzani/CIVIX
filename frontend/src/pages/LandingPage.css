@@ -60,7 +60,7 @@
 .landing-float-report { display: flex; gap: 11px; align-items: flex-start; }
 .landing-float-report > img { width: 82px; height: 109px; object-fit: cover; border-radius: 9px; }
 .landing-float-report > div { min-width: 0; }
-.landing-float-report span { display: inline-block; padding: 3px 6px; border-radius: 5px; background: #f1f7f3; font-size: 9px; font-weight: 650; color: #406151; }
+.landing-float-report > div > span { display: inline-block; padding: 3px 6px; border-radius: 5px; background: #f1f7f3; font-size: 9px; font-weight: 650; color: #406151; }
 .landing-float-report h2 { font-size: 12px; font-weight: 750; margin: 5px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .landing-float-report p { display: flex; align-items: flex-start; gap: 3px; font-size: 9px; color: #6f7b77; }
 .landing-float-report small { font-size: 8px; color: #7a8781; }
@@ -213,3 +213,11 @@
   .landing-page .landing-button-white { font-size: 11px; }
   .landing-cta .landing-button-outline { font-size: 11px; padding: 10px 19px; }
 }
+
+.landing-report-meta { display:grid; gap:7px; margin-top:11px; color:#64766d; font-size:12px; line-height:1.6; }
+.landing-report-meta > p, .landing-report-meta > time { display:flex; align-items:center; gap:7px; margin:0; font-size:inherit; color:inherit; }
+.landing-report-meta svg { flex-shrink:0; color:#7b8d82; }
+.landing-report-meta time { font-variant-numeric:tabular-nums; }
+.landing-float-report .landing-report-meta { font-size:10px; gap:5px; margin-top:7px; }
+.landing-float-report .landing-report-meta > p, .landing-float-report .landing-report-meta > time { gap:5px; }
+.landing-float-report .landing-report-meta svg { width:11px; height:11px; }
