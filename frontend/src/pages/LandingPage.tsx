@@ -4,10 +4,8 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   MapPin,
-  CalendarDays,
   ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
   Building2,
   FileText,
   Leaf,
@@ -26,7 +24,8 @@ import LandingMap from '@/components/LandingMap';
 import CivixLogo from '@/components/CivixLogo';
 import './LandingPage.css';
 import 'leaflet/dist/leaflet.css';
-import QueryError from '@/components/QueryError';
+import RecentReports from '@/components/RecentReports';
+import ReportMetadata from '@/components/ReportMetadata';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
@@ -36,13 +35,6 @@ import apiClient from '@/lib/api';
 import { MapPoint, StatsOverview, STATUS_LABEL, KATEGORI_LABEL, Report } from '@/types';
 import { getStatusColor } from '@/lib/utils';
 
-
-const reportDate = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' });
-
-function ReportMetadata({ report }: { report: Pick<Report, 'region' | 'dibuatPada'> }) {
-  const created = new Date(report.dibuatPada);
-  return <div className="landing-report-meta"><p><MapPin size={13} aria-hidden="true" /><span>{report.region?.nama || 'DKI Jakarta'}</span></p><time dateTime={report.dibuatPada} title="Tanggal laporan (WIB)"><CalendarDays size={13} aria-hidden="true" /><span>{reportDate.format(created)}</span></time></div>;
-}
 
 function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -57,8 +49,8 @@ function LandingPage() {
   });
 
   const { data: recentReports = [], isLoading: reportsLoading, isError: reportsError, refetch: retryReports, isFetching: reportsFetching } = useQuery<Report[]>({
-    queryKey: ['recent-reports'],
-    queryFn: async () => (await apiClient.get('/reports?limit=3')).data,
+    queryKey: ['recent-reports', 4],
+    queryFn: async () => (await apiClient.get('/reports?limit=4')).data,
   });
 
   const previewProgress = recentReports[0]
@@ -227,70 +219,7 @@ function LandingPage() {
 
         {/* Recent Reports */}
         <Reveal delay="delay-1">
-        <section className="border-b border-civix-border bg-civix-soft py-16 lg:py-20">
-          <div className="container-civix">
-            <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <p className="eyebrow mb-3">Pantau Sekitar</p>
-                <h2 className="section-title">Laporan terbaru</h2>
-              </div>
-              <Link to="/reports" className="btn-outline">
-                Lihat semua <ArrowRight size={16} />
-              </Link>
-            </div>
-            {reportsLoading ? (
-              <div className="grid gap-5 md:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="skeleton h-64" />
-                ))}
-              </div>
-            ) : reportsError ? (
-              <QueryError subject="Laporan terbaru" retry={retryReports} pending={reportsFetching} />
-            ) : recentReports.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-civix-border bg-white py-16 text-center">
-                <AlertTriangle className="mx-auto mb-3 text-civix-muted/50" size={32} />
-                <p className="font-semibold text-civix-text">Belum ada laporan publik</p>
-                <p className="mt-1 text-sm text-civix-muted">Laporan yang terverifikasi akan tampil di sini.</p>
-              </div>
-            ) : (
-              <div className="grid gap-5 md:grid-cols-3">
-                {recentReports.map((report) => (
-                  <Link
-                    key={report.id}
-                    data-reveal-item
-                    to={`/reports/${report.id}`}
-                    className="group overflow-hidden rounded-xl border border-civix-border bg-white transition-[transform,box-shadow,border-color,background-color] motion-card hover:border-civix-primary hover:shadow-lg"
-                  >
-                    {report.photos?.[0] ? (
-                      <img src={report.photos[0].url} alt={report.judul} className="h-40 w-full object-cover" />
-                    ) : (
-                      <div className="flex h-40 items-center justify-center bg-civix-soft text-civix-muted/50">
-                        <MapPin size={36} />
-                      </div>
-                    )}
-                    <div className="p-5">
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-civix-primary">
-                          {KATEGORI_LABEL[report.kategori]}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs text-civix-muted">
-                          <span
-                            className="status-dot" style={{ backgroundColor: getStatusColor(report.status) }}
-                          />
-                          {STATUS_LABEL[report.status]}
-                        </span>
-                      </div>
-                      <h3 className="line-clamp-2 font-bold text-civix-forest transition-colors group-hover:text-civix-primary">
-                        {report.judul}
-                      </h3>
-                      <ReportMetadata report={report} />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+          <RecentReports reports={recentReports} loading={reportsLoading} error={reportsError} refreshing={reportsFetching} onRetry={retryReports} />
         </Reveal>
 
         {/* FAQ Section */}
