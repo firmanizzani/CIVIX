@@ -117,11 +117,6 @@ body { background: var(--neutral); }
 .report-progress > li[data-complete="true"] > span { background: var(--primary); border-color: var(--primary); }
 .report-progress > li[aria-current="step"] > span { border-color: var(--primary); background: #e4f4eb; }
 .report-progress > li[aria-current="step"] { color: var(--forest); }
-.landing-footer { border-top: 1px solid #e5efe9; }
-.landing-footer-brand > p { font-size: 11px; }
-.landing-footer-grid > div:not(:first-child) > a { font-size: 12px; }
-.landing-footer-grid h2 { font-size: 12px; }
-.landing-footer-bottom { font-size: 11px; }
 @media (max-width: 1023px) {
   .container-civix { padding-inline: 26px; }
   .auth-shell { gap: 30px; }
@@ -162,7 +157,6 @@ body { background: var(--neutral); }
   .workspace-context { margin-bottom: 20px; }
   .workspace-detail { padding: 18px; }
   .create-report-page form > .card, .report-detail-page .card { padding: 20px; }
-  .landing-footer-brand > p, .landing-footer-bottom { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .map-workspace .marker-pulse-red, .map-workspace .marker-pulse-halo { animation: none; }
