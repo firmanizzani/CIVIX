@@ -15,7 +15,7 @@
 .landing-page > nav .btn-ghost { border: 1px solid #cce4d9; color: var(--landing-dark); padding-inline: 25px; }
 .landing-page > nav a[aria-current="page"] { background: transparent; color: var(--landing-dark); text-decoration-color: #42b689; text-underline-offset: 13px; }
 .landing-page .landing-hero { position: relative; overflow: hidden; background: #effaf5; min-height: 650px; }
-.landing-city-art { position: absolute; inset: 0; background: url('../assets/jakarta-hero-3d.webp') bottom center / cover no-repeat; }
+.landing-city-art { position: absolute; inset: 0; background: url('../assets/jakarta-hero-3d.webp') bottom center / cover no-repeat; pointer-events: none; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 36%); mask-image: linear-gradient(to bottom, transparent, #000 36%); }
 .landing-hero-grid { position: relative; display: grid; grid-template-columns: .96fr 1.04fr; align-items: center; gap: 55px; min-height: 650px; padding-top: 35px; padding-bottom: 125px; }
 .landing-hero-copy { padding-bottom: 10px; }
 .landing-kicker { display: inline-flex; background: #d6f3e5; color: #08754e; border-radius: 999px; padding: 6px 12px; font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .035em; }
@@ -134,7 +134,8 @@
 .landing-cta-note { display: flex; align-items: center; gap: 13px; background: #ffffffed; border-radius: 13px; padding: 19px 23px; color: var(--landing-dark); width: fit-content; transform: rotate(-3deg); }
 .landing-cta-note > span { display: grid; place-items: center; width: 45px; height: 45px; background: #dff3e5; color: #24935c; border-radius: 50%; }
 .landing-cta-note p { font-size: 11px; line-height: 1.5; }
-@media (min-width: 1500px) { .landing-city-art { background-size: 100% auto; } }
+/* Keep the fade attached to the image edge when wide screens expose sky above it. */
+@media (min-width: 1500px) { .landing-city-art { top: auto; height: calc(100vw / 3); max-height: 100%; background-size: 100% auto; } }
 @media (max-width: 1023px) {
   .landing-page .container-civix { padding-inline: 26px; }
   .landing-hero-grid { gap: 25px; min-height: 610px; }
