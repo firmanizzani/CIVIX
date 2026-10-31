@@ -13,12 +13,12 @@ import {
 import { FileText, CheckCircle2, Timer, Clock, Lightbulb, Trophy, TrendingUp, AlertTriangle } from 'lucide-react';
 
 const CATEGORY_COLORS: Record<KategoriLaporan, string> = {
-  jalan_rusak: '#B91C1C',
-  drainase: '#2563EB',
-  sampah: '#0D9488',
-  penerangan: '#D97706',
+  jalan_rusak: '#C87968',
+  drainase: '#648FB5',
+  sampah: '#4D9990',
+  penerangan: '#C9A252',
   fasilitas_umum: '#008358',
-  lainnya: '#64748B',
+  lainnya: '#8B97A5',
 };
 
 export default function StatsPage() {
@@ -139,7 +139,10 @@ export default function StatsPage() {
                     <XAxis type="category" dataKey="periode" tick={{ fontSize: 11 }} />
                     <YAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
                     <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Legend
+                      wrapperStyle={{ fontSize: 11 }}
+                      formatter={(value: string) => <span className="text-slate-600">{value}</span>}
+                    />
                     {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
                       <Bar
                         key={key}
@@ -179,7 +182,7 @@ export default function StatsPage() {
                   </ResponsiveContainer>
                 </div>
                 <div className="space-y-1.5">
-                  {categoryData.rows.slice(0, 4).map((row) => (
+                  {categoryData.rows.map((row) => (
                     <div key={row.kategori} className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-2 text-slate-600">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ background: CATEGORY_COLORS[row.kategori] }} />
