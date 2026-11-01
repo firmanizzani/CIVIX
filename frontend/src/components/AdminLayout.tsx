@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ClipboardCheck, Files, Building2, Users, Settings, ChevronDown, LogOut, ExternalLink, Menu, X, Map, ChartNoAxesCombined, PlusSquare, BookOpen } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Files, Building2, Users, Settings, ChevronDown, LogOut, ExternalLink, Menu, X, Map, ChartNoAxesCombined, PlusSquare, BookOpen, FileClock, ListTodo } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api';
 import CivixLogo from '@/components/CivixLogo';
@@ -24,7 +24,7 @@ const links = [
 
 const agencyLinks = [
   { to: '/agency', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/agency/assignments', label: 'Tugas Penanganan', icon: ClipboardCheck },
+  { to: '/agency/assignments', label: 'Tugas Penanganan', icon: ListTodo },
   { to: '/agency/reports', label: 'Semua Laporan', icon: Files },
   { to: '/agency/map', label: 'Peta Laporan', icon: Map },
   { to: '/agency/stats', label: 'Statistik', icon: ChartNoAxesCombined },
@@ -35,7 +35,7 @@ const agencyLinks = [
 const citizenLinks = [
   { to: '/citizen', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/citizen/create-report', label: 'Buat Laporan', icon: PlusSquare },
-  { to: '/citizen/reports', label: 'Riwayat Laporan', icon: Files },
+  { to: '/citizen/reports', label: 'Riwayat Laporan', icon: FileClock },
   { to: '/citizen/map', label: 'Peta Laporan', icon: Map },
   { to: '/citizen/information', label: 'Informasi', icon: BookOpen },
   { to: '/citizen/settings', label: 'Pengaturan', icon: Settings },
