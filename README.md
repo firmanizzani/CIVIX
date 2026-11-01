@@ -1,453 +1,152 @@
-# CIVIX — Platform Laporan Infrastruktur DKI Jakarta
+# CIVIX — Platform Pelaporan Infrastruktur dan Lingkungan DKI Jakarta
 
-**CIVIX** (Civic Infrastructure Verification & Integrated Execution) adalah platform civic technology untuk pelaporan, pemantauan, verifikasi, dan tindak lanjut permasalahan infrastruktur serta lingkungan di DKI Jakarta.
+## 1. Deskripsi Project
 
-Platform ini memungkinkan warga melaporkan masalah infrastruktur, admin memverifikasi laporan, instansi menangani laporan yang ditugaskan, dan masyarakat memantau progres penanganan secara transparan.
+**CIVIX** (Civic Infrastructure Verification & Integrated Execution) adalah aplikasi web untuk melaporkan masalah infrastruktur dan lingkungan di DKI Jakarta, mulai dari jalan rusak hingga sampah dan penerangan jalan. Warga dapat memantau perkembangan laporan, admin memverifikasi dan menugaskan laporan, sedangkan instansi menangani serta mengunggah bukti penyelesaian.
 
----
+Project ini dikembangkan untuk **Web In Action 2026 — Multimedia In Action 2026**, dengan subtema utama **Civic Reporting & Accountability**.
 
-## Fitur Utama
+## 2. Identitas Tim
 
-### Warga
-- Membuat laporan permasalahan (foto, lokasi, kategori)
-- Melacak status laporan dengan kode tiket unik
-- Melihat peta laporan publik dengan status berwarna (merah/kuning/hijau)
-- Memberikan dukungan (upvote) dan komentar pada laporan
-- Dashboard pribadi untuk melihat semua laporan yang dikirim
+**Nama tim: SWE Ball Knowledge**
 
-### Admin
-- Verifikasi laporan baru dari warga
-- Menolak atau menandai laporan duplikat
-- Menugaskan laporan terverifikasi ke instansi terkait
-- Dashboard sidebar: peta seluruh laporan, ringkasan status, tren, dan perbandingan wilayah
-- Antrean verifikasi dan tabel semua laporan dengan filter kategori, wilayah, status, instansi, dan tanggal
-- Manajemen pengguna lintas peran dan instansi beserta akun petugas
-- Pengaturan durasi tampilan laporan selesai di peta publik (1–90 hari, tersimpan di database)
+| Nama | Peran |
+| --- | --- |
+| Ibnu Ahmad Fauzan | Ketua tim |
+| Muhammad Firman Izzani | Anggota |
 
-### Instansi
-- Menerima laporan yang ditugaskan
-- Memperbarui progres penanganan dengan catatan
-- Mengunggah foto bukti penyelesaian
-- Dashboard tugas instansi
+## 3. Tech Stack
 
-### Fitur Publik
-- Peta interaktif DKI Jakarta dengan penanda laporan (durasi titik hijau mengikuti pengaturan admin, default 7 hari)
-- Daftar laporan publik (filter kategori, status, wilayah)
-- Detail laporan dengan timeline status transparan
-- Statistik penanganan: tren, sebaran kategori, insight otomatis
-- Pelacakan laporan dengan kode tiket tanpa login
+| Bagian | Teknologi |
+| --- | --- |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
+| Navigasi dan pengelolaan data | React Router, TanStack Query, Zustand, Axios |
+| Form dan validasi | React Hook Form, Zod |
+| Peta | Leaflet, React Leaflet |
+| Grafik | Recharts |
+| Backend | Node.js, Express, TypeScript |
+| Database | PostgreSQL, Drizzle ORM |
+| Autentikasi | JWT, bcrypt |
+| Unggah dan penyimpanan foto | Multer, Supabase Storage |
 
----
-
-## Teknologi
-
-### Frontend
-- **React 18** + **Vite** + **TypeScript**
-- **Tailwind CSS** untuk styling
-- **shadcn/ui** komponen dasar
-- **React Router** navigasi
-- **TanStack Query** server state
-- **Zustand** client state
-- **React Hook Form** + **Zod** validasi
-- **Leaflet** + **React Leaflet** peta interaktif
-- **Recharts** visualisasi statistik
-
-### Backend
-- **Node.js** + **Express.js** + **TypeScript**
-- **Drizzle ORM** akses database
-- **PostgreSQL** database (Supabase)
-- **JWT** autentikasi
-- **Multer** upload foto
-- **Supabase Storage** penyimpanan foto
-- **Zod** validasi request
-
-### Database
-- **PostgreSQL** (via Supabase)
-- Migrasi dengan **Drizzle Kit**
-- Seeding data demo
-
----
-
-## Struktur Project
-
-```
-civix/
-├── backend/                # Backend Express + TypeScript
-│   ├── src/
-│   │   ├── config/         # Konfigurasi (JWT, Supabase)
-│   │   ├── db/             # Schema Drizzle + migrasi
-│   │   ├── middleware/     # Auth, role guard
-│   │   ├── modules/        # Modul API (auth/reports/admin/agency/stats/uploads)
-│   │   ├── utils/          # Helper (ticket, geo validation)
-│   │   ├── app.ts          # Express app
-│   │   └── server.ts       # Server entry
-│   ├── drizzle/            # Migrasi database
-│   ├── .env                # Environment variables
-│   └── package.json
-│
-├── frontend/               # Frontend React + Vite
-│   ├── src/
-│   │   ├── components/     # Komponen UI (Navbar, Footer, ProtectedRoute)
-│   │   ├── pages/          # Halaman (Landing, Auth, Dashboard, Map, dll)
-│   │   ├── lib/            # Utils, API client
-│   │   ├── stores/         # Zustand (authStore)
-│   │   ├── types/          # TypeScript interfaces
-│   │   ├── App.tsx         # Routing
-│   │   └── main.tsx        # Entry point
-│   ├── .env                # Environment variables
-│   └── package.json
-│
-├── docs/                   # Dokumentasi tambahan (opsional)
-├── schema.sql              # Referensi SQL original
-├── PRD_CIVIX.md            # Product Requirements Document
-├── .gitignore
-├── package.json            # Root workspace
-└── README.md               # File ini
-```
-
----
-
-## Instalasi & Menjalankan Project
+## 4. Cara Menjalankan Project
 
 ### Prasyarat
-- **Node.js** 18+ dan **npm**
-- **PostgreSQL** lokal atau akun **Supabase**
-- **Git**
 
-### 1. Clone Repository
+- Node.js 22 atau 24 beserta npm.
+- Git.
+- Database PostgreSQL lokal atau melalui Supabase.
+- Koneksi internet untuk memuat tile peta dan layanan eksternal.
+
+### Clone repository
 
 ```bash
-git clone <repository-url>
-cd civix
+git clone https://github.com/firmanizzani/CIVIX.git
+cd CIVIX
 ```
 
-### 2. Install Dependencies
+### Instal dependensi
+
+Jalankan dari folder utama project:
 
 ```bash
 npm install
-cd backend && npm install
-cd ../frontend && npm install
-cd ..
+npm --prefix backend install
+npm --prefix frontend install
 ```
 
-### 3. Setup Database (Supabase)
+### Konfigurasi lingkungan
 
-1. Buat project baru di [Supabase](https://supabase.com)
-2. Salin **Database URL** dari Settings → Database → Connection String (URI mode)
-3. Buat bucket storage bernama `civix-reports` di Supabase Storage (Public atau dengan policy yang sesuai)
+Salin file `backend/.env.example` menjadi `backend/.env`, kemudian sesuaikan nilainya. Jalankan perintah PowerShell berikut dari folder utama project:
 
-### 4. Konfigurasi Environment Variables
+```powershell
+Copy-Item backend/.env.example backend/.env
+```
 
-#### Backend (`backend/.env`)
-
-Salin template dari folder utama project: `Copy-Item backend/.env.example backend/.env`, lalu sesuaikan nilainya.
+Isi `backend/.env` dengan konfigurasi milik lingkungan pengembangan Anda:
 
 ```env
 PORT=3000
 NODE_ENV=development
-DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@[HOST]:[PORT]/postgres?sslmode=require
+DATABASE_URL=postgresql://postgres:password@localhost:5432/civix
 AUTH_SECRET=ganti-dengan-string-acak-minimal-32-karakter
 FRONTEND_URL=http://localhost:5173
-SUPABASE_URL=https://[your-project].supabase.co
-SUPABASE_SERVICE_ROLE_KEY=[your-service-role-key]
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_STORAGE_BUCKET=civix-reports
 ```
 
-**Catatan:**
-- `AUTH_SECRET`: Generate string acak 32+ karakter untuk JWT signing
-- `DATABASE_URL`: Salin dari Supabase Connection String
-- `SUPABASE_SERVICE_ROLE_KEY`: Salin dari Supabase Settings → API → service_role key (JANGAN commit ke Git!)
+- `DATABASE_URL`: koneksi ke database PostgreSQL yang sudah dibuat. Untuk Supabase, gunakan connection string dari project Anda.
+- `AUTH_SECRET`: gunakan nilai acak untuk penandatanganan token.
+- Untuk penyimpanan foto melalui Supabase, isi `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY`, lalu buat bucket `civix-reports` yang mengizinkan pembacaan gambar melalui URL publik. Service role key hanya digunakan di backend.
+- Untuk mencoba secara lokal tanpa Supabase Storage, biarkan kedua variabel Supabase tersebut kosong. Layanan unggahan akan memakai fallback data URI.
+- Jangan unggah file `.env` atau kredensial pribadi ke repository.
 
-#### Frontend (`frontend/.env`)
+Salin `frontend/.env.example` menjadi `frontend/.env`:
 
-Salin template dari folder utama project: `Copy-Item frontend/.env.example frontend/.env`.
+```powershell
+Copy-Item frontend/.env.example frontend/.env
+```
+
+Nilai bawaan frontend:
 
 ```env
 VITE_API_BASE_URL=/api/v1
 ```
 
-Saat development, Vite akan proxy `/api` ke `http://localhost:3000` (sudah dikonfigurasi di `vite.config.ts`).
+### Siapkan database dan data demo
 
-### 5. Migrasi Database
-
-```bash
-cd backend
-npm run db:generate   # Generate migrasi dari schema
-npm run db:migrate    # Jalankan migrasi ke database
-```
-
-### 6. (Opsional) Seed Data Demo
+Jalankan migrasi yang sudah tersedia dari folder utama:
 
 ```bash
-cd backend
-npm run db:seed
+npm --prefix backend run db:migrate
 ```
 
-Seed akan membuat:
-- Beberapa region DKI Jakarta
-- User demo (warga, admin, instansi)
-- Laporan demo dengan berbagai status
-- Timeline status
+Untuk database pengembangan baru, tambahkan data wilayah, instansi, akun, dan laporan demo:
 
-### 7. Jalankan Development Server
-
-**Terminal 1 - Backend:**
 ```bash
-cd backend
-npm run dev
+npm --prefix backend run db:seed
 ```
-Backend berjalan di `http://localhost:3000`
 
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-Frontend berjalan di `http://localhost:5173`
+Akun berikut tersedia setelah seeding pada database baru. Kata sandi akun yang sudah ada tidak otomatis diganti oleh proses seed.
 
-**Atau jalankan keduanya sekaligus dari root:**
+| Peran | Email | Kata sandi demo |
+| --- | --- | --- |
+| Warga | warga1@demo.com | demo1234 |
+| Admin | admin@demo.com | demo1234 |
+| Instansi Bina Marga | instansi@demo.com | demo1234 |
+
+Akun ini hanya untuk demonstrasi pada lingkungan pengembangan.
+
+### Jalankan aplikasi
+
+Dari folder utama:
+
 ```bash
 npm run dev
 ```
 
----
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- Backend API: [http://localhost:3000/api/v1](http://localhost:3000/api/v1)
 
-## Akun Demo (Setelah Seeding)
+Perintah tersebut menjalankan frontend dan backend bersamaan. Pastikan port 5173 serta 3000 tersedia agar alamat dan konfigurasi asal frontend sesuai.
 
-| Role | Unit / Instansi | Email | Password |
-|------|---------------|-------|----------|
-| Warga | Warga Demo 1 | warga1@demo.com | demo1234 |
-| Warga | Warga Demo 2 | warga2@demo.com | demo1234 |
-| Admin | Admin CIVIX | admin@demo.com | demo1234 |
-| Instansi | Dinas Bina Marga Provinsi DKI Jakarta | instansi@demo.com | demo1234 |
-| Instansi | Dinas Sumber Daya Air Provinsi DKI Jakarta | air@demo.com | demo1234 |
-| Instansi | Dinas Lingkungan Hidup Provinsi DKI Jakarta | lingkungan@demo.com | demo1234 |
-| Instansi | Unit Pelaksana Teknis Penerangan Jalan Umum Provinsi DKI Jakarta | penerangan@demo.com | demo1234 |
+## 5. Progress Saat Ini
 
----
+**Status per 1 November 2026:** seluruh halaman utama publik, warga, admin, dan instansi telah tersedia. Alur inti telah diimplementasikan dengan API dan database; pengujian serta penyempurnaan pengalaman penggunaan masih berlangsung.
 
-## Build untuk Production
+| Bagian | Progress implementasi |
+| --- | --- |
+| Halaman publik | Landing page, daftar dan detail laporan, peta laporan, serta statistik. |
+| Autentikasi | Pendaftaran warga, login, dan pembatasan akses sesuai peran. |
+| Ruang Warga | Dashboard, formulir laporan empat tahap, riwayat dan detail laporan sendiri, peta, informasi, serta pengaturan profil dan foto akun. |
+| Ruang Admin | Dashboard, antrean verifikasi, seluruh laporan, penugasan instansi, peta, statistik terpisah, pengelolaan instansi dan pengguna, serta pengaturan platform. |
+| Ruang Instansi | Dashboard, daftar tugas dan laporan unit, detail tugas, penyelesaian dengan foto bukti, penolakan dengan alasan, peta, statistik, petugas, serta pengaturan unit. |
+| Pelaporan dan pemantauan | Tiket laporan, foto awal, lokasi, riwayat status, catatan penanganan, dan bukti perbaikan. |
+| Peta status | Penanda diterima berwarna merah, diverifikasi oranye, dalam penanganan kuning, dan selesai hijau. Masa tampil laporan selesai mengikuti pengaturan admin, dengan nilai awal tujuh hari. |
+| Partisipasi publik | Dukungan dan komentar melalui detail laporan publik setelah login. |
+| Data dan statistik | Ringkasan penanganan, tren bulanan, distribusi kategori, perbandingan wilayah, dan insight berbasis data laporan. |
 
-### Frontend
-```bash
-cd frontend
-npm run build
-```
-Output: `frontend/dist/`
+Alur demonstrasi utama: warga membuat laporan, admin memverifikasi dan menugaskan instansi, instansi menyelesaikan dengan foto bukti, lalu warga memantau perubahan melalui detail laporan.
 
-### Backend
-```bash
-cd backend
-npm run build
-```
-Output: `backend/dist/`
-
----
-
-## Deployment
-
-### Frontend → Vercel
-
-1. Push project ke GitHub
-2. Import project di Vercel
-3. Set **Root Directory**: `frontend`
-4. Set **Build Command**: `npm run build`
-5. Set **Output Directory**: `dist`
-6. Tambahkan environment variables:
-   - `VITE_API_BASE_URL=https://your-backend.railway.app/api/v1`
-
-### Backend → Railway / Render
-
-#### Railway:
-1. Create new project → Deploy from GitHub
-2. Set **Root Directory**: `backend`
-3. Set **Build Command**: `npm run build`
-4. Set **Start Command**: `npm start`
-5. Tambahkan semua environment variables dari `backend/.env.example`
-
-#### Render:
-1. New Web Service → Connect Repository
-2. Set **Root Directory**: `backend`
-3. Set **Build Command**: `npm install && npm run build`
-4. Set **Start Command**: `npm start`
-5. Tambahkan environment variables di dashboard
-
-### Database → Supabase
-Database sudah hosted di Supabase. Pastikan connection string production benar.
-
----
-
-## API Endpoints (Ringkasan)
-
-### Public
-- `GET /api/v1/reports` - Daftar laporan publik
-- `GET /api/v1/reports/map` - Data peta (titik hijau 7 hari)
-- `GET /api/v1/reports/track/:kodeTiket` - Lacak tiket
-- `GET /api/v1/reports/:id` - Detail laporan
-- `GET /api/v1/stats/overview` - Statistik ringkasan
-- `GET /api/v1/stats/trend` - Tren mingguan
-- `GET /api/v1/stats/regions` - Perbandingan wilayah
-- `GET /api/v1/stats/category` - Sebaran kategori + insight
-
-### Auth
-- `POST /api/v1/auth/register` - Daftar (warga)
-- `POST /api/v1/auth/login` - Login
-- `GET /api/v1/auth/me` - User info
-
-### Warga (Protected)
-- `GET /api/v1/me/reports` - Laporan milik user
-- `POST /api/v1/reports` - Buat laporan (multipart: foto, data)
-- `POST /api/v1/reports/:id/upvote` - Toggle upvote
-- `POST /api/v1/reports/:id/comments` - Tambah komentar
-
-### Admin (Protected)
-- `GET /api/v1/admin/dashboard` - Statistik admin
-- `GET /api/v1/admin/reports` - Semua laporan
-- `POST /api/v1/admin/reports/:id/verify` - Verifikasi
-- `POST /api/v1/admin/reports/:id/reject` - Tolak (wajib alasan)
-- `POST /api/v1/admin/reports/:id/duplicate` - Tandai duplikat
-- `POST /api/v1/admin/reports/:id/assign` - Tugaskan ke instansi
-
-### Instansi (Protected)
-- `GET /api/v1/agency/dashboard` - Dashboard instansi
-- `GET /api/v1/agency/assignments` - Daftar tugas
-- `GET /api/v1/agency/assignments/:id` - Detail tugas
-- `POST /api/v1/agency/assignments/:id/progress` - Update progres
-- `POST /api/v1/agency/assignments/:id/complete` - Selesaikan (wajib foto bukti)
-
-Dokumentasi API lengkap: Lihat kode di `backend/src/modules/*/routes.ts`
-
----
-
-## Fitur Sesuai PRD
-
-✅ **F1**: Warga buat laporan dengan foto dan lokasi  
-✅ **F2**: Kode tiket unik otomatis (`LPR-YYYY-XXXXX`)  
-✅ **F3**: Admin verifikasi/tolak/duplikat  
-✅ **F4**: Timeline status publik  
-✅ **F5**: Pelacakan lewat kode tiket  
-✅ **F6**: Peta interaktif dengan filter  
-✅ **F7**: Instansi upload bukti perbaikan  
-✅ **F8**: Upvote dan komentar  
-✅ **F9**: Dashboard statistik + insight otomatis  
-✅ **F12**: Titik peta merah/kuning/hijau; hijau hilang 7 hari setelah selesai  
-✅ **F13**: Validasi wilayah DKI Jakarta di backend + frontend  
-
----
-
-## Catatan Penting
-
-### 1. Database Credentials
-- Jangan commit `.env` ke Git
-- Gunakan `.env.example` untuk template
-- `DATABASE_URL` harus PostgreSQL connection string valid
-
-### 2. Migrasi Tertunda
-Jika migrasi belum dijalankan karena kredensial DB lokal:
-1. Siapkan `DATABASE_URL` yang benar di `backend/.env`
-2. Jalankan `npm run db:migrate` dari folder backend
-3. (Opsional) Jalankan `npm run db:seed` untuk data demo
-
-### 3. Upload Foto
-- Tanpa Supabase Storage: foto dikembalikan sebagai data URI (fallback)
-- Dengan Supabase Storage: foto disimpan di bucket `civix-reports`
-- Maksimal 3 foto per laporan, 5MB per foto
-
-### 4. Validasi DKI Jakarta
-Backend menolak laporan di luar batas DKI Jakarta:
-- Lat: -6.38 s.d -5.2 (termasuk Kepulauan Seribu)
-- Lng: 106.68 s.d 106.98
-
-### 5. Peta Status (PRD 5.4)
-- **Merah**: `diterima`, `diverifikasi` (baru dilaporkan)
-- **Kuning**: `ditugaskan`, `dikerjakan` (sedang diproses)
-- **Hijau**: `selesai` (hanya tampil 7 hari dari `selesai_pada`, lalu otomatis hilang dari peta tetapi tetap di database)
-- **Tidak tampil**: `ditolak`, `duplikat`
-
----
-
-## Troubleshooting
-
-### Backend tidak start
-- Cek `DATABASE_URL` di `backend/.env`
-- Pastikan PostgreSQL berjalan atau Supabase project aktif
-- Jalankan migrasi: `cd backend && npm run db:migrate`
-
-### Frontend blank / CORS error
-- Pastikan backend berjalan di `http://localhost:3000`
-- Cek `FRONTEND_URL` di `backend/.env`
-- Cek proxy di `frontend/vite.config.ts`
-
-### Upload foto gagal
-- Cek `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`
-- Pastikan bucket `civix-reports` ada dan policy-nya benar
-- Fallback: foto akan dikembalikan sebagai data URI (base64)
-
-### Peta tidak muncul
-- Cek console browser untuk error Leaflet
-- Pastikan endpoint `/api/v1/reports/map` return data valid
-- Koordinat harus number, bukan string (backend sudah handle)
-
----
-
-## Kontribusi & Pengembangan
-
-- Baca PRD: `PRD_CIVIX.md`
-- Ikuti struktur folder yang ada
-- TypeScript strict mode di frontend, non-strict di backend (Drizzle ORM typing issue)
-- Frontend typecheck pass 100%, backend build berjalan runtime
-- Gunakan shadcn/ui untuk komponen baru
-- Commit message jelas dan deskriptif
-
----
-
-## Lisensi
-
-Project ini dibuat untuk **Lomba Web In Action 2026 (Multimedia In Action)** dengan tema **Civic Technology**.
-
----
-
-## Kontak & Support
-
-Untuk pertanyaan terkait project, hubungi tim pengembang atau buka issue di repository.
-
-**CIVIX** — Laporan Warga, Aksi Nyata untuk Kota.
-
-## Pembaruan dashboard admin
-
-Setelah menarik pembaruan, jalankan `cd backend` lalu `npm run db:migrate` untuk menambahkan tabel `platform_settings` dari migrasi `0007_platform_settings`. Migrasi ini tidak menghapus atau mengubah laporan yang ada. Jalankan backend dan frontend seperti biasa.
-
-Halaman admin tersedia di `/admin`, `/admin/verification`, `/admin/reports`, `/admin/agencies`, `/admin/people`, dan `/admin/settings`. Profil administrator dan tombol keluar berada di bawah sidebar.
-
-Ruang kerja admin menyediakan `/admin/reports` untuk seluruh laporan dan tugas penanganan, `/admin/map` untuk peta seluruh laporan, dan `/admin/stats` untuk analisis kategori, status, tren, serta wilayah. Dashboard menampilkan ringkasan dan laporan terbaru. Tautan lama `/admin/tasks` diarahkan ke Semua Laporan dengan parameter pencariannya tetap dipertahankan. Tautan lokasi pada detail memusatkan peta admin ke laporan tersebut. Sidebar mempertahankan identitas Admin CIVIX.
-
-Detail admin memakai foto dan riwayat yang sama dengan laporan publik. Admin dapat menyelesaikan laporan yang sudah ditugaskan/dikerjakan melalui satu tombol **Tandai Selesai**, dengan catatan opsional dan foto bukti wajib. Pemeriksaan `check-admin-api.mjs` memastikan dataset dashboard, statistik, peta, dan daftar laporan mencakup seluruh instansi. Untuk menyertakan uji penyelesaian oleh admin di `check-agency-workflow.mjs`, tambahkan `CIVIX_TEST_ADMIN_EMAIL` dan `CIVIX_TEST_ADMIN_PASSWORD` pada environment pengujian.
-
-Lima kartu admin menampilkan total, menunggu verifikasi, dalam penanganan, selesai, serta gabungan ditolak/duplikat. Periode awal adalah 30 hari berdasarkan tanggal pembuatan laporan, dengan batas hari Asia/Jakarta. Kartu hanya menampilkan ikon, judul, dan jumlah, tanpa persentase atau teks perbandingan. Tautan kartu dan laporan terbaru mempertahankan filter tanggal. Status pada setiap kelompok adalah status laporan saat ini, bukan rekonstruksi status historis pada akhir periode lama.
-
-Untuk pemeriksaan integrasi API pada server pengembangan yang berjalan, isi environment `CIVIX_TEST_EMAIL` dan `CIVIX_TEST_PASSWORD` dengan akun admin pengujian yang sudah ada, lalu jalankan `node scripts/check-admin-api.mjs` dari folder backend. Pemeriksaan ini tidak memproses laporan atau mengganti akun/password; pengaturan peta hanya disimpan ulang dengan nilai yang sama.
-
-## Ruang kerja instansi
-
-Halaman `/agency` menyediakan dashboard, `/agency/assignments` untuk tugas, `/agency/reports` untuk seluruh laporan milik unit, `/agency/map`, `/agency/stats`, `/agency/people`, dan `/agency/settings`. Semua data dibatasi oleh instansi akun yang sedang masuk. Pengguna baru selalu mendapat peran petugas pada unit yang sama; pilihan peran lain dan status aktif/nonaktif tidak ditampilkan karena belum ada dalam model akun.
-
-Penyelesaian tugas menggunakan satu tombol **Tandai Selesai** yang mengirim catatan dan 1–3 foto bukti sekaligus. Tugas berstatus `ditugaskan` atau `dikerjakan` dapat diselesaikan langsung. Alasan penolakan wajib diisi dan tercatat pada riwayat yang sama dengan halaman publik/admin. Dashboard dan statistik memakai periode tanggal pembuatan laporan yang dipilih; angka tidak menggunakan data contoh.
-
-Jalankan pemeriksaan dari folder backend dengan environment `CIVIX_TEST_EMAIL` dan `CIVIX_TEST_PASSWORD` berisi akun instansi pengujian yang sudah ada:
-
-- `node scripts/check-agency-api.mjs`: filter, jumlah, paginasi, sinkronisasi publik, validasi, dan simpan profil dengan isi yang sama. Tambahkan `CIVIX_OTHER_EMAIL` (dan bila berbeda `CIVIX_OTHER_PASSWORD`) untuk menguji pemisahan dua instansi.
-- `node scripts/check-agency-workflow.mjs`: pengujian integrasi pada server pengembangan menggunakan laporan dan satu akun QA sementara. Menguji penyelesaian beserta foto, pengiriman ulang, penolakan, dan pembuatan petugas. Script memakai `backend/.env`, lalu membersihkan data serta file QA yang dibuatnya. Jangan jalankan pada server produksi.
-
-## Ruang kerja Warga
-
-Halaman `/citizen` memakai sidebar CIVIX yang sama dengan ruang Admin dan Instansi. Menu Warga terdiri dari Dashboard, Buat Laporan, Riwayat Laporan, Peta Laporan, Informasi, dan Pengaturan. Akun serta tombol keluar berada pada dropdown kiri bawah; tidak ada lonceng atau akun tambahan di kanan atas. Tautan lama `/citizen/profile` diarahkan ke Pengaturan.
-
-Jalankan `npm run db:migrate` dari folder backend setelah menarik perubahan untuk menambahkan tabel `citizen_profiles` (migrasi `0008`). Informasi akun, nomor telepon, alamat, serta foto akun disimpan pada database dan penyimpanan gambar yang sama. Halaman Pengaturan mengikuti susunan panel Admin tanpa tab Profil atau Preferensi. Email tetap hanya baca; perubahan kredensial ditangani administrator.
-
-Pembuatan laporan memiliki empat tahap: Informasi, Lokasi, Foto, dan Tinjau. Wilayah diambil dari database, bukan wilayah contoh tetap. Foto wajib 1–3 berkas JPG/PNG/WebP/GIF, maksimal 5 MB per foto. Penyimpanan laporan, foto, dan riwayat awal berada dalam satu transaksi database. Pencarian alamat bersifat bantuan; penandaan langsung di peta tetap tersedia. Pengiriman berhasil membuka detail laporan milik pengguna.
-
-Dashboard, riwayat, dan detail mengambil laporan pengguna yang sedang masuk dan memperbarui data setiap 30 detik. Filter dan paginasi diproses pada API. Peta Warga memperlihatkan laporan publik sesuai durasi Admin serta seluruh laporan milik pengguna, termasuk laporan selesai yang sudah melewati durasi peta publik. Informasi menampilkan panduan penggunaan, kategori, privasi, lokasi, dan status yang sesuai fitur CIVIX.
-
-Ilustrasi sidebar ketiga peran memakai `frontend/public/jakarta-sidebar-mint.webp`, dibuat dengan imagegen bawaan dan dioptimalkan menjadi WebP transparan. Prompt aset: "Polished mint and sage Jakarta city park illustration, slim centered Monas and flame in muted sage-gray, pale layered skyscrapers, softly rounded trees, winding park path, low-contrast flat illustration, transparent sky, no gold, text or UI."
-
-Uji integrasi pengembangan: `node scripts/check-citizen-workflow.mjs` dari backend. Script membuat akun/laporan QA sementara, menguji pembuatan beserta foto, informasi akun, pemisahan akses, filter, jumlah, paginasi, dan peta, lalu membersihkan tepat data serta file QA tersebut. Tambahkan `CIVIX_TEST_ADMIN_EMAIL` dan `CIVIX_TEST_ADMIN_PASSWORD` untuk menguji perubahan status Admin yang tersinkron di Warga dan halaman publik. Jangan jalankan pada server produksi.
+Beberapa kemampuan belum lengkap: halaman Lupa Kata Sandi belum terhubung ke pengiriman email, pelacakan tiket tersedia melalui API tetapi belum memiliki halaman tersendiri, dan validasi lokasi masih memakai rentang koordinat pendekatan DKI Jakarta. Ketersediaan halaman tidak berarti seluruh skenario sudah selesai diuji atau aplikasi telah terintegrasi dengan layanan resmi pemerintah.
