@@ -1,0 +1,12 @@
+.photo-preview-trigger { display: block; width: 100%; border-radius: 9px; cursor: zoom-in; overflow: hidden; }
+.photo-preview-trigger:focus-visible { outline: 2px solid #008358; outline-offset: 4px; }
+.workspace-proof-grid > .photo-preview-trigger { width: 112px; }
+.workspace-proof-grid > .photo-preview-trigger > img { width: 112px; height: 96px; object-fit: cover; }
+.admin-dialog.photo-preview-dialog { width: min(1100px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); border: 1px solid #dce9e2; overflow: auto; }
+.photo-preview-header { display: flex; gap: 20px; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #e4eee8; }
+.photo-preview-dialog .photo-preview-header h2 { font-size: 16px; line-height: 1.5; font-weight: 650; }
+.photo-preview-header button { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; color: #426652; border-radius: 8px; }
+.photo-preview-header button:hover { background: #edf6f1; }
+.photo-preview-header button:focus-visible { outline: 2px solid #008358; outline-offset: 2px; }
+.photo-preview-image { display: block; width: 100%; height: auto; max-height: calc(100dvh - 120px); object-fit: contain; background: #f3f7f5; }
+.photo-preview-error { padding: 40px 24px; color: #6c3f35; }

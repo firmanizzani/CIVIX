@@ -25,6 +25,8 @@ body { background: var(--neutral); }
 .civix-navbar a[aria-current="page"] { background: transparent; color: var(--forest); text-decoration-color: #42b689; text-underline-offset: 13px; }
 .civix-navbar .btn-ghost { border: 1px solid #cce4d9; color: var(--forest); padding-inline: 25px; }
 .civix-navbar .btn-primary { padding-inline: 27px; }
+.civix-navbar .civix-auth-button { width: 92px; min-width: 92px; height: 44px; min-height: 44px; padding: 0 20px; border-radius: 9px; }
+.civix-navbar .civix-auth-button.w-full { width: 100%; }
 .btn-primary, .btn-accent { background-image: none; background-color: var(--primary); color: #fff; box-shadow: none; min-height: 44px; border-radius: 9px; }
 .btn-primary:hover, .btn-accent:hover { background-color: var(--deep); }
 .btn-outline { border-color: #cce4d9; color: var(--forest); min-height: 44px; }
@@ -131,7 +133,7 @@ body { background: var(--neutral); }
   .container-civix { padding-inline: 22px; }
   .civix-navbar > .container-civix > div:first-child { height: 70px; }
   .civix-nav-auth { margin-left: auto; margin-right: 8px; }
-  .civix-navbar .civix-nav-auth .btn-ghost, .civix-navbar .civix-nav-auth .btn-primary { padding-inline: 13px; min-height: 39px; }
+  .civix-navbar .civix-nav-auth .btn-ghost, .civix-navbar .civix-nav-auth .btn-primary { padding-inline: 13px; min-height: 44px; }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 20px; padding: 24px 22px; border-radius: 16px; }
   .page-heading h1 { font-size: 28px; }
   .page-heading p { font-size: 13px; }

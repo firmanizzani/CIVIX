@@ -28,7 +28,6 @@ const agencyLinks = [
   { to: '/agency/reports', label: 'Semua Laporan', icon: Files },
   { to: '/agency/map', label: 'Peta Laporan', icon: Map },
   { to: '/agency/stats', label: 'Statistik', icon: ChartNoAxesCombined },
-  { to: '/agency/people', label: 'Manajemen Pengguna', icon: Users },
   { to: '/agency/settings', label: 'Pengaturan', icon: Settings },
 ];
 

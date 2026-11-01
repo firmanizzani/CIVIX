@@ -96,7 +96,7 @@ VITE_API_BASE_URL=/api/v1
 
 ### Siapkan database dan data demo
 
-Jalankan migrasi yang sudah tersedia dari folder utama:
+Jalankan migrasi yang sudah tersedia dari folder utama, termasuk setelah memperbarui project. Migrasi terbaru menerapkan batas satu akun per instansi:
 
 ```bash
 npm --prefix backend run db:migrate
@@ -141,7 +141,7 @@ Perintah tersebut menjalankan frontend dan backend bersamaan. Pastikan port 5173
 | Autentikasi | Pendaftaran warga, login, dan pembatasan akses sesuai peran. |
 | Ruang Warga | Dashboard, formulir laporan empat tahap, riwayat dan detail laporan sendiri, peta, informasi, serta pengaturan profil dan foto akun. |
 | Ruang Admin | Dashboard, antrean verifikasi, seluruh laporan, penugasan instansi, peta, statistik terpisah, pengelolaan instansi dan pengguna, serta pengaturan platform. |
-| Ruang Instansi | Dashboard, daftar tugas dan laporan unit, detail tugas, penyelesaian dengan foto bukti, penolakan dengan alasan, peta, statistik, petugas, serta pengaturan unit. |
+| Ruang Instansi | Dashboard, daftar tugas dan laporan unit, detail tugas, penyelesaian dengan foto bukti, penolakan dengan alasan, peta, statistik, serta pengaturan unit. Setiap instansi memiliki satu akun yang dikelola admin. |
 | Pelaporan dan pemantauan | Tiket laporan, foto awal, lokasi, riwayat status, catatan penanganan, dan bukti perbaikan. |
 | Peta status | Penanda diterima berwarna merah, diverifikasi oranye, dalam penanganan kuning, dan selesai hijau. Masa tampil laporan selesai mengikuti pengaturan admin, dengan nilai awal tujuh hari. |
 | Partisipasi publik | Dukungan dan komentar melalui detail laporan publik setelah login. |

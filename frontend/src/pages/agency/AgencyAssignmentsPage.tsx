@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { CheckCircle2, Search, Upload, X } from 'lucide-react';
 import AgencyTaskDetail from './AgencyTaskDetail';
+import PhotoPreview from '@/components/PhotoPreview';
 import { AgencyTable } from './AgencyDashboard';
 import { useAgencyOverview } from './agencyData';
 import QueryError from '@/components/QueryError';
@@ -82,7 +83,7 @@ export default function AgencyAssignmentsPage({ all = false }: { all?: boolean }
                 {fileError && <p className="workspace-error" role="alert">{fileError}</p>}
                 <button type="submit" className="btn-primary mt-4 w-full" disabled={mutation.isPending || !files.length}><CheckCircle2 size={16} />{mutation.isPending ? 'Menyimpan…' : 'Tandai Selesai'}</button>
               </div>
-          </form> : report.status === 'selesai' ? <section className="workspace-completion"><h3>Bukti Penyelesaian</h3>{proofs.length ? <div className="workspace-proof-grid">{proofs.map((photo) => <a key={photo.id} href={photo.url} target="_blank" rel="noreferrer"><img src={photo.url} alt="Foto bukti penyelesaian laporan" /></a>)}</div> : <p className="workspace-muted">Belum ada foto bukti penyelesaian yang tersimpan.</p>}</section> : null}
+          </form> : report.status === 'selesai' ? <section className="workspace-completion"><h3>Bukti Penyelesaian</h3>{proofs.length ? <div className="workspace-proof-grid">{proofs.map((photo) => <PhotoPreview key={photo.id} src={photo.url} alt="Foto bukti penyelesaian laporan" />)}</div> : <p className="workspace-muted">Belum ada foto bukti penyelesaian yang tersimpan.</p>}</section> : null}
 
     {['ditugaskan', 'dikerjakan'].includes(report.status) && (rejecting ? <form className="workspace-task-form" onSubmit={event => { event.preventDefault(); mutation.mutate('reject'); }}><label className="label" htmlFor="agency-reject-reason">Alasan penolakan</label><textarea id="agency-reject-reason" required maxLength={2000} className="input" rows={3} value={note} disabled={mutation.isPending} onChange={event => setNote(event.target.value)} /><p className="workspace-muted">Alasan akan terlihat pada riwayat laporan.</p><div className="agency-action-pair"><button type="button" className="btn-outline" disabled={mutation.isPending} onClick={() => { setRejecting(false); setNote(''); }}>Batal</button><button className="admin-button-danger" disabled={mutation.isPending || !note.trim()}>Tolak Laporan</button></div></form> : <button className="admin-button-danger agency-reject" disabled={mutation.isPending} onClick={() => { setRejecting(true); setNote(''); mutation.reset(); }}>Tolak Laporan</button>)}
     {!['ditugaskan', 'dikerjakan', 'selesai'].includes(report.status) && <p className="workspace-muted">Laporan ini tidak memiliki tindakan penanganan aktif.</p>}

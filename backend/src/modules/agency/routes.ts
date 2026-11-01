@@ -6,8 +6,7 @@ import { Router, Response } from 'express';
 import multer from 'multer';
 import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportStatusLogs, agencies, users, regions } from '../../db/schema.js';
-import bcrypt from 'bcrypt';
-import { asc, eq, desc, count, inArray, and, sql } from 'drizzle-orm';
+import { asc, eq, desc, count, inArray, and } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.js';
 
@@ -21,12 +20,10 @@ const upload = multer({
 
 const router = Router();
 router.use(authMiddleware);
-router.use(requireRole(['instansi', 'admin']));
-
-
+router.use(requireRole(['instansi']));
 
 const getAgencyScope = async (req: AuthRequest, res: Response): Promise<{ agencyId: string } | null> => {
-  if (req.user!.peran === 'admin') return { agencyId: '' };
+
   const user = await db.query.users.findFirst({
     where: eq(users.id, req.user!.id),
     columns: { agencyId: true },
@@ -40,13 +37,8 @@ const getAgencyScope = async (req: AuthRequest, res: Response): Promise<{ agency
 };
 
 const scopeCondition = (agencyId: string) =>
-  agencyId ? eq(reports.assignedAgencyId, agencyId) : sql`TRUE`;
+  eq(reports.assignedAgencyId, agencyId);
 
-const assertOwnsReport = async (reportId: string, agencyId: string): Promise<boolean> => {
-  if (!agencyId) return true;
-  const report = await db.query.reports.findFirst({ where: eq(reports.id, reportId) });
-  return !!report && report.assignedAgencyId === agencyId;
-};
 
 // Every screen uses this same assignment scope, including completed/rejected work.
 router.get('/overview', async (req: AuthRequest, res: Response) => {
@@ -85,23 +77,6 @@ router.patch('/profile', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     if (error instanceof z.ZodError) return res.status(400).json({ error: 'Nama wajib 2–150 karakter dan deskripsi maksimal 2.000 karakter.' });
     res.status(500).json({ error: 'Profil instansi belum berhasil disimpan' });
-  }
-});
-
-router.post('/members', async (req: AuthRequest, res: Response) => {
-  try {
-    const scope = await getAgencyScope(req, res);
-    if (!scope) return;
-    if (!scope.agencyId) return res.status(400).json({ error: 'Masuk dengan akun instansi untuk menambah petugas.' });
-    const body = z.object({ nama: z.string().trim().min(3).max(100), email: z.string().trim().email().max(150), password: z.string().min(8).max(128) }).strict().parse(req.body);
-    const passwordHash = await bcrypt.hash(body.password, 12);
-    const [member] = await db.insert(users).values({ nama: body.nama, email: body.email, passwordHash, peran: 'instansi', agencyId: scope.agencyId })
-      .onConflictDoNothing({ target: users.email }).returning({ id: users.id, nama: users.nama, email: users.email, peran: users.peran, dibuatPada: users.dibuatPada });
-    if (!member) return res.status(409).json({ error: 'Email sudah terdaftar' });
-    res.status(201).json(member);
-  } catch (error) {
-    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Periksa nama, alamat email, dan kata sandi minimal 8 karakter.' });
-    res.status(500).json({ error: 'Petugas belum berhasil ditambahkan' });
   }
 });
 

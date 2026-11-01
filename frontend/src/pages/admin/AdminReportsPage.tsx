@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ArrowRight, Search, Clock, CheckCircle2, XCircle, Copy, Send, FileText, CalendarDays, HardHat } from 'lucide-react';
 import AdminReportDetail from '@/components/AdminReportDetail';
-import ReportCompletionForm from '@/components/ReportCompletionForm';
 import QueryError from '@/components/QueryError';
 import { StatusBadge, WorkspacePagination, WorkspaceRefresh, reportCover } from '@/components/ReportWorkspaceUI';
 import { getActionError, useReportWorkspace } from '@/hooks/useReportWorkspace';
@@ -28,8 +27,8 @@ export default function AdminReportsPage({ verification = false }: { verificatio
     queryKey: ['admin-agencies'], queryFn: async () => (await apiClient.get('/admin/agencies')).data,
   });
   const mutation = useMutation({
-    mutationFn: async ({ action, body, reportId }: { action: string; body?: Record<string, string>; reportId?: string }) =>
-      (await apiClient.post(action === 'reject-task' ? '/agency/assignments/' + (reportId || selectedId) + '/reject' : '/admin/reports/' + (reportId || selectedId) + '/' + action, body || {})).data,
+    mutationFn: async ({ action, body, reportId }: { action: 'verify' | 'reject' | 'duplicate' | 'assign' | 'restore'; body?: Record<string, string>; reportId?: string }) =>
+      (await apiClient.post('/admin/reports/' + (reportId || selectedId) + '/' + action, body || {})).data,
     onSuccess: async (result) => {
       setSuccess(result.message || 'Perubahan berhasil disimpan.');
       setAction(null); setNote(''); setTargetTicket('');
@@ -63,12 +62,12 @@ export default function AdminReportsPage({ verification = false }: { verificatio
             {selected.status === 'diverifikasi' && <button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('duplicate')}><Copy size={15} />Tandai Duplikat</button>}
             {(selected.status === 'duplikat' || selected.status === 'diverifikasi') && !action && <button className="workspace-text-link" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'restore' })}>Kembalikan ke antrean verifikasi</button>}
           </div>
-          {['ditugaskan', 'dikerjakan'].includes(selected.status) && !action && <><ReportCompletionForm key={selected.id} reportId={selected.id} onSaved={w.refreshReports} /><button className="admin-button-danger agency-reject" disabled={mutation.isPending} onClick={() => openAction('reject')}>Tolak Laporan</button></>}
+          {['ditugaskan', 'dikerjakan'].includes(selected.status) && <p className="workspace-muted">Laporan sedang ditangani oleh instansi yang ditugaskan. Admin dapat memantau riwayat dan bukti penanganan; perubahan progres dan penyelesaian dilakukan oleh instansi.</p>}
           {selected.status === 'selesai' && <p className="workspace-muted">Penanganan sudah selesai. Foto bukti tersedia pada galeri laporan.</p>}
           {selected.status === 'ditolak' && <p className="workspace-muted">Laporan ditolak. Alasan penolakan tercatat dalam riwayat penanganan.</p>}
-          {action && <form className="workspace-action-form" onSubmit={(event) => {
+          {action && ((action === 'reject' && selected.status === 'diterima') || (action === 'duplicate' && ['diterima', 'diverifikasi'].includes(selected.status)) || (action === 'assign' && selected.status === 'diverifikasi')) && <form className="workspace-action-form" onSubmit={(event) => {
             event.preventDefault();
-            mutation.mutate({ action: action === 'reject' && selected.status !== 'diterima' ? 'reject-task' : action, body: action === 'assign' ? { agencyId, catatan: note } : action === 'reject' ? { alasan: note } : targetTicket ? { targetTicket } : {} });
+            mutation.mutate({ action, body: action === 'assign' ? { agencyId, catatan: note } : action === 'reject' ? { alasan: note } : targetTicket ? { targetTicket } : {} });
           }}>
             <h3>{action === 'assign' ? 'Tugaskan ke instansi' : action === 'reject' ? 'Alasan penolakan' : 'Tandai sebagai duplikat'}</h3>
             {action === 'assign' && <><label className="label" htmlFor="assign-agency">Instansi penerima</label><select id="assign-agency" className="input" required value={agencyId} onChange={(event) => setAgencyId(event.target.value)}><option value="">Pilih instansi</option>{agencies.data?.map((agency) => <option key={agency.id} value={agency.id}>{agency.nama}</option>)}</select>{agencies.isError && <p role="alert" className="workspace-error">Daftar instansi gagal dimuat. <button type="button" onClick={() => agencies.refetch()}>Coba lagi</button></p>}</>}

@@ -64,6 +64,13 @@
       "when": 1793278800000,
       "tag": "0008_citizen_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793494800000,
+      "tag": "0009_one_account_per_agency",
+      "breakpoints": true
     }
   ]
 }

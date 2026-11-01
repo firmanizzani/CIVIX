@@ -42,7 +42,10 @@ export const users = pgTable('users', {
   peran: peranUserEnum('peran').notNull().default('warga'),
   agencyId: varchar('agency_id', { length: 40 }).references(() => agencies.id, { onDelete: 'set null' }),
   dibuatPada: timestamp('dibuat_pada', { withTimezone: true }).notNull().defaultNow(),
-});
+}, table => ({
+  oneAccountPerAgency: uniqueIndex('users_one_account_per_agency').on(table.agencyId)
+    .where(sql`${table.agencyId} IS NOT NULL`),
+}));
 
 export const regions = pgTable('regions', {
   id: varchar('id', { length: 40 }).primaryKey().default(sql`'region_' || lpad(nextval('seq_region_id')::text, 3, '0')`),

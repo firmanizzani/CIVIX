@@ -1,4 +1,4 @@
-﻿import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { Menu, X } from 'lucide-react';
 import AnimatedCollapse from '@/components/AnimatedCollapse';
@@ -71,10 +71,10 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link to="/login" className="btn-ghost text-xs">
+                <Link to="/login" className="btn-ghost civix-auth-button text-xs">
                   Masuk
                 </Link>
-                <Link to="/register" className="btn-primary text-xs">
+                <Link to="/register" className="btn-primary civix-auth-button text-xs">
                   Daftar
                 </Link>
               </>
@@ -124,10 +124,10 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link to="/login" onClick={() => setMobileOpen(false)} className="btn-ghost w-full text-sm">
+                  <Link to="/login" onClick={() => setMobileOpen(false)} className="btn-ghost civix-auth-button w-full text-sm">
                     Masuk
                   </Link>
-                  <Link to="/register" onClick={() => setMobileOpen(false)} className="btn-primary w-full text-sm">
+                  <Link to="/register" onClick={() => setMobileOpen(false)} className="btn-primary civix-auth-button w-full text-sm">
                     Daftar
                   </Link>
                 </>

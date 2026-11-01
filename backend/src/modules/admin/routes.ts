@@ -190,15 +190,22 @@ router.post('/agencies', async (req, res: Response) => {
 router.post('/agencies/:id/accounts', async (req, res: Response) => {
   try {
     const body = AccountSchema.parse(req.body);
-    const agency = await db.query.agencies.findFirst({ where: eq(agencies.id, req.params.id) });
-    if (!agency) return res.status(404).json({ error: 'Instansi tidak ditemukan' });
-    const existing = await db.query.users.findFirst({ where: eq(users.email, body.email) });
-    if (existing) return res.status(409).json({ error: 'Email sudah terdaftar' });
-    const passwordHash = await bcrypt.hash(body.password, 12);
-    const [account] = await db.insert(users).values({ nama: body.nama, email: body.email, passwordHash, peran: 'instansi', agencyId: agency.id })
-      .returning({ id: users.id, nama: users.nama, email: users.email, agencyId: users.agencyId });
+    const account = await db.transaction(async tx => {
+      const [agency] = await tx.select().from(agencies).where(eq(agencies.id, req.params.id)).for('update');
+      if (!agency) throw new ReportTransitionError(404, 'Instansi tidak ditemukan');
+      const existingAccount = await tx.query.users.findFirst({ where: eq(users.agencyId, agency.id) });
+      if (existingAccount) throw new ReportTransitionError(409, 'Instansi ini sudah memiliki akun. Satu instansi hanya boleh memiliki satu akun.');
+      const existingEmail = await tx.query.users.findFirst({ where: eq(users.email, body.email) });
+      if (existingEmail) throw new ReportTransitionError(409, 'Email sudah terdaftar');
+      const passwordHash = await bcrypt.hash(body.password, 12);
+      const [created] = await tx.insert(users).values({ nama: body.nama, email: body.email, passwordHash, peran: 'instansi', agencyId: agency.id })
+        .onConflictDoNothing().returning({ id: users.id, nama: users.nama, email: users.email, agencyId: users.agencyId });
+      if (!created) throw new ReportTransitionError(409, 'Email atau akun instansi sudah terdaftar. Muat ulang daftar instansi.');
+      return created;
+    });
     res.status(201).json(account);
   } catch (err) {
+    if (err instanceof ReportTransitionError) return res.status(err.statusCode).json({ error: err.message });
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     res.status(500).json({ error: 'Gagal membuat akun instansi' });
   }
