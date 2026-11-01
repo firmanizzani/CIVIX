@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
-import { ArrowUpRight, ClipboardList, HardHat, CheckCircle2, Files } from 'lucide-react';
+import { ArrowUpRight, Send, HardHat, CheckCircle2, FileText } from 'lucide-react';
 import QueryError from '@/components/QueryError';
 import { StatusBadge, reportCover, WorkspaceRefresh } from '@/components/ReportWorkspaceUI';
 import { KATEGORI_LABEL, STATUS_LABEL, Report, StatusLaporan, Region } from '@/types';
@@ -13,12 +13,12 @@ export function AgencySummary({ rows, loading, days, base = "/agency" }: { rows:
   const from = new Date(`${jakartaDay(new Date())}T12:00:00+07:00`); from.setUTCDate(from.getUTCDate() - days + 1);
   const period = days ? `&dateFrom=${jakartaDay(from)}&dateTo=${jakartaDay(new Date())}` : '';
   const metrics = [
-    { label: base === '/admin' ? 'Menunggu Verifikasi' : 'Belum Ditangani', value: rows.filter(r => r.status === (base === '/admin' ? 'diterima' : 'ditugaskan')).length, icon: ClipboardList, status: base === '/admin' ? 'diterima' : 'ditugaskan', tone: 'red' },
-    { label: base === '/admin' ? 'Dalam Penanganan' : 'Sedang Dikerjakan', value: rows.filter(r => r.status === 'dikerjakan' || (base === '/admin' && r.status === 'ditugaskan')).length, icon: HardHat, status: base === '/admin' ? 'proses' : 'dikerjakan', tone: 'amber' },
+    { label: base === '/admin' ? 'Menunggu Verifikasi' : 'Menunggu Ditangani', value: rows.filter(r => r.status === (base === '/admin' ? 'diterima' : 'ditugaskan')).length, icon: Send, status: base === '/admin' ? 'diterima' : 'ditugaskan', tone: 'amber' },
+    { label: 'Sedang Dikerjakan', value: rows.filter(r => r.status === 'dikerjakan' || (base === '/admin' && r.status === 'ditugaskan')).length, icon: HardHat, status: base === '/admin' ? 'proses' : 'dikerjakan', tone: 'amber' },
     { label: 'Selesai', value: rows.filter(r => r.status === 'selesai').length, icon: CheckCircle2, status: 'selesai', tone: 'green' },
-    { label: 'Total Laporan', value: rows.length, icon: Files, status: '', tone: 'neutral' },
+    { label: 'Total Laporan', value: rows.length, icon: FileText, status: '', tone: 'green' },
   ];
-  return <div className="agency-summary">{metrics.map(({ label, value, icon: Icon, status, tone }) => <Link key={label} data-tone={tone} className="admin-panel" to={`${base}/reports?status=${status}${period}`}><Icon size={21} /><div><span>{label}</span><strong>{loading ? '—' : value}</strong><small>Lihat laporan <ArrowUpRight size={11} /></small></div></Link>)}</div>;
+  return <div className="agency-summary">{metrics.map(({ label, value, icon: Icon, status, tone }) => <Link key={label} data-tone={tone} className="admin-panel" to={`${base}/reports?status=${status}${period}`}><span><Icon size={22} strokeWidth={2} /></span><div><span>{label}</span><strong>{loading ? '—' : value}</strong></div></Link>)}</div>;
 }
 
 export function AgencyTable({ rows, offset = 0, base = "/agency" }: { rows: Report[]; offset?: number; base?: string }) {

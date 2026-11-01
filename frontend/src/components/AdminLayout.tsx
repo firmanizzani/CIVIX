@@ -64,7 +64,7 @@ export default function AdminLayout({ agency = false, citizen = false }: { agenc
     <div className="admin-mobile-bar"><Link to={base}><CivixLogo size="sm" /></Link><button ref={toggle} type="button" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? `Tutup navigasi ${roleName}` : `Buka navigasi ${roleName}`} aria-expanded={mobileOpen} aria-controls="admin-sidebar">{mobileOpen ? <X size={21} /> : <Menu size={21} />}</button></div>
     {mobileOpen && <button className="admin-sidebar-backdrop" onClick={() => setMobileOpen(false)} aria-label={`Tutup navigasi ${roleName}`} />}
     <aside id="admin-sidebar" className="admin-sidebar" data-open={mobileOpen}>
-      <Link to={base} className="admin-brand" aria-label={`CIVIX Dashboard ${citizen ? 'Warga' : agency ? 'Instansi' : 'Admin'}`}><CivixLogo />{(agency || citizen) && <small>{citizen ? 'Warga' : 'Instansi'}</small>}</Link>
+      <Link to={base} className="admin-brand" aria-label={`CIVIX Dashboard ${citizen ? 'Warga' : agency ? 'Instansi' : 'Admin'}`}><CivixLogo /><small>{citizen ? 'Warga' : agency ? 'Instansi' : 'Admin'}</small></Link>
       <nav aria-label={`Navigasi ${roleName}`}>{(citizen ? citizenLinks : agency ? agencyLinks : links).map(({ to, label, icon: Icon }) => <NavLink end={to === base} key={to} to={to} onClick={() => setMobileOpen(false)}><Icon size={17} strokeWidth={1.7} /><span>{label}</span></NavLink>)}</nav>
       <SidebarArtwork />
       {citizen ? <CitizenSidebarAccount /> : <div className="admin-profile" ref={profile}>

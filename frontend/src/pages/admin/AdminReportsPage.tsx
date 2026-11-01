@@ -76,7 +76,7 @@ export default function AdminReportsPage({ verification = false }: { verificatio
   </>;
   const tabs = [
     { value: '', label: 'Semua', count: w.data?.totalAll, icon: FileText, tone: 'green' },
-    { value: 'diterima', label: 'Menunggu', count: counts?.diterima, icon: Clock, tone: 'amber' },
+    { value: 'diterima', label: 'Menunggu', count: counts?.diterima, icon: Clock, tone: 'red' },
     { value: 'diverifikasi', label: 'Terverifikasi', count: counts?.diverifikasi, icon: CheckCircle2, tone: 'green' },
     { value: 'proses', label: 'Diproses', count: counts ? counts.ditugaskan + counts.dikerjakan : undefined, icon: HardHat, tone: 'blue' },
     { value: 'ditolak', label: 'Ditolak', count: counts?.ditolak, icon: XCircle, tone: 'red' },

@@ -4,7 +4,7 @@ type MetricReport = Pick<Report, 'status' | 'dibuatPada'>;
 export const adminMetricDefinitions = [
   { key: 'total', label: 'Total Laporan', status: '' },
   { key: 'pending', label: 'Menunggu Verifikasi', status: 'diterima' },
-  { key: 'processing', label: 'Dalam Penanganan', status: 'proses' },
+  { key: 'processing', label: 'Sedang Dikerjakan', status: 'proses' },
   { key: 'completed', label: 'Selesai', status: 'selesai' },
   { key: 'closed', label: 'Ditolak / Duplikat', status: 'ditolak_duplikat' },
 ] as const;
