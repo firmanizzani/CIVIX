@@ -31,6 +31,7 @@ import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import AnimatedCollapse from '@/components/AnimatedCollapse';
 import AnimatedCounter from '@/components/AnimatedCounter';
+import { reportCover } from '@/components/ReportWorkspaceUI';
 import apiClient from '@/lib/api';
 import { MapPoint, StatsOverview, STATUS_LABEL, KATEGORI_LABEL, Report } from '@/types';
 import { getStatusColor } from '@/lib/utils';
@@ -53,8 +54,15 @@ function LandingPage() {
     queryFn: async () => (await apiClient.get('/reports?limit=4')).data,
   });
 
-  const previewProgress = recentReports[0]
-    ? ({ diterima: 0, diverifikasi: 1, ditugaskan: 2, dikerjakan: 2, selesai: 3, ditolak: -1, duplikat: -1 }[recentReports[0].status])
+  // Keep the feed chronological; feature a useful example separately in the hero.
+  const heroCandidates = recentReports.filter(report =>
+    reportCover(report) && report.judul.trim().length >= 8 && report.judul.trim().split(/\s+/).length >= 2,
+  );
+  const heroReport = heroCandidates.find(report => report.status === 'dikerjakan')
+    || heroCandidates.find(report => report.status === 'ditugaskan')
+    || heroCandidates[0];
+  const previewProgress = heroReport
+    ? ({ diterima: 0, diverifikasi: 1, ditugaskan: 2, dikerjakan: 2, selesai: 3, ditolak: -1, duplikat: -1 }[heroReport.status])
     : -1;
 
   return (
@@ -82,10 +90,10 @@ function LandingPage() {
                 </div>
               </div>
               <div className="landing-report-float" data-ui>
-                {recentReports[0] ? <><Link to={`/reports/${recentReports[0].id}`} className="landing-float-report">
-                    {recentReports[0].photos?.[0] && <img src={recentReports[0].photos[0].url} alt="" />}
-                    <div><span>{KATEGORI_LABEL[recentReports[0].kategori]}</span><h2>{recentReports[0].judul}</h2><ReportMetadata report={recentReports[0]} /></div>
-                  </Link><p className="landing-float-status"><span style={{ background: getStatusColor(recentReports[0].status) }} />{STATUS_LABEL[recentReports[0].status]}</p>
+                {heroReport ? <><Link to={`/reports/${heroReport.id}`} className="landing-float-report">
+                    {reportCover(heroReport) && <img src={reportCover(heroReport)} alt="" />}
+                    <div><span>{KATEGORI_LABEL[heroReport.kategori]}</span><h2>{heroReport.judul}</h2><ReportMetadata report={heroReport} /></div>
+                  </Link><p className="landing-float-status"><span style={{ background: getStatusColor(heroReport.status) }} />{STATUS_LABEL[heroReport.status]}</p>
                 </> : <><span className="landing-float-label"><ShieldCheck size={17} /> Proses yang transparan</span><h2>Setiap laporan,<br />bisa Anda pantau.</h2><p className="landing-float-description">Dari laporan diterima hingga penanganan selesai.</p></>}
                 <div className="landing-mini-progress" aria-label="Tahapan penanganan laporan">{['Diterima', 'Verifikasi', 'Ditangani', 'Selesai'].map((label, index) => <span key={label} data-complete={previewProgress >= index}><i />{label}</span>)}</div>
               </div>
@@ -105,7 +113,7 @@ function LandingPage() {
         <Reveal><section className="landing-map-section"><div className="container-civix landing-map-grid">
               <div className="landing-map-frame"><LandingMap interactive points={mapPoints} loading={mapLoading} error={mapError} retry={retryMap} fetching={mapFetching} />
                 <div className="landing-map-legend"><strong>Status laporan</strong>{(['diterima', 'diverifikasi', 'dikerjakan', 'selesai'] as const).map(status => <span key={status}><i style={{ background: getStatusColor(status) }} />{STATUS_LABEL[status]}</span>)}</div>
-                <Link to="/map" className="landing-map-caption"><MapPin size={25} /><span><strong>Lihat laporan di sekitar Anda</strong><small>Temukan dan pantau laporan dari warga lain.</small></span><ArrowRight size={17} /></Link>
+                <Link to="/map" className="landing-map-caption"><MapPin size={21} /><span><strong>Lihat laporan di sekitar Anda</strong><small>Temukan dan pantau laporan dari warga lain.</small></span><ArrowRight size={17} /></Link>
               </div>
               <div className="landing-map-copy"><span className="landing-kicker">Peta laporan</span><h2>Lihat kondisi Jakarta<br />secara nyata di peta.</h2><p>Jelajahi laporan dari seluruh wilayah Jakarta, filter berdasarkan kategori, dan temukan masalah di sekitar Anda dengan mudah.</p><Link to="/map" className="btn landing-button">Buka Peta Laporan <ArrowRight size={17} /></Link></div>
         </div></section></Reveal>

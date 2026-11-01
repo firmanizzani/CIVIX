@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import PageHeading from '@/components/PageHeading';
 import apiClient from '@/lib/api';
 import { MapPoint, STATUS_LABEL, KATEGORI_LABEL, STATUS_MAP_COLOR, StatusLaporan } from '@/types';
-import { MapContainer, TileLayer, CircleMarker, Popup, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, ZoomControl, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Layers } from 'lucide-react';
+import { Maximize2, Minimize2 } from 'lucide-react';
+import './public-map.css';
 
 const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
+
+function ResizeMap() {
+  const map = useMap();
+  useEffect(() => {
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    });
+    observer.observe(map.getContainer());
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+  }, [map]);
+  return null;
+}
 
 const getColor = (status: StatusLaporan) => {
   switch (STATUS_MAP_COLOR[status]) {
@@ -29,9 +44,38 @@ const getColor = (status: StatusLaporan) => {
 export default function MapPage() {
   const { data: mapSettings } = useQuery<{ completedMapDays: number }>({ queryKey: ['map-settings'], queryFn: async () => (await apiClient.get('/reports/map-settings')).data });
   const [selectedKategori, setSelectedKategori] = useState<string>('');
+  const workspace = useRef<HTMLElement>(null);
+  const [expanded, setExpanded] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
-  const { data: points = [] } = useQuery<MapPoint[]>({
+  useEffect(() => {
+    const onFullscreen = () => setExpanded(document.fullscreenElement === workspace.current);
+    document.addEventListener('fullscreenchange', onFullscreen);
+    return () => document.removeEventListener('fullscreenchange', onFullscreen);
+  }, []);
+  useEffect(() => {
+    if (!expanded) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !document.fullscreenElement) setExpanded(false);
+    };
+    window.addEventListener('keydown', escape);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', escape); };
+  }, [expanded]);
+  const toggleExpanded = async () => {
+    if (expanded) {
+      if (document.fullscreenElement === workspace.current) await document.exitFullscreen();
+      else setExpanded(false);
+      return;
+    }
+    try {
+      if (workspace.current?.requestFullscreen) await workspace.current.requestFullscreen();
+      else setExpanded(true);
+    } catch { setExpanded(true); }
+  };
+
+  const { data: points = [], isError, refetch } = useQuery<MapPoint[]>({
     queryKey: ['map-points-full'],
     queryFn: async () => (await apiClient.get('/reports/map')).data,
   });
@@ -46,68 +90,45 @@ export default function MapPage() {
   return (
     <div className="app-page map-page flex min-h-screen flex-col bg-civix-neutral">
       <Navbar />
-      <div className="container-civix"><PageHeading label="Peta laporan" title="Jakarta, dalam satu peta." description="Jelajahi titik laporan warga dan pantau status penanganannya." /></div>
+<div className="container-civix"><PageHeading label="Peta laporan" title="Jakarta, dalam satu peta." description="Jelajahi titik laporan warga dan pantau status penanganannya." /></div>
 
-      <div className="map-workspace relative flex flex-1 flex-col">
-        {/* Floating Filter Controls */}
-        <div className="absolute top-4 left-4 z-[1000] flex flex-wrap gap-2 rounded-xl bg-white/95 p-3 shadow-lg backdrop-blur border border-slate-200 animate-in-up">
-          <select
-            aria-label="Kategori laporan di peta"
-            value={selectedKategori}
-            onChange={(e) => setSelectedKategori(e.target.value)}
-            className="input text-xs py-1.5 min-w-[140px]"
-          >
-            <option value="">Semua Kategori</option>
-            {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
-            ))}
-          </select>
-
-          <select
-            aria-label="Status laporan di peta"
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="input text-xs py-1.5 min-w-[140px]"
-          >
-            <option value="">Semua Status</option>
-            <option value="diterima">Menunggu Verifikasi</option>
-            <option value="diverifikasi">Terverifikasi</option>
-            <option value="diproses">Sedang Diproses</option>
-            <option value="selesai">Selesai</option>
-          </select>
-        </div>
-
-        {/* Legend */}
-        <div className="absolute bottom-6 right-4 z-[1000] rounded-xl bg-white/95 p-4 shadow-lg backdrop-blur border border-slate-200 max-w-xs animate-in-up-delay-1">
-          <div className="mb-2 text-xs font-bold text-civix-navy flex items-center gap-1.5">
-            <Layers size={14} /> Legenda Status Laporan
+      <section ref={workspace} className="map-workspace public-map-workspace" data-expanded={expanded} aria-label="Peta laporan Jakarta">
+        <div className="public-map-toolbar">
+          <label>Kategori
+            <select aria-label="Kategori laporan di peta" value={selectedKategori} onChange={e => setSelectedKategori(e.target.value)} className="input">
+              <option value="">Semua Kategori</option>
+              {Object.entries(KATEGORI_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </select>
+          </label>
+          <label>Status
+            <select aria-label="Status laporan di peta" value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)} className="input">
+              <option value="">Semua Status</option>
+              <option value="diterima">Menunggu Verifikasi</option>
+              <option value="diverifikasi">Terverifikasi</option>
+              <option value="diproses">Sedang Diproses</option>
+              <option value="selesai">Selesai</option>
+            </select>
+          </label>
+          <div className="public-map-tools">
+            <button type="button" className="btn-outline public-map-fullscreen" title={expanded ? 'Keluar dari layar penuh' : 'Layar penuh'} onClick={toggleExpanded} aria-label={expanded ? 'Keluar dari layar penuh' : 'Buka peta layar penuh'}>{expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
           </div>
-          <div className="space-y-1.5 text-xs text-slate-700">
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-red" />
-              <span>Merah: Baru dilaporkan</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-orange" />
-              <span>Oranye: Terverifikasi</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-amber" />
-              <span>Kuning: Sedang Diproses</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-green" />
-              <span>Hijau: Selesai {mapSettings ? `(tampil ${mapSettings.completedMapDays} hari)` : ''}</span>
-            </div>
-          </div>
-          <p className="mt-3 text-[10px] text-slate-400 border-t border-slate-100 pt-2">
-            Titik hijau otomatis disembunyikan {mapSettings ? `setelah ${mapSettings.completedMapDays} hari` : 'sesuai durasi platform'} untuk menjaga keterbacaan peta.
-          </p>
         </div>
-
+        {isError && <div className="public-map-notice" role="alert">Data laporan gagal dimuat. <button type="button" onClick={() => refetch()}>Coba lagi</button></div>}
+        <div className="public-map-stage">
+          <aside id="public-map-legend" className="public-map-legend" aria-label="Legenda status laporan">
+            <header><strong>Status laporan</strong></header>
+            <ul>
+              <li><span className="status-dot status-red" />Menunggu Verifikasi</li>
+              <li><span className="status-dot status-orange" />Terverifikasi</li>
+              <li><span className="status-dot status-amber" />Sedang Diproses</li>
+              <li><span className="status-dot status-green" />Selesai {mapSettings ? `(tampil ${mapSettings.completedMapDays} hari)` : ''}</li>
+            </ul>
+            <p>Titik selesai ditampilkan {mapSettings ? `selama ${mapSettings.completedMapDays} hari` : 'sesuai pengaturan platform'}.</p>
+          </aside>
         {/* The Map */}
-        <div className="map-canvas w-full">
+
           <MapContainer center={DKI_CENTER} zoom={12} zoomControl={false} className="h-full w-full">
+            <ResizeMap />
             <ZoomControl position="bottomleft" />
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -158,7 +179,7 @@ export default function MapPage() {
                         <p className="text-xs font-semibold text-slate-700 mt-0.5">{STATUS_LABEL[point.status]}</p>
                         <Link
                           to={`/reports/${point.id}`}
-                          className="mt-3 block rounded-lg bg-lime-600 px-3 py-1.5 text-center text-xs font-semibold !text-white shadow-sm transition hover:bg-lime-700"
+                          className="mt-3 block rounded-lg bg-civix-primary px-3 py-1.5 text-center text-xs font-semibold !text-white transition hover:bg-civix-deep"
                         >
                           Buka Laporan
                         </Link>
@@ -170,7 +191,7 @@ export default function MapPage() {
             })}
           </MapContainer>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -67,7 +67,7 @@ export default function AdminLayout({ agency = false, citizen = false }: { agenc
       <nav aria-label={`Navigasi ${roleName}`}>{(citizen ? citizenLinks : agency ? agencyLinks : links).map(({ to, label, icon: Icon }) => <NavLink end={to === base} key={to} to={to} onClick={() => setMobileOpen(false)}><Icon size={17} strokeWidth={1.7} /><span>{label}</span></NavLink>)}</nav>
       <SidebarArtwork />
       {citizen ? <CitizenSidebarAccount /> : <div className="admin-profile" ref={profile}>
-        {profileOpen && <div className="admin-profile-menu" id="admin-profile-menu"><p>{user?.email}</p><Link to={`${base}/settings`}><Settings size={15} /> Pengaturan</Link><Link to="/"><ExternalLink size={15} /> Buka situs publik</Link><button type="button" onClick={() => { logout(); navigate('/login', { replace: true }); }}><LogOut size={15} /> Keluar</button></div>}
+        {profileOpen && <div className="admin-profile-menu" id="admin-profile-menu"><p>{user?.email}</p><Link to="/"><ExternalLink size={15} /> Buka situs publik</Link><button type="button" onClick={() => { logout(); navigate('/login', { replace: true }); }}><LogOut size={15} /> Keluar</button></div>}
         <button className="admin-profile-button" type="button" onClick={() => setProfileOpen(!profileOpen)} aria-expanded={profileOpen} aria-controls="admin-profile-menu"><span className="admin-avatar">{initials}</span><span><strong title={agency ? unit.data?.nama || user?.agencyNama || user?.nama : user?.nama}>{agency ? unit.data?.nama || user?.agencyNama || user?.nama : user?.nama || 'Admin'}</strong><small>{agency ? 'Instansi · DKI Jakarta' : 'Administrator'}</small></span><ChevronDown size={15} /></button>
       </div>}
     </aside>

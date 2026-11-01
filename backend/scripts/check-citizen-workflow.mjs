@@ -54,6 +54,20 @@ try {
   const ownMap = await request('/citizen/map'); assert.equal(ownMap.status, 200); assert.equal(ownMap.data.filter(row => row.owned).length, 7); assert.ok(ownMap.data.every(row => row.userId === undefined));
   const publicMap = await request('/reports/map'); const ownedIds = ownMap.data.filter(row => row.owned).map(row => row.id); assert.equal(publicMap.data.filter(row => ownedIds.includes(row.id)).length, 4, 'Public map excludes closed and expired completed reports');
   const other = await register(); assert.equal((await request('/citizen/reports/' + id, 'GET', undefined, other.token)).status, 404); assert.equal((await request('/reports/me/reports?view=workspace', 'GET', undefined, other.token)).data.totalAll, 0);
+  const completedFixture = ownMap.data.find(row => row.owned && row.status === 'selesai');
+  await sql`UPDATE reports SET dibuat_pada = NOW() - INTERVAL '50 days' WHERE id = ${completedFixture.id} AND user_id = ${account.user.id}`;
+  const allMap = await request('/citizen/map?period=all', 'GET', undefined, other.token);
+  assert.equal(allMap.status, 200);
+  assert.ok(allMap.data.some(row => row.id === completedFixture.id), 'All-time view includes older completed public reports');
+  const privateIds = ownMap.data.filter(row => row.owned && ['ditolak', 'duplikat'].includes(row.status)).map(row => row.id);
+  assert.ok(allMap.data.every(row => !privateIds.includes(row.id)), 'Time filters do not expose another citizen’s rejected or duplicate reports');
+  assert.ok(allMap.data.every(row => row.userId === undefined), 'Map never exposes reporter IDs');
+  for (const period of ['7', '30', '90']) {
+    const ranged = await request('/citizen/map?period=' + period);
+    assert.equal(ranged.status, 200);
+    assert.equal(ranged.data.some(row => row.id === completedFixture.id), period === '90', 'Range uses report creation date');
+  }
+  assert.equal((await request('/citizen/map?period=invalid')).status, 400);
   assert.ok((await request('/citizen/updates')).data.some(row => row.id === id));
   if (process.env.CIVIX_TEST_ADMIN_EMAIL && process.env.CIVIX_TEST_ADMIN_PASSWORD) {
     const login = await request('/auth/login', 'POST', { email: process.env.CIVIX_TEST_ADMIN_EMAIL, password: process.env.CIVIX_TEST_ADMIN_PASSWORD }, null); assert.equal(login.status, 200); const admin = login.data.token;

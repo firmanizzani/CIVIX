@@ -4,12 +4,21 @@ import { Menu, X } from 'lucide-react';
 import AnimatedCollapse from '@/components/AnimatedCollapse';
 import CivixLogo from '@/components/CivixLogo';
 import { useEffect, useRef, useState } from 'react';
+import './Navbar.css';
 
 export default function Navbar() {
   const { user, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const location = useLocation();
+  const isLanding = location.pathname === '/';
+  const [scrolled, setScrolled] = useState(() => window.scrollY > 12);
+  useEffect(() => {
+    const updateScroll = () => setScrolled(window.scrollY > 12);
+    updateScroll();
+    window.addEventListener('scroll', updateScroll, { passive: true });
+    return () => window.removeEventListener('scroll', updateScroll);
+  }, [location.pathname]);
   const menuButton = useRef<HTMLButtonElement>(null);
   useEffect(() => setMobileOpen(false), [location.pathname, location.search]);
   useEffect(() => {
@@ -37,7 +46,7 @@ export default function Navbar() {
   const dashLink = getDashboardLink();
 
   return (
-    <nav aria-label="Navigasi utama" className="civix-navbar sticky top-0 z-50 border-b border-civix-border bg-white">
+    <nav aria-label="Navigasi utama" className="civix-navbar civix-navbar--adaptive sticky top-0 z-50 border-b border-civix-border bg-white" data-landing={isLanding} data-scrolled={scrolled} data-menu-open={mobileOpen}>
       <div className="container-civix">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="text-xl text-civix-forest transition-colors hover:text-civix-primary">
@@ -61,11 +70,11 @@ export default function Navbar() {
             {user ? (
               <>
                 {dashLink && (
-                  <Link to={dashLink.to} className="btn-ghost text-xs">
+                  <Link to={dashLink.to} className="btn-primary civix-auth-button civix-account-button civix-role-button text-xs">
                     {dashLink.label}
                   </Link>
                 )}
-                <button onClick={logout} className="btn-outline text-xs">
+                <button onClick={logout} className="btn-outline civix-auth-button civix-account-button text-xs">
                   Keluar
                 </button>
               </>

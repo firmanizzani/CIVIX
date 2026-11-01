@@ -1,0 +1,39 @@
+.map-page .public-map-workspace { position: relative; display: flex; flex-direction: column; width: calc(100% - 80px); max-width: 1160px; margin: 0 auto 24px; background: #fff; border-radius: 16px; }
+.public-map-toolbar { position: absolute; z-index: 600; top: 14px; left: 14px; right: 14px; display: flex; flex-wrap: wrap; align-items: start; gap: 10px; pointer-events: none; }
+.public-map-toolbar > label { display: grid; gap: 4px; color: #60766a; font-size: 10px; font-weight: 600; width: 190px; padding: 6px 8px; background: #ffffffd9; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid #dce9e1; border-radius: 10px; pointer-events: auto; box-shadow: 0 2px 8px #123d2a0a; }
+.public-map-toolbar .input { height: 36px; min-height: 36px; padding-block: 6px; font-size: 11px; font-weight: 400; background: #ffffff80; }
+.public-map-toolbar .input option { background: #fff; color: #192c33; }
+.public-map-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; pointer-events: auto; }
+.public-map-tools .btn-outline { display: inline-flex; gap: 7px; font-size: 12px; min-height: 40px; white-space: nowrap; background: #ffffffe0; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 2px 8px #123d2a0a; }
+.public-map-tools .public-map-fullscreen { width: 40px; height: 40px; padding: 0; justify-content: center; }
+.public-map-stage { position: relative; isolation: isolate; height: calc(100dvh - 250px); min-height: 530px; }
+.public-map-stage > .leaflet-container { height: 100%; width: 100%; }
+.public-map-legend { position: absolute; z-index: 500; bottom: 26px; right: 14px; width: 186px; max-width: calc(100% - 28px); padding: 11px 12px; background: #ffffffde; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid #dce9e1; border-radius: 10px; box-shadow: 0 4px 16px #123d2a0d; }
+.public-map-legend header { color: #244f3a; font-size: 11px; }
+.public-map-legend ul { display: grid; gap: 6px; margin-top: 9px; }
+.public-map-legend li { display: flex; align-items: center; gap: 7px; font-size: 10px; color: #526b5d; }
+.public-map-legend .status-dot { width: 7px; height: 7px; flex-shrink: 0; }
+.public-map-legend p { margin-top: 9px; padding-top: 8px; border-top: 1px solid #e4eee8; color: #718578; font-size: 10px; line-height: 1.5; }
+.public-map-notice { position: absolute; z-index: 601; top: 110px; left: 14px; right: 14px; padding: 10px 14px; border-radius: 8px; font-size: 12px; color: #8b4b37; background: #fff9ef; }
+.public-map-notice button { text-decoration: underline; font-weight: 600; margin-left: 6px; }
+.map-page .public-map-workspace[data-expanded="true"], .public-map-workspace:fullscreen { position: fixed; inset: 0; z-index: 100; width: 100%; max-width: none; height: 100dvh; margin: 0; border: 0; border-radius: 0; background: #fff; }
+.public-map-workspace[data-expanded="true"] .public-map-toolbar { flex-shrink: 0; }
+.public-map-workspace[data-expanded="true"] .public-map-stage { flex: 1; height: auto; min-height: 0; }
+@media (max-width: 900px) {
+  .public-map-toolbar > label { width: 180px; }
+}
+@media (max-width: 767px) {
+  .map-page .public-map-workspace { width: calc(100% - 44px); border-radius: 13px; }
+  .public-map-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); top: 10px; left: 10px; right: 10px; gap: 8px; }
+  .public-map-toolbar > label { width: auto; min-width: 0; }
+  .public-map-toolbar .input { min-width: 0; padding-inline: 8px; }
+  .public-map-tools { grid-column: 1 / -1; justify-self: end; margin: 0; }
+  .public-map-tools .btn-outline { padding-inline: 10px; }
+  .public-map-stage { height: 75dvh; min-height: 520px; }
+  .public-map-legend { bottom: 26px; right: 12px; }
+  .public-map-notice { top: 150px; }
+  .map-page .public-map-workspace[data-expanded="true"] { width: 100%; border-radius: 0; }
+}
+
+.public-map-workspace .leaflet-control-zoom a { background: #ffffffe0; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.public-map-workspace .leaflet-control-zoom a:hover, .public-map-tools .btn-outline:hover { background: #fffffff5; }

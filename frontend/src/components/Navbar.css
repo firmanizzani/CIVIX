@@ -1,0 +1,43 @@
+.civix-navbar.civix-navbar--adaptive {
+  height: 84px;
+  flex-shrink: 0;
+  border: 0;
+  background: #fafffc;
+  transition: background-color 220ms ease;
+}
+.civix-navbar.civix-navbar--adaptive[data-landing="true"] { background: #effaf5; }
+.civix-navbar.civix-navbar--adaptive > .container-civix {
+  position: relative;
+  max-width: min(1240px, calc(100% - 32px));
+  transform: translateY(6px);
+  border: 1px solid transparent;
+  border-radius: 0;
+  transition: background-color 380ms ease, border-radius 380ms ease, border-color 380ms ease, box-shadow 380ms ease;
+}
+.civix-navbar.civix-navbar--adaptive > .container-civix > div:first-child {
+  height: 82px;
+}
+.civix-navbar.civix-navbar--adaptive[data-scrolled="true"] { background: transparent; }
+.civix-navbar.civix-navbar--adaptive[data-scrolled="true"] > .container-civix {
+  background: #fafffc;
+  border-color: #dceae2;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px #123d2a0d;
+}
+.civix-navbar.civix-navbar--adaptive[data-menu-open="true"] > .container-civix { background: #fafffc; border-color: #dceae2; border-radius: 16px; box-shadow: 0 6px 20px #123d2a0d; }
+.civix-navbar .civix-nav-auth .civix-account-button { width: 104px; min-width: 104px; height: 44px; padding-inline: 16px; }
+.civix-navbar .civix-nav-auth .civix-role-button { background: #def3e7; color: #07533e; border: 1px solid #b9dfca; }
+.civix-navbar .civix-nav-auth .civix-role-button:hover { background: #ccebdc; border-color: #98ceb3; }
+
+@media (max-width: 767px) {
+  .civix-navbar.civix-navbar--adaptive { height: 70px; }
+  .civix-navbar.civix-navbar--adaptive > .container-civix { max-width: calc(100% - 16px); padding-inline: 16px; }
+  .civix-navbar.civix-navbar--adaptive > .container-civix > div:first-child { height: 68px; }
+  .civix-navbar.civix-navbar--adaptive[data-scrolled="true"] > .container-civix { border-radius: 13px; }
+  .civix-navbar.civix-navbar--adaptive .civix-nav-auth { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .civix-navbar.civix-navbar--adaptive,
+  .civix-navbar.civix-navbar--adaptive > .container-civix,
+  .civix-navbar.civix-navbar--adaptive > .container-civix > div:first-child { transition: none; }
+}

@@ -7,7 +7,6 @@ import { db } from '../../db/index.js';
 import { users, citizenProfiles, reports, reportPhotos, reportStatusLogs } from '../../db/schema.js';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { uploadImageToStorage } from '../uploads/service.js';
-import { readPlatformSettings } from '../admin/settings.js';
 
 const router = Router();
 router.use(authMiddleware, requireRole(['warga']));
@@ -21,10 +20,17 @@ const fail = (res: Response, error: unknown) => {
 };
 router.get('/map', async (req: AuthRequest, res) => {
   try {
-    const { completedMapDays } = await readPlatformSettings();
-    const rows = await db.query.reports.findMany({ where: or(eq(reports.userId, req.user!.id), and(notInArray(reports.status, ['ditolak', 'duplikat']), sql`(${reports.status} != 'selesai' OR ${reports.selesaiPada} >= NOW() - (${completedMapDays} * INTERVAL '1 day'))`)), columns: { id: true, userId: true, judul: true, kodeTiket: true, status: true, kategori: true, namaJalan: true, regionId: true, latitude: true, longitude: true, dibuatPada: true }, with: { region: true, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } } });
+    const period = z.enum(['7', '30', '90', 'all']).parse(req.query.period ?? 'all');
+    const publicReports = notInArray(reports.status, ['ditolak', 'duplikat']);
+    const scope = or(eq(reports.userId, req.user!.id), publicReports);
+    const dateRange = period === 'all'
+      ? undefined : sql`${reports.dibuatPada} >= NOW() - (${Number(period)} * INTERVAL '1 day')`;
+    const rows = await db.query.reports.findMany({ where: and(scope, dateRange), columns: { id: true, userId: true, judul: true, kodeTiket: true, status: true, kategori: true, namaJalan: true, regionId: true, latitude: true, longitude: true, dibuatPada: true }, with: { region: true, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } } });
     res.json(rows.map(({ userId, ...row }) => ({ ...row, owned: userId === req.user!.id })));
-  } catch { res.status(500).json({ error: 'Gagal memuat peta laporan warga' }); }
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Periode peta tidak valid' });
+    res.status(500).json({ error: 'Gagal memuat peta laporan warga' });
+  }
 });
 router.get('/profile', async (req: AuthRequest, res) => {
   try {
