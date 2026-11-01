@@ -140,6 +140,8 @@ cd ..
 
 #### Backend (`backend/.env`)
 
+Salin template dari folder utama project: `Copy-Item backend/.env.example backend/.env`, lalu sesuaikan nilainya.
+
 ```env
 PORT=3000
 NODE_ENV=development
@@ -157,6 +159,8 @@ SUPABASE_STORAGE_BUCKET=civix-reports
 - `SUPABASE_SERVICE_ROLE_KEY`: Salin dari Supabase Settings → API → service_role key (JANGAN commit ke Git!)
 
 #### Frontend (`frontend/.env`)
+
+Salin template dari folder utama project: `Copy-Item frontend/.env.example frontend/.env`.
 
 ```env
 VITE_API_BASE_URL=/api/v1
