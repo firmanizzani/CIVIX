@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { ArrowRight, Search, Clock, CheckCircle2, XCircle, Copy, Send, FileText, MoreHorizontal, CalendarDays, HardHat } from 'lucide-react';
+import { ArrowRight, Search, Clock, CheckCircle2, XCircle, Copy, Send, FileText, CalendarDays, HardHat } from 'lucide-react';
 import AdminReportDetail from '@/components/AdminReportDetail';
 import ReportCompletionForm from '@/components/ReportCompletionForm';
 import QueryError from '@/components/QueryError';
 import { StatusBadge, WorkspacePagination, WorkspaceRefresh, reportCover } from '@/components/ReportWorkspaceUI';
 import { getActionError, useReportWorkspace } from '@/hooks/useReportWorkspace';
 import apiClient from '@/lib/api';
+import { CATEGORY_BADGE_STYLES } from '@/lib/categoryPalette';
 import { Report, AdminAgency, Region, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
 import { formatDateTime } from '@/lib/utils';
 
@@ -59,6 +60,7 @@ export default function AdminReportsPage({ verification = false }: { verificatio
           <div className="workspace-actions">
             {selected.status === 'diterima' && <><button className="btn-primary" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'verify' })}><CheckCircle2 size={16} />{mutation.isPending ? 'Menyimpan…' : 'Verifikasi Laporan'}</button><div className="workspace-action-pair"><button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('reject')}><XCircle size={15} />Tolak</button><button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('duplicate')}><Copy size={15} />Tandai Duplikat</button></div></>}
             {selected.status === 'diverifikasi' && <button className="btn-primary" disabled={mutation.isPending} onClick={() => openAction('assign')}><Send size={16} />Tugaskan ke Instansi</button>}
+            {selected.status === 'diverifikasi' && <button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('duplicate')}><Copy size={15} />Tandai Duplikat</button>}
             {(selected.status === 'duplikat' || selected.status === 'diverifikasi') && !action && <button className="workspace-text-link" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'restore' })}>Kembalikan ke antrean verifikasi</button>}
           </div>
           {['ditugaskan', 'dikerjakan'].includes(selected.status) && !action && <><ReportCompletionForm key={selected.id} reportId={selected.id} onSaved={w.refreshReports} /><button className="admin-button-danger agency-reject" disabled={mutation.isPending} onClick={() => openAction('reject')}>Tolak Laporan</button></>}
@@ -106,9 +108,9 @@ export default function AdminReportsPage({ verification = false }: { verificatio
       {w.isError ? <div className="p-5"><QueryError subject="Laporan admin" retry={w.refetch} pending={w.isFetching} /></div> : <div className="admin-table-scroll"><table className={verification ? "admin-verification-table" : "admin-all-reports-table"}><thead><tr><th>#</th><th>Foto</th><th>Judul Laporan</th><th>Kategori</th><th>Lokasi</th>{!verification && <th>Status</th>}<th>Tanggal</th><th>Aksi</th></tr></thead><tbody>
         {w.isLoading ? <tr><td colSpan={verification ? 7 : 8} className="admin-loading">Memuat laporan…</td></tr> : !w.data?.items.length ? <tr><td colSpan={verification ? 7 : 8}><div className="workspace-empty"><FileText size={28} /><h2>Tidak ada laporan pada filter ini</h2><p>Ubah kategori, status, atau kata pencarian untuk melihat laporan lainnya.</p><button className="btn-outline" onClick={() => w.update({ status: '', kategori: null, q: null, regionId: null, agencyId: null, dateFrom: null, dateTo: null })}>Lihat semua laporan</button></div></td></tr> : w.data.items.map(report => <tr key={report.id}>
           <td className="admin-ticket-cell">{report.kodeTiket}</td><td>{reportCover(report) ? <img className="admin-table-photo" src={reportCover(report)} alt="" /> : <span className="admin-table-photo admin-no-photo"><FileText size={18} /></span>}</td>
-          <td className="admin-title-cell"><button onClick={() => choose(report)}>{report.judul}</button>{verification && report.status !== 'diterima' && <StatusBadge status={report.status} />}</td><td><span className="admin-category" data-category={report.kategori}>{KATEGORI_LABEL[report.kategori]}</span></td><td className="admin-location-cell">{report.namaJalan || report.region?.nama || 'Alamat belum tersedia'}{report.region && <small>{report.region.nama}</small>}</td>{!verification && <td><StatusBadge status={report.status} /></td>}<td className="admin-date-cell">{formatDateTime(report.dibuatPada)}</td>
+          <td className="admin-title-cell"><button onClick={() => choose(report)}>{report.judul}</button>{verification && report.status !== 'diterima' && <StatusBadge status={report.status} />}</td><td><span className="admin-category" style={CATEGORY_BADGE_STYLES[report.kategori]}>{KATEGORI_LABEL[report.kategori]}</span></td><td className="admin-location-cell">{report.namaJalan || report.region?.nama || 'Alamat belum tersedia'}{report.region && <small>{report.region.nama}</small>}</td>{!verification && <td><StatusBadge status={report.status} /></td>}<td className="admin-date-cell">{formatDateTime(report.dibuatPada)}</td>
           <td><div className="admin-row-actions">{verification && report.status === 'diterima' ? <><button className="btn-primary" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'verify', reportId: report.id })}>Verifikasi</button><button className="admin-button-danger" disabled={mutation.isPending} onClick={() => choose(report, 'reject')}>Tolak</button></> : <button className="admin-text-button" onClick={() => choose(report)}>Detail <ArrowRight size={12} /></button>}
-          <details className="admin-row-menu"><summary aria-label={`Aksi laporan ${report.kodeTiket}`}><MoreHorizontal size={18} /></summary><div><button onClick={() => choose(report)}>Lihat detail</button>{['diterima', 'diverifikasi'].includes(report.status) && <button onClick={() => choose(report, 'duplicate')}>Tandai duplikat</button>}{report.status === 'diterima' && <button onClick={() => choose(report, 'reject')}>Tolak laporan</button>}</div></details></div></td>
+          </div></td>
         </tr>)}
       </tbody></table></div>}
       <WorkspacePagination data={w.data} onPage={page => w.update({ page: String(page) }, false)} />

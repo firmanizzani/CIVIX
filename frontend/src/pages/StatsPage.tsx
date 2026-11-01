@@ -5,6 +5,7 @@ import PageHeading from '@/components/PageHeading';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
+import { CATEGORY_COLORS } from '@/lib/categoryPalette';
 import { StatsOverview, TrendRow, RegionStat, CategoryStat, KATEGORI_LABEL, KategoriLaporan } from '@/types';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -12,14 +13,7 @@ import {
 } from 'recharts';
 import { FileText, CheckCircle2, Timer, Clock, Lightbulb, Trophy, TrendingUp, AlertTriangle } from 'lucide-react';
 
-const CATEGORY_COLORS: Record<KategoriLaporan, string> = {
-  jalan_rusak: '#C87968',
-  drainase: '#648FB5',
-  sampah: '#4D9990',
-  penerangan: '#C9A252',
-  fasilitas_umum: '#008358',
-  lainnya: '#8B97A5',
-};
+
 
 export default function StatsPage() {
   const { data: overview, isLoading: overviewLoading, isError: overviewError, refetch: overviewRetry, isFetching: overviewFetching } = useQuery<StatsOverview>({
