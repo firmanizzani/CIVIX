@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 export const JWT_SECRET = process.env.AUTH_SECRET || 'dev-secret-change-in-production';
 export const JWT_EXPIRY = '7d';
 export const SUPABASE_URL = process.env.SUPABASE_URL || '';

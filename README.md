@@ -131,7 +131,17 @@ npm run dev
 
 Perintah tersebut menjalankan frontend dan backend bersamaan. Pastikan port 5173 serta 3000 tersedia agar alamat dan konfigurasi asal frontend sesuai.
 
-## 5. Progress Saat Ini
+## 5. Deploy ke Vercel
+
+Gunakan satu repository GitHub dengan dua project Vercel: Root Directory `backend` untuk API Express dan `frontend` untuk website Vite. Konfigurasi deploy tersedia di masing-masing folder. Database dan foto tetap menggunakan Supabase yang sama.
+
+Pada project backend, isi `NODE_ENV=production`, `DATABASE_URL`, `AUTH_SECRET`, `FRONTEND_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, dan `SUPABASE_STORAGE_BUCKET` melalui Environment Variables Vercel. Gunakan koneksi Supabase dengan SSL. Untuk stack Postgres.js CIVIX, Session pooler dapat digunakan untuk menghindari keterbatasan query pipelining pada shared transaction pooler. Gunakan project Supabase yang sudah ada agar data tetap tersedia; tidak perlu seed ulang.
+
+Pada project frontend, isi `VITE_API_BASE_URL=https://ALAMAT-BACKEND/api/v1` dengan tipe **Config**. Setelah URL frontend diketahui, sesuaikan `FRONTEND_URL` backend dengan origin frontend tersebut. Redeploy project terkait setelah mengubah variabel. Secret database dan service-role key hanya diisi di backend. `.gitignore` di root berlaku untuk kedua folder.
+
+Uji `/health` dan `/api/v1/reports` pada backend, lalu periksa login, foto, dan sinkronisasi laporan melalui frontend. Vercel membatasi total request body unggahan menjadi 4,5 MB, sedangkan batas lokal CIVIX lebih besar. Untuk mempertahankan batas unggahan lokal penuh, alur foto perlu diubah menjadi upload langsung ke Storage menggunakan signed upload URL atau backend ditempatkan pada hosting dengan batas request lebih besar.
+
+## 6. Progress Saat Ini
 
 **Status per 1 November 2026:** seluruh halaman utama publik, warga, admin, dan instansi telah tersedia. Alur inti telah diimplementasikan dengan API dan database; pengujian serta penyempurnaan pengalaman penggunaan masih berlangsung.
 

@@ -9,5 +9,8 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL tidak ditemukan');
 }
 
-const client = postgres(process.env.DATABASE_URL, { max: 10, prepare: false });
+const client = postgres(process.env.DATABASE_URL, {
+  max: process.env.VERCEL === '1' ? 1 : 10,
+  prepare: false,
+});
 export const db: any = drizzle(client, { schema });
