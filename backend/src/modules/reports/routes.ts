@@ -150,28 +150,6 @@ router.get('/map', async (_req, res: Response) => {
   }
 });
 
-// GET /reports/track/:kodeTiket - Tracking publik
-router.get('/track/:kodeTiket', async (req, res: Response) => {
-  try {
-    const report = await db.query.reports.findFirst({
-      where: eq(reports.kodeTiket, req.params.kodeTiket),
-      with: {
-        photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
-        statusLogs: {
-          orderBy: [desc(reportStatusLogs.waktu)],
-          with: { user: { columns: { nama: true, peran: true } } },
-        },
-        region: true,
-      },
-    });
-
-    if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
-    res.json(report);
-  } catch (err) {
-    res.status(500).json({ error: 'Gagal melacak laporan' });
-  }
-});
-
 // POST /reports - Buat laporan (Warga)
 router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequest, res: Response) => {
   try {

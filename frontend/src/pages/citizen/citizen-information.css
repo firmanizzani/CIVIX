@@ -1,0 +1,39 @@
+.admin-dialog.warga-reading-modal {
+  width: min(880px, calc(100vw - 40px));
+  max-height: calc(100dvh - 48px);
+  border: 1px solid #deebe4;
+  border-radius: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.warga-reading { padding: 32px 36px; }
+.warga-reading-header { display: flex; align-items: flex-start; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid #e5eee9; }
+.warga-reading-label { display: block; margin-bottom: 10px; color: #008358; font-size: 12px; font-weight: 600; }
+.warga-reading-modal .warga-reading h2 { color: #203c31; font-size: 25px; line-height: 1.3; font-weight: 700; }
+.warga-reading-header p { margin-top: 12px; }
+.warga-reading p { color: #5a7066; font-size: 15px; line-height: 1.8; }
+.warga-reading-close { flex-shrink: 0; display: grid; place-items: center; width: 40px; height: 40px; margin: -8px -12px 0 auto; border-radius: 10px; color: #537365; }
+.warga-reading-close:hover { background: #edf7f1; color: #005e40; }
+.warga-reading-close:focus-visible { outline: 2px solid #008358; outline-offset: 3px; }
+.warga-reading-body { padding-top: 26px; }
+.warga-category-guide, .warga-reading-sections { display: grid; gap: 24px; padding: 0; margin: 0; list-style: none; }
+.warga-category-guide li, .warga-reading-sections li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 16px; }
+.warga-category-guide li > svg { margin-top: 2px; }
+.warga-reading h3 { color: #2b4438; font-size: 16px; line-height: 1.5; font-weight: 650; margin-bottom: 5px; }
+.warga-reading-number { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #e5f5ec; color: #008358; font-size: 13px; font-weight: 700; }
+.warga-reading-tip { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 12px; margin-top: 30px; padding: 20px; border-radius: 12px; background: #f0f8f3; }
+.warga-reading-tip > svg { color: #008358; margin-top: 3px; }
+.warga-reading-tip h3 { font-size: 14px; }
+.warga-reading-tip p { font-size: 14px; }
+
+@media (max-width: 600px) {
+  .admin-dialog.warga-reading-modal { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); border-radius: 16px; }
+  .warga-reading { padding: 24px 20px; }
+  .warga-reading-modal .warga-reading h2 { font-size: 21px; }
+  .warga-reading-header { gap: 12px; padding-bottom: 20px; }
+  .warga-reading-close { margin-right: -6px; }
+  .warga-reading p { font-size: 14px; }
+  .warga-category-guide li, .warga-reading-sections li { gap: 12px; }
+  .warga-reading-tip { padding: 16px; }
+}

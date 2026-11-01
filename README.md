@@ -149,4 +149,4 @@ Perintah tersebut menjalankan frontend dan backend bersamaan. Pastikan port 5173
 
 Alur demonstrasi utama: warga membuat laporan, admin memverifikasi dan menugaskan instansi, instansi menyelesaikan dengan foto bukti, lalu warga memantau perubahan melalui detail laporan.
 
-Beberapa kemampuan belum lengkap: halaman Lupa Kata Sandi belum terhubung ke pengiriman email, pelacakan tiket tersedia melalui API tetapi belum memiliki halaman tersendiri, dan validasi lokasi masih memakai rentang koordinat pendekatan DKI Jakarta. Ketersediaan halaman tidak berarti seluruh skenario sudah selesai diuji atau aplikasi telah terintegrasi dengan layanan resmi pemerintah.
+Beberapa kemampuan belum lengkap: halaman Lupa Kata Sandi belum terhubung ke pengiriman email dan pengujian seluruh skenario penggunaan masih berlangsung.
