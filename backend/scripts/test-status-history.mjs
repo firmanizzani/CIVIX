@@ -34,6 +34,8 @@ try {
   assert(verify.every((response) => response.status === 200), JSON.stringify(verify));
   assert.equal((await logs(ids[0], 'diverifikasi')).length, 1, 'Concurrent verification must create one event.');
   assert.equal((await post(`/admin/reports/${ids[0]}/reject`, adminToken, { alasan: 'Invalid stale action' })).status, 409);
+  assert.equal((await post(`/admin/reports/${ids[0]}/duplicate`, adminToken)).status, 409, 'Verified reports cannot be marked duplicate');
+  assert.equal((await logs(ids[0], 'duplikat')).length, 0);
   assert.equal((await post('/admin/reports/nonexistent-test/verify', adminToken)).status, 404);
 
   const assign = await Promise.all(Array.from({ length: 6 }, () => post(`/admin/reports/${ids[0]}/assign`, adminToken, { agencyId: agencyUser.agency_id })));

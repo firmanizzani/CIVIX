@@ -40,6 +40,7 @@ export default function AdminReportsPage({ verification = false }: { verificatio
   useEffect(() => { const requested = w.params.get('tindakan'); setAction(requested === 'reject' || requested === 'duplicate' ? requested : null); setNote(''); setTargetTicket(''); mutation.reset(); }, [selectedId]);
   const counts = w.data?.counts;
   const selected = detail.data;
+  const showActionForm = action !== null && selected?.status === (action === 'assign' ? 'diverifikasi' : 'diterima');
   const choose = (report: Report, next?: 'reject' | 'duplicate') => {
     if (mutation.isPending) return;
     w.update({ laporan: report.id, tindakan: next || null }, false);
@@ -59,13 +60,12 @@ export default function AdminReportsPage({ verification = false }: { verificatio
           <div className="workspace-actions">
             {selected.status === 'diterima' && <><button className="btn-primary" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'verify' })}><CheckCircle2 size={16} />{mutation.isPending ? 'Menyimpan…' : 'Verifikasi Laporan'}</button><div className="workspace-action-pair"><button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('reject')}><XCircle size={15} />Tolak</button><button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('duplicate')}><Copy size={15} />Tandai Duplikat</button></div></>}
             {selected.status === 'diverifikasi' && <button className="btn-primary" disabled={mutation.isPending} onClick={() => openAction('assign')}><Send size={16} />Tugaskan ke Instansi</button>}
-            {selected.status === 'diverifikasi' && <button className="btn-outline" disabled={mutation.isPending} onClick={() => openAction('duplicate')}><Copy size={15} />Tandai Duplikat</button>}
-            {(selected.status === 'duplikat' || selected.status === 'diverifikasi') && !action && <button className="workspace-text-link" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'restore' })}>Kembalikan ke antrean verifikasi</button>}
+            {(selected.status === 'duplikat' || selected.status === 'diverifikasi') && !showActionForm && <button className="workspace-text-link" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'restore' })}>Kembalikan ke antrean verifikasi</button>}
           </div>
           {['ditugaskan', 'dikerjakan'].includes(selected.status) && <p className="workspace-muted">Laporan sedang ditangani oleh instansi yang ditugaskan. Admin dapat memantau riwayat dan bukti penanganan; perubahan progres dan penyelesaian dilakukan oleh instansi.</p>}
           {selected.status === 'selesai' && <p className="workspace-muted">Penanganan sudah selesai. Foto bukti tersedia pada galeri laporan.</p>}
           {selected.status === 'ditolak' && <p className="workspace-muted">Laporan ditolak. Alasan penolakan tercatat dalam riwayat penanganan.</p>}
-          {action && ((action === 'reject' && selected.status === 'diterima') || (action === 'duplicate' && ['diterima', 'diverifikasi'].includes(selected.status)) || (action === 'assign' && selected.status === 'diverifikasi')) && <form className="workspace-action-form" onSubmit={(event) => {
+          {action && showActionForm && <form className="workspace-action-form" onSubmit={(event) => {
             event.preventDefault();
             mutation.mutate({ action, body: action === 'assign' ? { agencyId, catatan: note } : action === 'reject' ? { alasan: note } : targetTicket ? { targetTicket } : {} });
           }}>

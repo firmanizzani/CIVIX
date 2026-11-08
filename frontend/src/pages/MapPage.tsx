@@ -1,16 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import PageHeading from '@/components/PageHeading';
+import PublicReportMarkers from '@/components/PublicReportMarkers';
 import apiClient from '@/lib/api';
-import { MapPoint, STATUS_LABEL, KATEGORI_LABEL, STATUS_MAP_COLOR, StatusLaporan } from '@/types';
-import { MapContainer, TileLayer, CircleMarker, Popup, ZoomControl, useMap } from 'react-leaflet';
+import { KATEGORI_LABEL, type MapPoint } from '@/types';
+import { MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import './public-map.css';
 
 const DKI_CENTER: [number, number] = [-6.2088, 106.8456];
+const MAX_ZOOM = 19;
 
 function ResizeMap() {
   const map = useMap();
@@ -25,21 +26,6 @@ function ResizeMap() {
   }, [map]);
   return null;
 }
-
-const getColor = (status: StatusLaporan) => {
-  switch (STATUS_MAP_COLOR[status]) {
-    case 'merah':
-      return '#dc2626';
-    case 'oranye':
-      return '#d97706';
-    case 'kuning':
-      return '#facc15';
-    case 'hijau':
-      return '#008358';
-    default:
-      return '#64748b';
-  }
-};
 
 export default function MapPage() {
   const { data: mapSettings } = useQuery<{ completedMapDays: number }>({ queryKey: ['map-settings'], queryFn: async () => (await apiClient.get('/reports/map-settings')).data });
@@ -75,17 +61,17 @@ export default function MapPage() {
     } catch { setExpanded(true); }
   };
 
-  const { data: points = [], isError, refetch } = useQuery<MapPoint[]>({
+  const { data: points, isError, refetch } = useQuery<MapPoint[]>({
     queryKey: ['map-points-full'],
     queryFn: async () => (await apiClient.get('/reports/map')).data,
   });
 
-  const filteredPoints = points.filter((p) => {
+  const filteredPoints = useMemo(() => (points ?? []).filter((p) => {
     if (selectedKategori && p.kategori !== selectedKategori) return false;
     if (selectedStatus === 'diproses' && !['ditugaskan', 'dikerjakan'].includes(p.status)) return false;
     if (selectedStatus && selectedStatus !== 'diproses' && p.status !== selectedStatus) return false;
     return true;
-  });
+  }), [points, selectedKategori, selectedStatus]);
 
   return (
     <div className="app-page map-page flex min-h-screen flex-col bg-civix-neutral">
@@ -127,68 +113,15 @@ export default function MapPage() {
           </aside>
         {/* The Map */}
 
-          <MapContainer center={DKI_CENTER} zoom={12} zoomControl={false} className="h-full w-full">
+          <MapContainer center={DKI_CENTER} zoom={12} maxZoom={MAX_ZOOM} zoomControl={false} className="h-full w-full">
             <ResizeMap />
             <ZoomControl position="bottomleft" />
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maxZoom={19}
+              maxZoom={MAX_ZOOM}
             />
-            {filteredPoints.map((point) => {
-              const isRed = point.status === 'diterima';
-              const coords: [number, number] = [Number(point.latitude), Number(point.longitude)];
-              return (
-                <React.Fragment key={point.id}>
-                  {/* Glowing pulsing halo effect for red urgent markers */}
-                  {isRed && (
-                    <CircleMarker
-                      center={coords}
-                      radius={18}
-                      interactive={false}
-                      pathOptions={{
-                        color: '#ef4444',
-                        weight: 1.5,
-                        fillColor: '#dc2626',
-                        fillOpacity: 0.25,
-                        className: 'marker-pulse-halo',
-                      }}
-                    />
-                  )}
-                  <CircleMarker
-                    center={coords}
-                    radius={isRed ? 10 : 8}
-                    pathOptions={{
-                      color: 'white',
-                      weight: 2,
-                      fillColor: getColor(point.status),
-                      fillOpacity: 0.95,
-                      className: isRed ? 'marker-pulse-red' : '',
-                    }}
-                  >
-                    <Popup>
-                      <div className="p-1 min-w-[200px]">
-                        <span className="mono text-[10px] text-slate-400">{point.kodeTiket}</span>
-                        <h3 className="font-bold text-sm text-civix-forest mt-0.5">{point.judul}</h3>
-                        {point.namaJalan && (
-                          <p className="text-xs text-slate-600 mt-1 flex items-start gap-1">
-                            <span className="font-semibold text-civix-forest">Lokasi:</span> {point.namaJalan}
-                          </p>
-                        )}
-                        <p className="text-xs text-civix-primary mt-1 font-medium">{KATEGORI_LABEL[point.kategori]}</p>
-                        <p className="text-xs font-semibold text-slate-700 mt-0.5">{STATUS_LABEL[point.status]}</p>
-                        <Link
-                          to={`/reports/${point.id}`}
-                          className="mt-3 block rounded-lg bg-civix-primary px-3 py-1.5 text-center text-xs font-semibold !text-white transition hover:bg-civix-deep"
-                        >
-                          Buka Laporan
-                        </Link>
-                      </div>
-                    </Popup>
-                  </CircleMarker>
-                </React.Fragment>
-              );
-            })}
+            <PublicReportMarkers points={filteredPoints} />
           </MapContainer>
         </div>
       </section>

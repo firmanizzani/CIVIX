@@ -8,6 +8,25 @@
 .public-map-tools .public-map-fullscreen { width: 40px; height: 40px; padding: 0; justify-content: center; }
 .public-map-stage { position: relative; isolation: isolate; height: calc(100dvh - 250px); min-height: 530px; }
 .public-map-stage > .leaflet-container { height: 100%; width: 100%; }
+.public-map-cluster {
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #007b55;
+  color: #fff;
+  box-shadow: 0 0 0 4px #00835838;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.public-map-cluster:hover, .public-map-cluster:focus-visible { background: #07533e; }
+.public-map-cluster-popup h3 { color: #244f3a; font-weight: 700; margin-bottom: 6px; }
+.public-map-cluster-popup ul { max-height: 180px; overflow-y: auto; }
+.public-map-cluster-popup li + li { border-top: 1px solid #e4eee8; }
+.public-map-cluster-popup a { display: grid; gap: 2px; padding: 7px 4px; color: #07533e; overflow-wrap: anywhere; }
+.public-map-cluster-popup a:hover, .public-map-cluster-popup a:focus-visible { background: #edf8f2; }
+.public-map-cluster-popup a span { color: #526b5d; font-size: 11px; }
 .public-map-legend { position: absolute; z-index: 500; bottom: 26px; right: 14px; width: 186px; max-width: calc(100% - 28px); padding: 11px 12px; background: #ffffffde; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid #dce9e1; border-radius: 10px; box-shadow: 0 4px 16px #123d2a0d; }
 .public-map-legend header { color: #244f3a; font-size: 11px; }
 .public-map-legend ul { display: grid; gap: 6px; margin-top: 9px; }

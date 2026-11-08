@@ -23,6 +23,7 @@
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.28.0",
     "recharts": "^2.15.3",
+    "supercluster": "9.1.0",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.24.1",
     "zustand": "^4.5.5"

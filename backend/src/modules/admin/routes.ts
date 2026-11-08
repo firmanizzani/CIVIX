@@ -150,7 +150,7 @@ router.post('/reports/:id/duplicate', async (req: AuthRequest, res: Response) =>
   try {
     const { targetTicket } = z.object({ targetTicket: z.string().trim().max(20).optional() }).parse(req.body || {});
     const result = await transitionReport({ reportId: req.params.id, actorId: req.user!.id,
-      status: 'duplikat', allowedFrom: ['diterima', 'diverifikasi'],
+      status: 'duplikat', allowedFrom: ['diterima'],
       note: targetTicket ? `Duplikat dari tiket ${targetTicket}` : 'Laporan terindikasi duplikat' });
     res.json({ success: true, changed: result.changed, message: 'Laporan ditandai duplikat' });
   } catch (error) { sendTransitionError(res, error); }
