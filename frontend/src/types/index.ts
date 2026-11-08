@@ -46,7 +46,7 @@ export interface StatusLog {
   status: StatusLaporan;
   catatan: string | null;
   waktu: string;
-  user?: { nama: string; peran: string } | null;
+  user?: { peran: Peran; agency?: { nama: string } | null } | null;
 }
 
 export interface Comment {

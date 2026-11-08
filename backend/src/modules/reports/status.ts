@@ -3,6 +3,18 @@ import { db } from '../../db/index.js';
 import { reports, reportStatusLogs } from '../../db/schema.js';
 
 type Status = typeof reports.$inferSelect.status;
+
+export const reportStatusHistory = {
+  columns: { diubahOleh: false },
+  orderBy: [desc(reportStatusLogs.waktu), desc(reportStatusLogs.id)],
+  with: {
+    user: {
+      columns: { peran: true },
+      with: { agency: { columns: { nama: true } } },
+    },
+  },
+} as const;
+
 export class ReportTransitionError extends Error {
   constructor(public statusCode: number, message: string) { super(message); }
 }

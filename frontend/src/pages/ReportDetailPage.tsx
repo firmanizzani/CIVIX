@@ -7,7 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
 import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
-import { formatDateTime, getStatusColor } from '@/lib/utils';
+import { formatDateTime, getStatusActorLabel, getStatusColor } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import Reveal from '@/components/Reveal';
 import { ThumbsUp, MessageSquare, ArrowLeft, CheckCircle2, Clock, MapPin, AlertCircle } from 'lucide-react';
@@ -220,14 +220,16 @@ export default function ReportDetailPage() {
               </h2>
 
               <div className="relative border-l-2 border-slate-200 pl-4 space-y-6">
-                {report.statusLogs?.map((log, index) => (
-                  <div key={log.id} className="relative">
+                {report.statusLogs?.map((log, index) => {
+                  const actor = getStatusActorLabel(log);
+                  return <div key={log.id} className="relative">
                     <span style={{ backgroundColor: getStatusColor(log.status) }} className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'ring-4 ring-slate-100' : ''}`} />
                     <p className="text-xs text-slate-500">{formatDateTime(log.waktu, true)}</p>
                     <p className="font-bold text-sm text-civix-navy">{STATUS_LABEL[log.status]}</p>
+                    {actor && <p className="text-xs text-slate-600">{actor}</p>}
                     {log.catatan && <p className="mt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded">{log.catatan}</p>}
                   </div>
-                ))}
+                })}
               </div>
             </div>
           </div>

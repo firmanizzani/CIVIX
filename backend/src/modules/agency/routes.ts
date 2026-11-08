@@ -1,7 +1,7 @@
 import { getReportWorkspace } from '../reports/workspace.js';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { transitionReport, ReportTransitionError } from '../reports/status.js';
+import { transitionReport, ReportTransitionError, reportStatusHistory } from '../reports/status.js';
 import { Router, Response } from 'express';
 import multer from 'multer';
 import { db } from '../../db/index.js';
@@ -154,7 +154,7 @@ router.get('/assignments/:id', async (req: AuthRequest, res: Response) => {
         photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true,
         assignedAgency: true,
-        statusLogs: { orderBy: [desc(reportStatusLogs.waktu)] },
+        statusLogs: reportStatusHistory,
         user: { columns: { nama: true } },
       },
     });
@@ -179,7 +179,12 @@ router.post('/assignments/:id/progress', async (req: AuthRequest, res: Response)
     const { catatan } = z.object({ status: z.literal('dikerjakan', { errorMap: () => ({ message: 'Untuk menyelesaikan laporan, unggah foto bukti melalui tindakan penyelesaian.' }) }), catatan: z.string().trim().max(2000).optional() }).parse(req.body);
     const result = await transitionReport({
       reportId: req.params.id, actorId: req.user!.id, status: 'dikerjakan', allowedFrom: ['ditugaskan', 'dikerjakan'],
-      requiredAgencyId: scope.agencyId, allowNoteUpdate: true, note: catatan || 'Pekerjaan mulai dikerjakan',
+      requiredAgencyId: scope.agencyId, allowNoteUpdate: true, note: catatan || '',
+      beforeChange: async (_tx, report) => {
+        if (report.status === 'ditugaskan' && !catatan) {
+          throw new ReportTransitionError(400, 'Isi hasil pengecekan lapangan sebelum memulai penanganan.');
+        }
+      },
     });
     res.json({ success: true, changed: result.changed, message: 'Progres berhasil diperbarui' });
   } catch (error) { sendTransitionError(res, error); }

@@ -57,3 +57,19 @@ export const uploadImageToStorage = async (
 
   return publicUrlData.publicUrl;
 };
+
+export const removeProfilePhotoFromStorage = async (userId: string, avatarUrl: string): Promise<void> => {
+  if (avatarUrl.startsWith('data:')) return;
+  if (!supabaseClient) throw new Error('Storage foto profil belum dikonfigurasi');
+
+  const bucket = supabaseClient.storage.from(SUPABASE_STORAGE_BUCKET);
+  const folder = `profiles/${userId}/`;
+  const { data } = bucket.getPublicUrl(folder);
+  const filename = avatarUrl.slice(data.publicUrl.length);
+  if (!avatarUrl.startsWith(data.publicUrl) || !/^[a-z0-9_-]+\.(jpg|png|webp)$/i.test(filename)) {
+    throw new Error('Lokasi foto profil tidak dikenali');
+  }
+
+  const { error } = await bucket.remove([folder + filename]);
+  if (error) throw error;
+};

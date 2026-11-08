@@ -72,10 +72,63 @@ try {
   if (process.env.CIVIX_TEST_ADMIN_EMAIL && process.env.CIVIX_TEST_ADMIN_PASSWORD) {
     const login = await request('/auth/login', 'POST', { email: process.env.CIVIX_TEST_ADMIN_EMAIL, password: process.env.CIVIX_TEST_ADMIN_PASSWORD }, null); assert.equal(login.status, 200); const admin = login.data.token;
     assert.equal((await request('/citizen/profile', 'GET', undefined, admin)).status, 403);
+    assert.equal((await request('/reports', 'POST', {}, admin)).status, 403, 'Admin cannot submit a citizen report');
+    assert.equal((await request('/admin/reports/' + id + '/verify', 'POST', {})).status, 403, 'Citizen cannot verify a report');
     assert.equal((await request('/admin/reports/' + id, 'GET', undefined, admin)).data.user.id, account.user.id);
     assert.equal((await request('/admin/reports/' + id + '/verify', 'POST', { catatan: 'QA verified by administrator' }, admin)).status, 200);
     const after = await request('/citizen/reports/' + id); assert.equal(after.data.status, 'diverifikasi'); assert.ok(after.data.statusLogs.some(log => log.catatan === 'QA verified by administrator'));
     assert.equal((await request('/reports/' + id)).data.status, 'diverifikasi'); assert.equal((await request('/citizen/updates')).data.find(row => row.id === id).status, 'diverifikasi');
+
+    if (process.env.CIVIX_TEST_AGENCY_EMAIL && process.env.CIVIX_TEST_OTHER_AGENCY_EMAIL) {
+      const loginAgency = async (email, password) => {
+        const response = await request('/auth/login', 'POST', { email, password }, null);
+        assert.equal(response.status, 200, 'Agency login succeeds');
+        assert.equal(response.data.user.peran, 'instansi');
+        assert.ok(response.data.user.agencyId);
+        return response.data;
+      };
+      const agency = await loginAgency(process.env.CIVIX_TEST_AGENCY_EMAIL, process.env.CIVIX_TEST_AGENCY_PASSWORD);
+      const otherAgency = await loginAgency(process.env.CIVIX_TEST_OTHER_AGENCY_EMAIL, process.env.CIVIX_TEST_OTHER_AGENCY_PASSWORD);
+      assert.notEqual(agency.user.agencyId, otherAgency.user.agencyId);
+      assert.equal((await request('/reports', 'POST', {}, agency.token)).status, 403, 'Agency cannot submit a citizen report');
+
+      const assigned = await request(`/admin/reports/${id}/assign`, 'POST', { agencyId: agency.user.agencyId }, admin);
+      assert.equal(assigned.status, 200);
+      const taskPath = `/agency/assignments/${id}`;
+      const note = 'QA field check confirms the damage at the reported location.';
+      const progress = { status: 'dikerjakan', catatan: note };
+      assert.equal((await request(taskPath, 'GET', undefined, otherAgency.token)).status, 404);
+      assert.equal((await request(taskPath + '/progress', 'POST', progress, otherAgency.token)).status, 403);
+      assert.equal((await request(taskPath + '/complete', 'POST', new FormData(), admin)).status, 403);
+      assert.equal((await request(taskPath + '/progress', 'POST', { ...progress, catatan: '   ' }, agency.token)).status, 400);
+      assert.equal((await request(taskPath, 'GET', undefined, agency.token)).data.status, 'ditugaskan');
+
+      assert.equal((await request(taskPath + '/progress', 'POST', progress, agency.token)).status, 200);
+      const retry = await request(taskPath + '/progress', 'POST', progress, agency.token);
+      assert.equal(retry.status, 200);
+      assert.equal(retry.data.changed, false);
+      assert.equal((await request(taskPath + '/complete', 'POST', new FormData(), agency.token)).status, 400);
+      const proof = new FormData();
+      proof.append('bukti', image(), 'qa-completion.png');
+      assert.equal((await request(taskPath + '/complete', 'POST', proof, agency.token)).status, 200);
+
+      for (const [path, viewer] of [[`/reports/${id}`, null], [`/citizen/reports/${id}`, token], [taskPath, agency.token], [`/admin/reports/${id}`, admin]]) {
+        const response = await request(path, 'GET', undefined, viewer);
+        assert.equal(response.status, 200);
+        const { statusLogs, photos, status } = response.data;
+        assert.equal(status, 'selesai');
+        assert.ok(photos.some(photo => photo.jenis === 'bukti_perbaikan'));
+        const history = Object.fromEntries(statusLogs.map(log => [log.status, log]));
+        assert.equal(history.diterima.user.peran, 'warga');
+        assert.equal(history.diverifikasi.user.peran, 'admin');
+        assert.equal(history.ditugaskan.user.peran, 'admin');
+        assert.ok(history.ditugaskan.catatan.includes(assigned.data.agency.nama));
+        assert.equal(history.dikerjakan.catatan, note);
+        assert.equal(history.selesai.user.agency.nama, assigned.data.agency.nama);
+        assert.ok(statusLogs.every(log => log.waktu && log.diubahOleh === undefined && !log.user?.nama && !log.user?.email));
+      }
+      console.log('Role workflow passed: citizen submission, admin verification and assignment, scoped field check, evidence, and role-only history on all report details.');
+    }
   }
   console.log('Citizen integration passed: creation + evidence, profile/avatar/preferences persistence, counts/filters/pagination, private scope, public map retention, anonymous detail, admin status synchronization.');
 } finally {

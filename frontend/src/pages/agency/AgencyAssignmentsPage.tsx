@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { CheckCircle2, Search, Upload, X } from 'lucide-react';
+import { CheckCircle2, ClipboardCheck, Search, Upload, X } from 'lucide-react';
 import AgencyTaskDetail from './AgencyTaskDetail';
 import PhotoPreview from '@/components/PhotoPreview';
 import { AgencyTable } from './AgencyDashboard';
@@ -35,7 +35,12 @@ export default function AgencyAssignmentsPage({ all = false }: { all?: boolean }
     enabled: !!selectedId, staleTime: 10000, refetchInterval: 30000,
   });
   const mutation = useMutation({
-    mutationFn: async (action: 'complete' | 'reject') => {
+    mutationFn: async (action: 'progress' | 'complete' | 'reject') => {
+      if (action === 'progress') {
+        return (await apiClient.post('/agency/assignments/' + selectedId + '/progress', {
+          status: 'dikerjakan', catatan: note.trim(),
+        })).data;
+      }
       if (action === 'complete') {
         const form = new FormData();
         form.append('catatan', note);
@@ -70,7 +75,13 @@ export default function AgencyAssignmentsPage({ all = false }: { all?: boolean }
   const actions = report && <>
           {success && <p className="workspace-success" role="status"><CheckCircle2 size={16} />{success}</p>}
           {mutation.isError && <p className="workspace-error" role="alert">{getActionError(mutation.error)}</p>}
-          {['ditugaskan', 'dikerjakan'].includes(report.status) && !rejecting ? <form className="workspace-task-form" onSubmit={(event) => { event.preventDefault(); if (files.length) mutation.mutate('complete'); }}>
+          {report.status === 'ditugaskan' && !rejecting && <form className="workspace-task-form" onSubmit={(event) => { event.preventDefault(); if (note.trim()) mutation.mutate('progress'); }}>
+            <label className="label" htmlFor="agency-field-check">Hasil Pengecekan Lapangan</label>
+            <textarea id="agency-field-check" className="input" rows={3} required maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Contoh: Lubang terkonfirmasi di lokasi. Perbaikan dijadwalkan besok." disabled={mutation.isPending} />
+            <p className="workspace-muted">Catatan ini akan tampil di riwayat laporan.</p>
+            <button type="submit" className="btn-primary w-full" disabled={mutation.isPending || !note.trim()}><ClipboardCheck size={16} />{mutation.isPending ? 'Menyimpan…' : 'Mulai Penanganan'}</button>
+          </form>}
+          {report.status === 'dikerjakan' && !rejecting ? <form className="workspace-task-form" onSubmit={(event) => { event.preventDefault(); if (files.length) mutation.mutate('complete'); }}>
             <label className="label" htmlFor="agency-progress-note">Catatan Penanganan (opsional)</label>
             <textarea id="agency-progress-note" className="input" rows={3} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Tulis perkembangan atau hasil penanganan di lokasi…" disabled={mutation.isPending} />
               <div className="workspace-upload-section">

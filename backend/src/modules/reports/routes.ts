@@ -6,7 +6,8 @@ import multer from 'multer';
 import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportStatusLogs, comments, upvotes, users, regions } from '../../db/schema.js';
 import { asc, eq, desc, and, sql, notInArray, gte, lte } from 'drizzle-orm';
-import { authMiddleware, AuthRequest } from '../../middleware/auth.js';
+import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
+import { reportStatusHistory } from './status.js';
 import generateTicket from '../../utils/ticket.js';
 import { isWithinDKIJakarta } from '../../utils/geo.js';
 import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.js';
@@ -151,7 +152,7 @@ router.get('/map', async (_req, res: Response) => {
 });
 
 // POST /reports - Buat laporan (Warga)
-router.post('/', authMiddleware, upload.array('photos', 3), async (req: AuthRequest, res: Response) => {
+router.post('/', authMiddleware, requireRole(['warga']), upload.array('photos', 3), async (req: AuthRequest, res: Response) => {
   try {
     const { judul, deskripsi, namaJalan, kategori, latitude, longitude, anonim, regionId } = req.body;
     const lat = parseFloat(latitude);
@@ -236,7 +237,7 @@ router.get('/:id', async (req, res: Response) => {
       where: eq(reports.id, req.params.id),
       with: {
         photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
-        statusLogs: { orderBy: [desc(reportStatusLogs.waktu)] },
+        statusLogs: reportStatusHistory,
         region: true,
         assignedAgency: { columns: { id: true, nama: true } },
         upvotes: true,

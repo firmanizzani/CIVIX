@@ -1,8 +1,8 @@
 import { getReportWorkspace } from '../reports/workspace.js';
-import { transitionReport, ReportTransitionError } from '../reports/status.js';
+import { transitionReport, ReportTransitionError, reportStatusHistory } from '../reports/status.js';
 import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
-import { reports, reportPhotos, reportStatusLogs, agencies, reportAssignments, users, regions, platformSettings } from '../../db/schema.js';
+import { reports, reportPhotos, agencies, reportAssignments, users, regions, platformSettings } from '../../db/schema.js';
 import { eq, desc, count, asc, ilike, or, and, ne } from 'drizzle-orm';
 import { readPlatformSettings } from './settings.js';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
@@ -114,7 +114,7 @@ router.get('/reports/:id', async (req, res: Response) => {
       where: eq(reports.id, req.params.id),
       with: { photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true, assignedAgency: true,
-        statusLogs: { orderBy: [desc(reportStatusLogs.waktu), desc(reportStatusLogs.id)] }, user: { columns: { id: true, nama: true, email: true } } },
+        statusLogs: reportStatusHistory, user: { columns: { id: true, nama: true, email: true } } },
     });
     if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
     res.json(report);

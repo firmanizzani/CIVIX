@@ -1,6 +1,23 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { StatusLaporan } from '@/types';
+import { StatusLaporan, StatusLog } from '@/types';
+
+export function getStatusActorLabel({ status, user }: StatusLog): string | undefined {
+  if (!user) return undefined;
+  const actor = { warga: 'Warga', admin: 'Admin', instansi: user.agency?.nama || 'Instansi' }[user.peran];
+  if (!actor) return undefined;
+
+  const action: Record<StatusLaporan, string> = {
+    diterima: user.peran === 'warga' ? 'Dilaporkan' : 'Dikembalikan ke antrean',
+    diverifikasi: 'Diverifikasi',
+    ditugaskan: 'Ditugaskan',
+    dikerjakan: 'Ditangani',
+    selesai: 'Diselesaikan',
+    ditolak: 'Ditolak',
+    duplikat: 'Ditandai duplikat',
+  };
+  return `${action[status]} oleh ${actor}`;
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

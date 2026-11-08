@@ -6,7 +6,8 @@ import { eq, desc, asc, and, or, notInArray, sql } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { users, citizenProfiles, reports, reportPhotos, reportStatusLogs } from '../../db/schema.js';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
-import { uploadImageToStorage } from '../uploads/service.js';
+import { removeProfilePhotoFromStorage, uploadImageToStorage } from '../uploads/service.js';
+import { reportStatusHistory } from '../reports/status.js';
 
 const router = Router();
 router.use(authMiddleware, requireRole(['warga']));
@@ -66,6 +67,29 @@ router.post('/avatar', avatarUpload.single('avatar'), async (req: AuthRequest, r
     res.json({ avatarUrl });
   } catch (error) { fail(res, error); }
 });
+router.delete('/avatar', async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+    const avatarUrl = await db.transaction(async tx => {
+      const profile = eq(citizenProfiles.userId, userId);
+      const [current] = await tx.select({ avatarUrl: citizenProfiles.avatarUrl }).from(citizenProfiles).where(profile).for('update');
+      if (!current?.avatarUrl) return null;
+
+      await tx.update(citizenProfiles).set({ avatarUrl: null, updatedAt: new Date() }).where(profile);
+      return current.avatarUrl;
+    });
+
+    if (avatarUrl) {
+      try {
+        await removeProfilePhotoFromStorage(userId, avatarUrl);
+      } catch {
+        console.error('Gagal membersihkan berkas foto profil dari Storage');
+        return res.json({ avatarUrl: null, warning: 'Foto sudah dilepas dari akun, tetapi berkas lama belum berhasil dibersihkan.' });
+      }
+    }
+    res.json({ avatarUrl: null });
+  } catch (error) { fail(res, error); }
+});
 router.get('/updates', async (req: AuthRequest, res) => {
   try {
     const rows = await db.query.reports.findMany({ where: eq(reports.userId, req.user!.id), columns: { id: true, judul: true, kodeTiket: true, status: true, dibuatPada: true }, with: { statusLogs: { limit: 1, orderBy: [desc(reportStatusLogs.waktu)] } } });
@@ -74,7 +98,7 @@ router.get('/updates', async (req: AuthRequest, res) => {
 });
 router.get('/reports/:id', async (req: AuthRequest, res) => {
   try {
-    const report = await db.query.reports.findFirst({ where: (row, { and }) => and(eq(row.id, req.params.id), eq(row.userId, req.user!.id)), with: { region: true, assignedAgency: true, photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] }, statusLogs: { orderBy: [desc(reportStatusLogs.waktu)] } } });
+    const report = await db.query.reports.findFirst({ where: (row, { and }) => and(eq(row.id, req.params.id), eq(row.userId, req.user!.id)), with: { region: true, assignedAgency: true, photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] }, statusLogs: reportStatusHistory } });
     if (!report) return res.status(404).json({ error: 'Laporan Anda tidak ditemukan' });
     res.json(report);
   } catch { res.status(500).json({ error: 'Gagal memuat detail laporan' }); }
