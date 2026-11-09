@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import QueryError from '@/components/QueryError';
-import { useParams, Link } from 'react-router-dom';
+import { useLocation, useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -15,15 +15,16 @@ import { ThumbsUp, MessageSquare, ArrowLeft, CheckCircle2, Clock, MapPin, AlertC
 
 export default function ReportDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { key: navigationKey } = useLocation();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
 
-  useLayoutEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [id]);
-
   const { data: report, isLoading, error, refetch, isFetching } = useQuery(publicReportDetailQuery(id));
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [navigationKey, isLoading]);
 
   const upvoteMutation = useMutation({
     mutationFn: async () => (await apiClient.post(`/reports/${id}/upvote`)).data,

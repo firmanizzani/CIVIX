@@ -285,6 +285,7 @@ router.get('/:id', async (req, res: Response) => {
     const report = await db.query.reports.findFirst({
       where: eq(reports.id, req.params.id),
       with: {
+        user: { columns: { nama: true } },
         photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         statusLogs: reportStatusHistory,
         region: true,
@@ -299,12 +300,7 @@ router.get('/:id', async (req, res: Response) => {
 
     if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
 
-    // Sembunyikan user pelapor jika anonim
-    if (report.anonim) {
-      (report as any).userId = null;
-    }
-
-    res.json(report);
+    res.json(report.anonim ? { ...report, userId: null, user: null } : report);
   } catch (err) {
     res.status(500).json({ error: 'Gagal mengambil detail' });
   }

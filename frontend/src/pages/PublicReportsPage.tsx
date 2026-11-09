@@ -52,7 +52,10 @@ export default function PublicReportsPage() {
     setFailedId(undefined);
     try {
       await queryClient.fetchQuery(publicReportDetailQuery(id));
-      if (opening.current === request) navigate(`/reports/${id}`);
+      if (opening.current === request) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        navigate(`/reports/${id}`);
+      }
     } catch {
       if (opening.current === request) setFailedId(id);
     } finally {
