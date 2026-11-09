@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import QueryError from '@/components/QueryError';
 import { useParams, Link } from 'react-router-dom';
@@ -6,11 +6,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import apiClient from '@/lib/api';
-import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
+import { publicReportDetailQuery } from '@/lib/reportQueries';
+import { STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDateTime, getStatusActorLabel, getStatusColor } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import Reveal from '@/components/Reveal';
-import { ThumbsUp, MessageSquare, ArrowLeft, CheckCircle2, Clock, MapPin, AlertCircle } from 'lucide-react';
+import { ThumbsUp, MessageSquare, ArrowLeft, CheckCircle2, Clock, MapPin, AlertCircle, LoaderCircle } from 'lucide-react';
 
 export default function ReportDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,10 +19,11 @@ export default function ReportDetailPage() {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
 
-  const { data: report, isLoading, error, refetch, isFetching } = useQuery<Report>({
-    queryKey: ['report-detail', id],
-    queryFn: async () => (await apiClient.get(`/reports/${id}`)).data,
-  });
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [id]);
+
+  const { data: report, isLoading, error, refetch, isFetching } = useQuery(publicReportDetailQuery(id));
 
   const upvoteMutation = useMutation({
     mutationFn: async () => (await apiClient.post(`/reports/${id}/upvote`)).data,
@@ -41,14 +43,16 @@ export default function ReportDetailPage() {
       <div className="app-page report-detail-page flex min-h-screen flex-col bg-civix-neutral">
         <Navbar />
         <div className="container-civix flex-1 py-12">
-          <div className="skeleton h-96 w-full" />
+          <div role="status" aria-label="Memuat detail laporan" className="flex justify-center py-12">
+            <LoaderCircle size={22} aria-hidden="true" className="animate-spin text-civix-primary motion-reduce:animate-none" />
+          </div>
         </div>
         <Footer />
       </div>
     );
   }
 
-  if (error || !report) {
+  if (!report) {
     return (
       <div className="app-page report-detail-page flex min-h-screen flex-col bg-civix-neutral">
         <Navbar />
@@ -73,14 +77,14 @@ export default function ReportDetailPage() {
 
       <div className="container-civix flex-1 py-12">
         <Reveal>
-          <Link to="/reports" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-civix-navy">
+          <Link to="/reports" className="mb-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-600 hover:text-civix-navy md:mb-6 md:min-h-0">
             <ArrowLeft size={16} /> Kembali ke daftar
           </Link>
         </Reveal>
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-y-6 lg:grid-cols-3 lg:gap-x-8">
           {/* Main Info */}
-          <div className="lg:col-span-2">
+          <div className="min-w-0 break-words lg:col-span-2">
             <Reveal>
               <div className="card p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
@@ -103,11 +107,11 @@ export default function ReportDetailPage() {
 
               <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-500">
                 <span>Dilaporkan: {formatDateTime(report.dibuatPada)}</span>
-                <span>•</span>
+                <span className="hidden sm:inline" aria-hidden="true">•</span>
                 <span>Pelapor: {report.anonim ? 'Anonim (Warga)' : report.user?.nama || 'Warga'}</span>
                 {report.region && (
                   <>
-                    <span>•</span>
+                    <span className="hidden sm:inline" aria-hidden="true">•</span>
                     <span className="flex items-center gap-1"><MapPin size={12} /> {report.region.nama}</span>
                   </>
                 )}
@@ -127,10 +131,12 @@ export default function ReportDetailPage() {
               </div>
               </div>
             </Reveal>
+          </div>
 
+          <div className="min-w-0 lg:col-span-2">
             {/* Photos */}
             <Reveal delay="delay-1">
-              <div className="card mt-6 p-6">
+              <div className="card p-6">
               <h2 className="mb-4 text-lg font-bold text-civix-navy">Foto Laporan Awal</h2>
               {awalPhotos.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -160,61 +166,10 @@ export default function ReportDetailPage() {
                 </div>
               </Reveal>
             )}
-
-            {/* Comments (F8) */}
-            <Reveal delay="delay-2">
-              <div className="card mt-6 p-6">
-              <h2 className="mb-4 text-lg font-bold text-civix-navy flex items-center gap-2">
-                <MessageSquare size={18} /> Komentar ({report.comments?.length || 0})
-              </h2>
-
-              {user ? (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (commentText.trim()) commentMutation.mutate(commentText);
-                  }}
-                  className="mb-6 space-y-3"
-                >
-                  <textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Tulis tanggapan atau informasi tambahan..."
-                    className="input min-h-[80px]"
-                    required
-                  />
-                  <button type="submit" disabled={commentMutation.isPending} className="btn-primary">
-                    {commentMutation.isPending ? 'Mengirim...' : 'Kirim Komentar'}
-                  </button>
-                </form>
-              ) : (
-                <div className="mb-6 rounded-lg bg-slate-50 p-4 text-center text-sm text-slate-600">
-                  <Link to="/login" className="font-semibold text-civix-blue underline">Masuk</Link> untuk memberi komentar.
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {report.comments?.length === 0 ? (
-                  <p className="text-sm text-slate-500">Belum ada komentar.</p>
-                ) : (
-                  report.comments?.map((comment) => (
-                    <div key={comment.id} className="border-b border-slate-100 pb-3 last:border-none">
-                      <div className="flex items-center justify-between text-xs text-slate-500">
-                        <span className="font-bold text-slate-700">{comment.user?.nama || 'Warga'}</span>
-                        <span>{formatDateTime(comment.waktu)}</span>
-                      </div>
-                      <p className="mt-1 text-sm text-slate-700">{comment.isi}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-              </div>
-            </Reveal>
           </div>
 
-          {/* Timeline Status Sidebar */}
-          <div>
-            <div className="card sticky top-24 p-6">
+          <aside className="min-w-0 break-words lg:col-start-3 lg:row-span-3 lg:row-start-1">
+            <div className="card p-6 lg:sticky lg:top-24">
               <h2 className="mb-4 text-lg font-bold text-civix-navy flex items-center gap-2">
                 <Clock size={18} /> Timeline Status
               </h2>
@@ -232,7 +187,58 @@ export default function ReportDetailPage() {
                 })}
               </div>
             </div>
-          </div>
+          </aside>
+
+            {/* Comments (F8) */}
+            <Reveal delay="delay-2" className="min-w-0 break-words lg:col-span-2">
+              <div className="card p-6">
+              <h2 className="mb-4 text-lg font-bold text-civix-navy flex items-center gap-2">
+                <MessageSquare size={18} /> Komentar ({report.comments?.length || 0})
+              </h2>
+
+              {user ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (commentText.trim()) commentMutation.mutate(commentText);
+                  }}
+                  className="mb-6 space-y-3"
+                >
+                  <textarea
+                    aria-label="Tanggapan atau informasi tambahan"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Tulis tanggapan atau informasi tambahan..."
+                    className="input min-h-[80px]"
+                    required
+                  />
+                  <button type="submit" disabled={commentMutation.isPending} className="btn-primary w-full sm:w-auto">
+                    {commentMutation.isPending ? 'Mengirim...' : 'Kirim Komentar'}
+                  </button>
+                </form>
+              ) : (
+                <div className="mb-6 rounded-lg bg-slate-50 p-4 text-center text-sm text-slate-600">
+                  <Link to="/login" className="font-semibold text-civix-blue underline">Masuk</Link> untuk memberi komentar.
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {report.comments?.length === 0 ? (
+                  <p className="text-sm text-slate-500">Belum ada komentar.</p>
+                ) : (
+                  report.comments?.map((comment) => (
+                    <div key={comment.id} className="border-b border-slate-100 pb-3 last:border-none">
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs text-slate-500">
+                        <span className="font-bold text-slate-700">{comment.user?.nama || 'Warga'}</span>
+                        <span>{formatDateTime(comment.waktu)}</span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-700">{comment.isi}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+              </div>
+            </Reveal>
         </div>
       </div>
 

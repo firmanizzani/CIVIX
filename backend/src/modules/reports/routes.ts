@@ -58,7 +58,7 @@ router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response
 // GET /reports - Public feed (only non-rejected & non-duplicate)
 router.get('/', async (req, res: Response) => {
   try {
-    const { kategori, status, regionId, periode, startDate, endDate, sort, limit = 20, page = 1 } = req.query;
+    const { kategori, status, regionId, periode, startDate, endDate, sort, view, limit = 20, page = 1 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let conditions: any[] = [notInArray(reports.status, ['ditolak', 'duplikat'])];
@@ -95,13 +95,27 @@ router.get('/', async (req, res: Response) => {
       }
     }
 
-    const result = await db.query.reports.findMany({
+    const listQuery = {
       where: and(...conditions),
       limit: Number(limit),
       offset,
       orderBy: sort === 'oldest' ? [asc(reports.dibuatPada), asc(reports.id)] : [desc(reports.dibuatPada)],
+    };
+    const photoOrder = [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)];
+
+    if (view === 'cards') {
+      const cards = await db.query.reports.findMany({
+        ...listQuery,
+        columns: { id: true, judul: true, kategori: true, kodeTiket: true, namaJalan: true, dibuatPada: true, status: true },
+        with: { photos: { columns: { url: true }, orderBy: photoOrder, limit: 1 } },
+      });
+      return res.json(cards);
+    }
+
+    const result = await db.query.reports.findMany({
+      ...listQuery,
       with: {
-        photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
+        photos: { orderBy: photoOrder },
         region: true,
         upvotes: true,
         comments: { with: { user: { columns: { nama: true } } } },

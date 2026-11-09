@@ -113,6 +113,10 @@ export interface MapPoint {
   photos?: { url: string }[];
 }
 
+export type PublicReportCard = Pick<Report, 'id' | 'judul' | 'kategori' | 'kodeTiket' | 'namaJalan' | 'dibuatPada' | 'status'> & {
+  photos: Pick<ReportPhoto, 'url'>[];
+};
+
 export interface ReportWorkspace {
   items: Report[];
   total: number;

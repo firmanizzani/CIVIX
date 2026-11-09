@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_STORAGE_BUCKET } from '../../config/index.js';
+import { NODE_ENV, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_STORAGE_BUCKET } from '../../config/index.js';
 
 let supabaseClient: any = null;
 
@@ -35,7 +35,10 @@ export const uploadImageToStorage = async (
   upsert = false
 ): Promise<string> => {
   if (!supabaseClient) {
-    // Fallback: return data URI / placeholder if storage not yet configured
+    if (NODE_ENV === 'production' || process.env.VERCEL === '1') {
+      throw new Error('Penyimpanan foto belum dikonfigurasi. Hubungi administrator.');
+    }
+    // Keep local development usable without Supabase Storage.
     const base64 = fileBuffer.toString('base64');
     return `data:${mimeType};base64,${base64}`;
   }

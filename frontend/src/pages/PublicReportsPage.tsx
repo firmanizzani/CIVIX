@@ -1,14 +1,16 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import PageHeading from '@/components/PageHeading';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
-import { Report, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
+import { publicReportDetailQuery } from '@/lib/reportQueries';
+import { PublicReportCard, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
 import { AlertTriangle, MapPin, Clock } from 'lucide-react';
 
@@ -19,19 +21,61 @@ export default function PublicReportsPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [page, setPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [openingId, setOpeningId] = useState<string>();
+  const [failedId, setFailedId] = useState<string>();
+  const opening = useRef<{ id: string }>();
+  const prefetchTimer = useRef<number>();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const effectivePeriod = periode === 'custom' && !startDate && !endDate ? '' : periode;
+  const activeFilters = [kategori, status, effectivePeriod].filter(Boolean).length;
 
-  const { data: reports = [], isLoading, isError, refetch, isFetching } = useQuery<Report[]>({
-    queryKey: ['public-reports', kategori, status, periode, startDate, endDate, page],
-    queryFn: async () => {
-      const params = new URLSearchParams();
+  useEffect(() => () => {
+    window.clearTimeout(prefetchTimer.current);
+    opening.current = undefined;
+  }, []);
+
+  function prefetchReport(id: string) {
+    void queryClient.prefetchQuery(publicReportDetailQuery(id));
+  }
+
+  async function openReport(event: MouseEvent<HTMLAnchorElement>, id: string) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+    event.preventDefault();
+    window.clearTimeout(prefetchTimer.current);
+    if (opening.current?.id === id) return;
+
+    const request = { id };
+    opening.current = request;
+    setOpeningId(id);
+    setFailedId(undefined);
+    try {
+      await queryClient.fetchQuery(publicReportDetailQuery(id));
+      if (opening.current === request) navigate(`/reports/${id}`);
+    } catch {
+      if (opening.current === request) setFailedId(id);
+    } finally {
+      if (opening.current === request) {
+        opening.current = undefined;
+        setOpeningId(undefined);
+      }
+    }
+  }
+
+  const { data: reports = [], isLoading, isError, refetch, isFetching } = useQuery<PublicReportCard[]>({
+    queryKey: ['public-reports', kategori, status, effectivePeriod, startDate, endDate, page],
+    retry: (failureCount, error) => failureCount < 1 && !(isAxiosError(error) && error.code === 'ECONNABORTED'),
+    queryFn: async ({ signal }) => {
+      const params = new URLSearchParams({ view: 'cards' });
       if (kategori) params.append('kategori', kategori);
       if (status) params.append('status', status);
-      if (periode) params.append('periode', periode);
-      if (periode === 'custom' && startDate) params.append('startDate', startDate);
-      if (periode === 'custom' && endDate) params.append('endDate', endDate);
+      if (effectivePeriod) params.append('periode', effectivePeriod);
+      if (effectivePeriod === 'custom' && startDate) params.append('startDate', startDate);
+      if (effectivePeriod === 'custom' && endDate) params.append('endDate', endDate);
       params.append('page', page.toString());
       params.append('limit', '12');
-      return (await apiClient.get(`/reports?${params.toString()}`)).data;
+      return (await apiClient.get<PublicReportCard[]>('/reports', { params, signal, timeout: 12000 })).data;
     },
   });
 
@@ -46,11 +90,23 @@ export default function PublicReportsPage() {
 
         {/* Filter Bar */}
         <Reveal delay="delay-1">
-          <div className="card mb-8 p-4">
-            <div className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-[200px]">
+          <div className="card mb-6 px-4 md:mb-8 md:py-4">
+            <button
+              type="button"
+              aria-expanded={filtersOpen}
+              aria-controls="report-filters"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className="flex min-h-12 w-full items-center gap-2 text-left text-sm font-semibold text-civix-navy md:hidden"
+            >
+              <SlidersHorizontal size={16} aria-hidden="true" />
+              Filter laporan
+              {activeFilters > 0 && <span className="rounded-full bg-civix-soft px-2 py-1 text-xs">{activeFilters} aktif</span>}
+              <ChevronDown size={16} aria-hidden="true" className={`ml-auto ${filtersOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <div id="report-filters" className={`${filtersOpen ? 'grid border-t border-civix-border py-4' : 'hidden'} gap-4 md:grid md:grid-cols-3 md:border-0 md:py-0`}>
+              <div className="min-w-0">
                 <label htmlFor="public-category" className="label">Kategori</label>
-                <select id="public-category" value={kategori} onChange={(e) => { setKategori(e.target.value); setPage(1); }} className="input">
+                <select id="public-category" value={kategori} onChange={(e) => { setKategori(e.target.value); setPage(1); }} className="input min-h-11">
                   <option value="">Semua Kategori</option>
                   {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
@@ -58,9 +114,9 @@ export default function PublicReportsPage() {
                 </select>
               </div>
 
-              <div className="flex-1 min-w-[200px]">
+              <div className="min-w-0">
                 <label htmlFor="public-status" className="label">Status</label>
-                <select id="public-status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="input">
+                <select id="public-status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="input min-h-11">
                   <option value="">Semua Status</option>
                   <option value="diterima">Menunggu Verifikasi</option>
                   <option value="diverifikasi">Terverifikasi</option>
@@ -70,9 +126,9 @@ export default function PublicReportsPage() {
                 </select>
               </div>
 
-              <div className="flex-1 min-w-[200px]">
+              <div className="min-w-0">
                 <label htmlFor="public-period" className="label flex items-center gap-1.5"><Clock size={14} /> Waktu</label>
-                <select id="public-period" value={periode} onChange={(e) => { setPeriode(e.target.value); setPage(1); }} className="input">
+                <select id="public-period" value={periode} onChange={(e) => { setPeriode(e.target.value); setPage(1); }} className="input min-h-11">
                   <option value="">Semua Waktu</option>
                   <option value="7d">7 Hari Terakhir</option>
                   <option value="30d">30 Hari Terakhir</option>
@@ -82,8 +138,8 @@ export default function PublicReportsPage() {
               </div>
 
               {periode === 'custom' && (
-                <div className="flex w-full flex-wrap gap-4">
-                  <div className="flex-1 min-w-[200px]">
+                <div className="grid gap-4 sm:grid-cols-2 md:col-span-3">
+                  <div className="min-w-0">
                     <label className="label" htmlFor="start-date">Tanggal Awal</label>
                     <input
                       id="start-date"
@@ -91,10 +147,10 @@ export default function PublicReportsPage() {
                       value={startDate}
                       max={endDate || undefined}
                       onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
-                      className="input"
+                      className="input min-h-11 min-w-0"
                     />
                   </div>
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="min-w-0">
                     <label className="label" htmlFor="end-date">Tanggal Akhir</label>
                     <input
                       id="end-date"
@@ -102,7 +158,7 @@ export default function PublicReportsPage() {
                       value={endDate}
                       min={startDate || undefined}
                       onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
-                      className="input"
+                      className="input min-h-11 min-w-0"
                     />
                   </div>
                 </div>
@@ -134,7 +190,17 @@ export default function PublicReportsPage() {
                   key={report.id}
                   data-reveal-item
                   to={`/reports/${report.id}`}
-                  className="group card overflow-hidden transition motion-card hover:shadow-lg"
+                  onPointerEnter={(event) => {
+                    if (event.pointerType === 'mouse') {
+                      window.clearTimeout(prefetchTimer.current);
+                      prefetchTimer.current = window.setTimeout(() => prefetchReport(report.id), 150);
+                    }
+                  }}
+                  onPointerLeave={() => window.clearTimeout(prefetchTimer.current)}
+                  onFocus={(event) => { if (event.currentTarget.matches(':focus-visible')) prefetchReport(report.id); }}
+                  onClick={(event) => { void openReport(event, report.id); }}
+                  aria-busy={openingId === report.id}
+                  className="group card overflow-hidden transition motion-card hover:shadow-lg aria-busy:cursor-progress"
                 >
                   {report.photos?.[0] ? (
                     <img src={report.photos[0].url} alt={report.judul} className="h-48 w-full object-cover" />
@@ -144,21 +210,22 @@ export default function PublicReportsPage() {
                     </div>
                   )}
                   <div className="p-5">
-                    <div className="mb-2 flex items-center justify-between">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                       <span className="text-xs font-semibold text-civix-blue">{KATEGORI_LABEL[report.kategori]}</span>
                       <span className="mono text-xs text-slate-500">{report.kodeTiket}</span>
                     </div>
-                    <h3 className="line-clamp-2 font-bold text-civix-navy group-hover:text-civix-orange">{report.judul}</h3>
+                    <h3 className="line-clamp-2 break-words font-bold text-civix-navy group-hover:text-civix-orange">{report.judul}</h3>
                     {report.namaJalan && (
                       <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-600">
                         <MapPin size={13} className="mt-0.5 shrink-0 text-civix-primary" />
                         <span className="line-clamp-1">{report.namaJalan}</span>
                       </p>
                     )}
-                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
                       <span>{formatDate(report.dibuatPada)}</span>
                       <span className={`rounded-full px-2.5 py-1 font-semibold ${getStatusBadgeClasses(report.status)}`}>{STATUS_LABEL[report.status]}</span>
                     </div>
+                    {failedId === report.id && <p role="alert" className="mt-3 text-sm text-red-700">Detail belum bisa dibuka. Klik lagi untuk mencoba.</p>}
                   </div>
                 </Link>
               ))}
