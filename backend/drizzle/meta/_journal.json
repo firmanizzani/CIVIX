@@ -71,6 +71,13 @@
       "when": 1793494800000,
       "tag": "0009_one_account_per_agency",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794183492953,
+      "tag": "0010_report_evidence_checks",
+      "breakpoints": true
     }
   ]
 }

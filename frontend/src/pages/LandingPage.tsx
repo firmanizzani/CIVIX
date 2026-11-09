@@ -54,13 +54,10 @@ function LandingPage() {
     queryFn: async () => (await apiClient.get('/reports?limit=4')).data,
   });
 
-  // Keep the feed chronological; feature a useful example separately in the hero.
-  const heroCandidates = recentReports.filter(report =>
-    reportCover(report) && report.judul.trim().length >= 8 && report.judul.trim().split(/\s+/).length >= 2,
-  );
-  const heroReport = heroCandidates.find(report => report.status === 'dikerjakan')
-    || heroCandidates.find(report => report.status === 'ditugaskan')
-    || heroCandidates[0];
+  const { data: [heroReport] = [] } = useQuery<Report[]>({
+    queryKey: ['featured-report'],
+    queryFn: async () => (await apiClient.get('/reports', { params: { limit: 1, sort: 'oldest' } })).data,
+  });
   const previewProgress = heroReport
     ? ({ diterima: 0, diverifikasi: 1, ditugaskan: 2, dikerjakan: 2, selesai: 3, ditolak: -1, duplikat: -1 }[heroReport.status])
     : -1;

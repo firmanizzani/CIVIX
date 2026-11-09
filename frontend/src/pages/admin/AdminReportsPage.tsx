@@ -7,7 +7,7 @@ import { StatusBadge, WorkspacePagination, WorkspaceRefresh, reportCover } from 
 import { getActionError, useReportWorkspace } from '@/hooks/useReportWorkspace';
 import apiClient from '@/lib/api';
 import { CATEGORY_BADGE_STYLES } from '@/lib/categoryPalette';
-import { Report, AdminAgency, Region, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
+import { Report, ReportEvidenceCheck, AdminAgency, Region, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
 import { formatDateTime } from '@/lib/utils';
 
 export default function AdminReportsPage({ verification = false }: { verification?: boolean }) {
@@ -18,7 +18,7 @@ export default function AdminReportsPage({ verification = false }: { verificatio
   const [agencyId, setAgencyId] = useState('');
   const [targetTicket, setTargetTicket] = useState('');
   const [success, setSuccess] = useState('');
-  const detail = useQuery<Report>({
+  const detail = useQuery<Report & { evidenceCheck: ReportEvidenceCheck | null }>({
     queryKey: ['workspace-detail', 'admin', w.user?.id, selectedId],
     queryFn: async () => (await apiClient.get('/admin/reports/' + selectedId)).data,
     enabled: !!selectedId, staleTime: 10000, refetchInterval: 30000,

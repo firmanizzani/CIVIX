@@ -40,6 +40,19 @@ export interface ReportPhoto {
   dibuatPada: string;
 }
 
+export interface NearbyReport {
+  id: string;
+  kodeTiket: string;
+  judul: string;
+  namaJalan: string | null;
+  distanceMeters: number;
+}
+
+export interface ReportEvidenceCheck {
+  photos: { photoId: string; status: 'match' | 'mismatch' | 'unavailable'; distanceMeters: number | null }[];
+  nearby: NearbyReport[];
+}
+
 export interface StatusLog {
   id: string;
   reportId: string;

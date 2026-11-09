@@ -4,13 +4,14 @@ import { readPlatformSettings } from '../admin/settings.js';
 import { z } from 'zod';
 import multer from 'multer';
 import { db } from '../../db/index.js';
-import { reports, reportPhotos, reportStatusLogs, comments, upvotes, users, regions } from '../../db/schema.js';
+import { reports, reportPhotos, reportEvidenceChecks, reportStatusLogs, comments, upvotes, users, regions } from '../../db/schema.js';
 import { asc, eq, desc, and, sql, notInArray, gte, lte } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { reportStatusHistory } from './status.js';
 import generateTicket from '../../utils/ticket.js';
-import { isWithinDKIJakarta } from '../../utils/geo.js';
-import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.js';
+import { jakartaRegionsAt } from '../../utils/geo.js';
+import { buildReportPhotoPath, removeReportPhotosFromStorage, uploadImageToStorage } from '../uploads/service.js';
+import { coordinatesSchema, findNearbyReports, NEARBY_RADIUS_METERS, PHOTO_MATCH_RADIUS_METERS, prepareReportPhoto, reportCategory } from './evidence.js';
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
@@ -57,7 +58,7 @@ router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response
 // GET /reports - Public feed (only non-rejected & non-duplicate)
 router.get('/', async (req, res: Response) => {
   try {
-    const { kategori, status, regionId, periode, startDate, endDate, limit = 20, page = 1 } = req.query;
+    const { kategori, status, regionId, periode, startDate, endDate, sort, limit = 20, page = 1 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let conditions: any[] = [notInArray(reports.status, ['ditolak', 'duplikat'])];
@@ -98,7 +99,7 @@ router.get('/', async (req, res: Response) => {
       where: and(...conditions),
       limit: Number(limit),
       offset,
-      orderBy: [desc(reports.dibuatPada)],
+      orderBy: sort === 'oldest' ? [asc(reports.dibuatPada), asc(reports.id)] : [desc(reports.dibuatPada)],
       with: {
         photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true,
@@ -151,29 +152,53 @@ router.get('/map', async (_req, res: Response) => {
   }
 });
 
+const locationCheckSchema = coordinatesSchema.extend({ kategori: reportCategory.optional() });
+
+router.get('/location-check', authMiddleware, requireRole(['warga']), async (req, res: Response) => {
+  const parsed = locationCheckSchema.safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: 'Koordinat atau kategori laporan tidak valid' });
+
+  try {
+    const { latitude, longitude, kategori } = parsed.data;
+    const regionNames = jakartaRegionsAt(latitude, longitude);
+    const nearby = kategori && regionNames.length ? await findNearbyReports(latitude, longitude, kategori) : [];
+    res.json({ regionNames, nearby, nearbyRadiusMeters: NEARBY_RADIUS_METERS, photoMatchRadiusMeters: PHOTO_MATCH_RADIUS_METERS });
+  } catch {
+    res.status(500).json({ error: 'Gagal memeriksa lokasi laporan' });
+  }
+});
+
 // POST /reports - Buat laporan (Warga)
 router.post('/', authMiddleware, requireRole(['warga']), upload.array('photos', 3), async (req: AuthRequest, res: Response) => {
+  const uploadedPaths: string[] = [];
+  let commitStarted = false;
   try {
-    const { judul, deskripsi, namaJalan, kategori, latitude, longitude, anonim, regionId } = req.body;
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
+    const { judul, deskripsi, namaJalan, kategori, anonim, regionId } = req.body;
+    const parsedLocation = coordinatesSchema.safeParse(req.body);
 
-    if (!judul?.trim() || !deskripsi?.trim() || !namaJalan?.trim() || !kategori || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+    if (![judul, deskripsi, namaJalan].every(value => typeof value === 'string' && value.trim()) || !kategori || !parsedLocation.success) {
       return res.status(400).json({ error: 'Judul, deskripsi, nama jalan, kategori, dan lokasi wajib diisi dengan benar' });
     }
+    const { latitude: lat, longitude: lng } = parsedLocation.data;
 
     if (namaJalan.trim().length > 200) {
       return res.status(400).json({ error: 'Nama jalan maksimal 200 karakter' });
     }
-    if (!z.enum(['jalan_rusak', 'drainase', 'sampah', 'penerangan', 'fasilitas_umum', 'lainnya']).safeParse(kategori).success || judul.trim().length > 150 || deskripsi.trim().length > 5000) {
+    if (!reportCategory.safeParse(kategori).success || judul.trim().length > 150 || deskripsi.trim().length > 5000) {
       return res.status(400).json({ error: 'Kategori tidak valid, judul maksimal 150 karakter, dan deskripsi maksimal 5.000 karakter.' });
     }
-    if (regionId && !await db.query.regions.findFirst({ where: eq(regions.id, String(regionId)) })) return res.status(400).json({ error: 'Wilayah laporan tidak ditemukan' });
-
-    if (!isWithinDKIJakarta(lat, lng)) {
+    const regionNames = jakartaRegionsAt(lat, lng);
+    if (!regionNames.length) {
       return res.status(400).json({
         error: 'Lokasi di luar batas DKI Jakarta. CIVIX hanya menerima laporan dalam wilayah DKI Jakarta.',
       });
+    }
+    if (regionId) {
+      const region = await db.query.regions.findFirst({ where: eq(regions.id, String(regionId)) });
+      if (!region) return res.status(400).json({ error: 'Wilayah laporan tidak ditemukan' });
+      if (!regionNames.includes(region.nama)) {
+        return res.status(400).json({ error: `Titik laporan berada di ${regionNames.join(' atau ')}. Sesuaikan wilayah administrasi atau titik di peta.` });
+      }
     }
 
     const files = req.files as Express.Multer.File[];
@@ -181,13 +206,20 @@ router.post('/', authMiddleware, requireRole(['warga']), upload.array('photos', 
       return res.status(400).json({ error: 'Minimal sertakan 1 foto bukti' });
     }
 
+    const preparedPhotos: Awaited<ReturnType<typeof prepareReportPhoto>>[] = [];
+    for (const [index, file] of files.entries()) {
+      try {
+        preparedPhotos.push(await prepareReportPhoto(file, lat, lng));
+      } catch {
+        return res.status(400).json({ error: `Foto ${index + 1} tidak dapat diproses. Pilih foto lain atau gunakan ukuran gambar yang lebih kecil.` });
+      }
+    }
+    const nearby = await findNearbyReports(lat, lng, kategori);
     const kodeTiket = generateTicket();
 
     // Commit the report, evidence and first status together.
     const newReport = await db.transaction(async tx => {
-    const [created] = await tx
-      .insert(reports)
-      .values({
+      const [created] = await tx.insert(reports).values({
         kodeTiket,
         userId: req.user!.id,
         regionId: regionId ? String(regionId) : null,
@@ -199,34 +231,37 @@ router.post('/', authMiddleware, requireRole(['warga']), upload.array('photos', 
         longitude: lng.toString(),
         anonim: anonim === 'true' || anonim === true,
         status: 'diterima',
-      })
-      .returning();
+      }).returning();
 
-    // Upload & Save Photos
-    for (const [index, file] of files.entries()) {
-      const storagePath = buildReportPhotoPath(kodeTiket, 'awal', index + 1, file.mimetype);
-      const url = await uploadImageToStorage(file.buffer, storagePath, file.mimetype);
-      await tx.insert(reportPhotos).values({
+      const photoChecks: typeof reportEvidenceChecks.$inferInsert.photos = [];
+      for (const [index, file] of preparedPhotos.entries()) {
+        const storagePath = buildReportPhotoPath(kodeTiket, 'awal', index + 1, file.mimetype);
+        const url = await uploadImageToStorage(file.buffer, storagePath, file.mimetype);
+        uploadedPaths.push(storagePath);
+        const [photo] = await tx.insert(reportPhotos).values({
+          reportId: created.id, url, jenis: 'awal',
+        }).returning({ id: reportPhotos.id });
+        photoChecks.push({ photoId: photo.id, ...file.check });
+      }
+      await tx.insert(reportEvidenceChecks).values({ reportId: created.id, photos: photoChecks, nearby });
+
+      await tx.insert(reportStatusLogs).values({
         reportId: created.id,
-        url,
-        jenis: 'awal',
+        diubahOleh: req.user!.id,
+        status: 'diterima',
+        catatan: 'Laporan berhasil dibuat dan masuk antrean verifikasi',
       });
-    }
-
-    // Status Log awal
-    await tx.insert(reportStatusLogs).values({
-      reportId: created.id,
-      diubahOleh: req.user!.id,
-      status: 'diterima',
-      catatan: 'Laporan berhasil dibuat dan masuk antrean verifikasi',
-    });
-    return created;
+      commitStarted = true;
+      return created;
     });
 
     res.status(201).json(newReport);
-  } catch (err: any) {
+  } catch (err) {
+    if (!commitStarted) {
+      await removeReportPhotosFromStorage(uploadedPaths).catch(() => console.error('Gagal membersihkan unggahan laporan'));
+    }
     console.error(err);
-    res.status(500).json({ error: err.message || 'Gagal membuat laporan' });
+    res.status(500).json({ error: 'Gagal membuat laporan' });
   }
 });
 

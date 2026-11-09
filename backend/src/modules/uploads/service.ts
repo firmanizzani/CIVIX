@@ -73,3 +73,9 @@ export const removeProfilePhotoFromStorage = async (userId: string, avatarUrl: s
   const { error } = await bucket.remove([folder + filename]);
   if (error) throw error;
 };
+
+export async function removeReportPhotosFromStorage(paths: string[]) {
+  if (!supabaseClient || !paths.length) return;
+  const { error } = await supabaseClient.storage.from(SUPABASE_STORAGE_BUCKET).remove(paths);
+  if (error) throw error;
+}

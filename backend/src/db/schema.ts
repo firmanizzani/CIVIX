@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, timestamp, boolean, numeric, integer, pgEnum, index, uniqueIndex, check } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, timestamp, boolean, numeric, integer, pgEnum, index, uniqueIndex, check, jsonb } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 export const peranUserEnum = pgEnum('peran_user', ['warga', 'admin', 'instansi']);
@@ -89,6 +89,22 @@ export const reports = pgTable(
     koordinatIdx: index('idx_reports_koordinat').on(table.latitude, table.longitude),
   })
 );
+
+export const reportEvidenceChecks = pgTable('report_evidence_checks', {
+  reportId: varchar('report_id', { length: 40 }).primaryKey().references(() => reports.id, { onDelete: 'cascade' }),
+  photos: jsonb('photos').$type<{
+    photoId: string;
+    status: 'match' | 'mismatch' | 'unavailable';
+    distanceMeters: number | null;
+  }[]>().notNull(),
+  nearby: jsonb('nearby').$type<{
+    id: string;
+    kodeTiket: string;
+    judul: string;
+    namaJalan: string | null;
+    distanceMeters: number;
+  }[]>().notNull(),
+}).enableRLS();
 
 export const reportPhotos = pgTable('report_photos', {
   id: varchar('id', { length: 40 }).primaryKey().default(sql`'rphoto_' || lpad(nextval('seq_report_photos_id')::text, 3, '0')`),

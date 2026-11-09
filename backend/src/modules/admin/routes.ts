@@ -2,7 +2,7 @@ import { getReportWorkspace } from '../reports/workspace.js';
 import { transitionReport, ReportTransitionError, reportStatusHistory } from '../reports/status.js';
 import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
-import { reports, reportPhotos, agencies, reportAssignments, users, regions, platformSettings } from '../../db/schema.js';
+import { reports, reportPhotos, reportEvidenceChecks, agencies, reportAssignments, users, regions, platformSettings } from '../../db/schema.js';
 import { eq, desc, count, asc, ilike, or, and, ne } from 'drizzle-orm';
 import { readPlatformSettings } from './settings.js';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
@@ -117,7 +117,11 @@ router.get('/reports/:id', async (req, res: Response) => {
         statusLogs: reportStatusHistory, user: { columns: { id: true, nama: true, email: true } } },
     });
     if (!report) return res.status(404).json({ error: 'Laporan tidak ditemukan' });
-    res.json(report);
+    const evidenceCheck = await db.query.reportEvidenceChecks.findFirst({
+      where: eq(reportEvidenceChecks.reportId, report.id),
+      columns: { photos: true, nearby: true },
+    });
+    res.json({ ...report, evidenceCheck: evidenceCheck ?? null });
   } catch { res.status(500).json({ error: 'Gagal memuat detail laporan' }); }
 });
 

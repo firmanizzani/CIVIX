@@ -96,11 +96,13 @@ VITE_API_BASE_URL=/api/v1
 
 ### Siapkan database dan data demo
 
-Jalankan migrasi yang sudah tersedia dari folder utama, termasuk setelah memperbarui project. Migrasi terbaru menerapkan batas satu akun per instansi:
+Jalankan migrasi yang sudah tersedia dari folder utama, termasuk setelah memperbarui project. Migrasi terbaru menambah tabel privat untuk hasil pengecekan foto dan laporan serupa yang dibaca admin.
 
 ```bash
 npm --prefix backend run db:migrate
 ```
+
+Batas lokasi CIVIX memakai enam poligon kota/kabupaten DKI Jakarta dari [OCHA ROAP / HDX](https://data.humdata.org/dataset/cod-ab-idn) melalui [geoBoundaries gbHumanitarian](https://www.geoboundaries.org/api.html), ADM2 tahun 2019, dengan lisensi [CC BY 3.0 IGO](https://creativecommons.org/licenses/by/3.0/igo/). CIVIX mengambil fitur Jakarta dari dataset dan membulatkan koordinat ke tujuh desimal.
 
 Untuk database pengembangan baru, tambahkan data wilayah, instansi, akun, dan laporan demo:
 

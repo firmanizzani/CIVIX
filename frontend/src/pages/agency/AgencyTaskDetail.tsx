@@ -6,7 +6,9 @@ import { Report, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
 import { StatusBadge } from '@/components/ReportWorkspaceUI';
 import { formatDateTime, getStatusActorLabel, getStatusColor } from '@/lib/utils';
 
-export default function AgencyTaskDetail({ report, onBack, actions, admin = false, backLabel = 'Tugas Penanganan' }: { report: Report; onBack: () => void; actions: ReactNode; admin?: boolean; backLabel?: string }) {
+export default function AgencyTaskDetail({ report, onBack, actions, evidence, admin = false, backLabel = 'Tugas Penanganan' }: {
+  report: Report; onBack: () => void; actions: ReactNode; evidence?: ReactNode; admin?: boolean; backLabel?: string;
+}) {
   const [photo, setPhoto] = useState(0);
   const photos = report.photos || [];
   return <><button className="admin-back" onClick={onBack}><ArrowLeft size={15} />{backLabel} <span>›</span> Detail Laporan</button>
@@ -30,6 +32,7 @@ export default function AgencyTaskDetail({ report, onBack, actions, admin = fals
           </li>;
         })}{!report.statusLogs?.length && <li>Belum ada riwayat penanganan.</li>}</ol>
       </section>
+      {evidence}
       <section className="admin-panel agency-task-actions"><h2>Tindakan</h2>{actions}</section>
     </aside></div>
   </>;
