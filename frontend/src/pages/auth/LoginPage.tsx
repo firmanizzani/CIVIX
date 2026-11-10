@@ -3,6 +3,8 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { getLoginDestination } from '@/lib/authRedirect';
 import AuthLayout from '@/components/AuthLayout';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
+import { useGoogleClientId } from '@/hooks/useGoogleClientId';
 import { AlertCircle, Loader2, Eye, EyeOff, Mail, Lock, ShieldCheck, ArrowRight, X, FlaskConical } from 'lucide-react';
 
 export default function LoginPage() {
@@ -10,7 +12,8 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect');
   const redirectQuery = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
-  const { login, isLoading } = useAuthStore();
+  const { login, loginWithGoogle, isLoading } = useAuthStore();
+  const googleClientId = useGoogleClientId();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,6 +22,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (useAuthStore.getState().isLoading) return;
     setError('');
     try {
       await login(email, password);
@@ -26,6 +30,17 @@ export default function LoginPage() {
       navigate(getLoginDestination(redirect, role || 'warga'), { replace: true });
     } catch (err: unknown) {
       setError((err instanceof Error ? err.message : "") || 'Gagal masuk. Silakan cek kembali email dan password.');
+    }
+  };
+
+  const handleGoogleLogin = async (credential: string) => {
+    if (useAuthStore.getState().isLoading) return;
+    setError('');
+    try {
+      await loginWithGoogle(credential);
+      navigate(getLoginDestination(redirect, 'warga'), { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal masuk dengan Google. Coba lagi.');
     }
   };
 
@@ -107,6 +122,14 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
+
+            {googleClientId && <div className="mt-5 space-y-2 text-center">
+              <div className="flex items-center gap-3 text-xs text-civix-muted">
+                <span className="h-px flex-1 bg-civix-border" />atau<span className="h-px flex-1 bg-civix-border" />
+              </div>
+              <GoogleSignInButton clientId={googleClientId} onCredential={handleGoogleLogin} />
+              <p className="text-xs text-civix-muted">Khusus akun Warga</p>
+            </div>}
 
             <div className="mt-6 border-t border-civix-border/70 pt-5 text-center text-xs">
               <span className="text-civix-muted">Belum punya akun? </span>

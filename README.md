@@ -152,6 +152,8 @@ Pada project backend, isi `NODE_ENV=production`, `DATABASE_URL`, `AUTH_SECRET`, 
 
 Pada project frontend, isi `VITE_API_BASE_URL=https://ALAMAT-BACKEND/api/v1` dengan tipe **Config**. Setelah URL frontend diketahui, sesuaikan `FRONTEND_URL` backend dengan origin frontend tersebut. Redeploy project terkait setelah mengubah variabel. Secret database dan service-role key hanya diisi di backend. `.gitignore` di root berlaku untuk kedua folder.
 
+Untuk mengaktifkan **Masuk dengan Google** bagi Warga, buat OAuth Client ID bertipe **Web application** di Google Auth Platform. Tambahkan origin frontend yang dipakai (misalnya `http://localhost:5173` dan domain CIVIX) ke **Authorized JavaScript origins**, lalu isi Client ID di `GOOGLE_CLIENT_ID` pada backend. Alur popup menerima token melalui callback JavaScript. Jalankan migrasi database sebelum mengaktifkan fitur. Warga yang sudah punya akun bisa menautkan Google dari **Pengaturan**, dengan kata sandi CIVIX dan email yang sama. [Panduan setup Google](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
+
 Uji `/health` dan `/api/v1/reports` pada backend, lalu periksa login, foto, dan sinkronisasi laporan melalui frontend. Vercel membatasi total request body unggahan menjadi 4,5 MB, sedangkan batas lokal CIVIX lebih besar. Untuk mempertahankan batas unggahan lokal penuh, alur foto perlu diubah menjadi upload langsung ke Storage menggunakan signed upload URL atau backend ditempatkan pada hosting dengan batas request lebih besar.
 
 ## Progres Proyek

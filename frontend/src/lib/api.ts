@@ -18,7 +18,7 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isAuthRequest = /^\/?auth\/(login|register)(?:\?|$)/.test(error.config?.url || '');
+    const isAuthRequest = /^\/?auth\/(login|register|google)(?:\?|$)/.test(error.config?.url || '');
     if (error.response?.status === 401 && !isAuthRequest) {
       localStorage.removeItem('civix_token');
       localStorage.removeItem('civix_user');

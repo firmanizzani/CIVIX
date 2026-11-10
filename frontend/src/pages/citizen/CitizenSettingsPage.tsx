@@ -6,6 +6,7 @@ import { getActionError } from '@/hooks/useReportWorkspace';
 import { useAuthStore } from '@/stores/authStore';
 import QueryError from '@/components/QueryError';
 import { CitizenProfile, useCitizenProfile } from './citizenData';
+import GoogleAccountSettings from './GoogleAccountSettings';
 
 function AccountSettings({ profile }: { profile: CitizenProfile }) {
   const [nama, setNama] = useState(profile.nama);
@@ -58,7 +59,7 @@ function AccountSettings({ profile }: { profile: CitizenProfile }) {
         <small>JPG, PNG, WebP · Maks. 2 MB</small>
         {(error || avatar.isError) && <p role="alert" className="workspace-error">{error || getActionError(avatar.error)}</p>}
         {avatar.isSuccess && <p className="workspace-success" role="status">{avatar.data.warning || (avatar.data.avatarUrl ? 'Foto akun diperbarui.' : 'Foto akun dihapus.')}</p>}
-      </aside></div></section></div></>;
+      </aside></div><GoogleAccountSettings userId={profile.id} /></section></div></>;
 }
 export default function CitizenSettingsPage() {
   const profile = useCitizenProfile();

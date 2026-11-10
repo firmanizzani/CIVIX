@@ -38,13 +38,15 @@ export const users = pgTable('users', {
   id: varchar('id', { length: 40 }).primaryKey().default(sql`'user_' || lpad(nextval('seq_user_id')::text, 3, '0')`),
   nama: varchar('nama', { length: 100 }).notNull(),
   email: varchar('email', { length: 150 }).notNull().unique(),
-  passwordHash: text('password_hash').notNull(),
+  passwordHash: text('password_hash'),
+  googleSubject: varchar('google_subject', { length: 255 }).unique(),
   peran: peranUserEnum('peran').notNull().default('warga'),
   agencyId: varchar('agency_id', { length: 40 }).references(() => agencies.id, { onDelete: 'set null' }),
   dibuatPada: timestamp('dibuat_pada', { withTimezone: true }).notNull().defaultNow(),
 }, table => ({
   oneAccountPerAgency: uniqueIndex('users_one_account_per_agency').on(table.agencyId)
     .where(sql`${table.agencyId} IS NOT NULL`),
+  signInMethod: check('users_sign_in_method', sql`${table.passwordHash} IS NOT NULL OR ${table.googleSubject} IS NOT NULL`),
 }));
 
 export const regions = pgTable('regions', {
