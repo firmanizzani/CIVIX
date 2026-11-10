@@ -13,14 +13,14 @@
   place-items: center;
   border: 2px solid #fff;
   border-radius: 50%;
-  background: #007b55;
+  background: #334e68;
   color: #fff;
-  box-shadow: 0 0 0 4px #00835838;
+  box-shadow: 0 0 0 4px #334e6838;
   font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.public-map-cluster:hover, .public-map-cluster:focus-visible { background: #07533e; }
+.public-map-cluster:hover, .public-map-cluster:focus-visible { background: #243b53; }
 .public-map-cluster-popup h3 { color: #244f3a; font-weight: 700; margin-bottom: 6px; }
 .public-map-cluster-popup ul { max-height: 180px; overflow-y: auto; }
 .public-map-cluster-popup li + li { border-top: 1px solid #e4eee8; }

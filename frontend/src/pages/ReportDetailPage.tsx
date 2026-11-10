@@ -5,6 +5,7 @@ import { useLocation, useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import PhotoPreview from '@/components/PhotoPreview';
 import apiClient from '@/lib/api';
 import { publicReportDetailQuery } from '@/lib/reportQueries';
 import { STATUS_LABEL, KATEGORI_LABEL } from '@/types';
@@ -83,7 +84,7 @@ export default function ReportDetailPage() {
           </Link>
         </Reveal>
 
-        <div className="grid grid-cols-1 gap-y-6 lg:grid-cols-3 lg:gap-x-8">
+        <div className="grid grid-cols-1 gap-y-6 lg:grid-cols-3 lg:grid-rows-[min-content_min-content_1fr] lg:items-start lg:gap-x-8">
           {/* Main Info */}
           <div className="min-w-0 break-words lg:col-span-2">
             <Reveal>
@@ -141,8 +142,8 @@ export default function ReportDetailPage() {
               <h2 className="mb-4 text-lg font-bold text-civix-navy">Foto Laporan Awal</h2>
               {awalPhotos.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {awalPhotos.map((photo) => (
-                    <img key={photo.id} src={photo.url} alt="Foto laporan" className="h-48 w-full rounded-lg object-cover" />
+                  {awalPhotos.map((photo, index) => (
+                    <PhotoPreview key={photo.id} src={photo.url} alt={`foto laporan awal ${index + 1}`} imageClassName="h-48 w-full rounded-lg object-cover" />
                   ))}
                 </div>
               ) : (
@@ -160,8 +161,8 @@ export default function ReportDetailPage() {
                 </h2>
                 <p className="mb-4 text-xs text-lime-700">Foto bukti hasil pekerjaan di lapangan</p>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {buktiPhotos.map((photo) => (
-                    <img key={photo.id} src={photo.url} alt="Bukti selesai" className="h-48 w-full rounded-lg object-cover border border-lime-200" />
+                  {buktiPhotos.map((photo, index) => (
+                    <PhotoPreview key={photo.id} src={photo.url} alt={`foto bukti penyelesaian ${index + 1}`} imageClassName="h-48 w-full rounded-lg border border-lime-200 object-cover" />
                   ))}
                 </div>
                 </div>
@@ -169,7 +170,7 @@ export default function ReportDetailPage() {
             )}
           </div>
 
-          <aside className="min-w-0 break-words lg:col-start-3 lg:row-span-3 lg:row-start-1">
+          <aside className="min-w-0 break-words lg:col-start-3 lg:row-span-3 lg:row-start-1 lg:self-stretch">
             <div className="card p-6 lg:sticky lg:top-24">
               <h2 className="mb-4 text-lg font-bold text-civix-navy flex items-center gap-2">
                 <Clock size={18} /> Timeline Status

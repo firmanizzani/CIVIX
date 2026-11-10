@@ -86,7 +86,7 @@ export default function StatsPage() {
             { label: 'Total Laporan', value: overview?.totalLaporan ?? 0, suffix: '', icon: FileText, color: 'text-civix-navy bg-slate-100' },
             { label: 'Persentase Selesai', value: overview?.persentaseSelesai ?? 0, suffix: '%', icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
             { label: 'Rata-rata Penyelesaian', value: overview?.rataRataHariSelesai ?? '—', suffix: overview?.rataRataHariSelesai != null ? ' hari' : '', icon: Timer, color: 'text-civix-forest bg-civix-mint' },
-            { label: 'Menunggu Tindak Lanjut', value: overview?.menunggu ?? 0, suffix: '', icon: Clock, color: 'text-amber-700 bg-amber-100' },
+            { label: 'Menunggu Tindakan', value: overview?.menunggu ?? 0, suffix: '', icon: Clock, color: 'text-amber-700 bg-amber-100' },
           ].map((card, i) => (
             <div key={i} className="card p-5">
               <div className={`mb-4 inline-flex rounded-lg p-2.5 ${card.color}`}>
@@ -96,7 +96,6 @@ export default function StatsPage() {
                 {overviewLoading || overviewError ? '—' : card.value}{!overviewLoading && !overviewError && card.suffix}
               </div>
               <div className="mt-1 text-xs font-medium text-slate-500">{card.label}</div>
-              {card.label === "Menunggu Tindak Lanjut" && <p className="mt-1 text-xs text-slate-600">Menunggu verifikasi atau sudah terverifikasi</p>}
             </div>
           ))}
           </div>

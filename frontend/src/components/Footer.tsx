@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import CivixLogo from '@/components/CivixLogo';
-import { Instagram, Leaf, Mail, MapPin } from 'lucide-react';
+import { Instagram, Mail, MapPin } from 'lucide-react';
 import './Footer.css';
 
 // Presentation handles for the competition prototype.
@@ -22,7 +22,7 @@ export default function Footer({ compact = true }: { compact?: boolean }) {
         <nav aria-label="Informasi footer"><h2>Informasi</h2><a href="/#cara-kerja">Cara Kerja</a><Link to="/citizen/create-report">Buat Laporan</Link><Link to="/citizen/reports">Riwayat Laporan</Link></nav>
         <section className="civix-footer-contact" aria-label="Kontak CIVIX"><h2>Terhubung dengan CIVIX</h2><p>Bantuan dan masukan untuk platform CIVIX.</p><a className="civix-footer-email" href="mailto:civix@email.com"><Mail size={17} aria-hidden="true" /><span>civix@email.com</span></a><div className="civix-footer-socials" aria-label="Media sosial CIVIX">{socialLinks.map(({ name, handle, url, icon: Icon }) => <a key={name} href={url} target="_blank" rel="noopener noreferrer" aria-label={name + ' ' + handle + ' (tab baru)'} title={name + ' ' + handle}><Icon size={17} /><span>{handle}</span></a>)}</div></section>
       </div>
-      <div className="container-civix"><div className="civix-footer-bottom"><p>© {new Date().getFullYear()} CIVIX. Semua hak dilindungi.</p><p><Leaf size={15} aria-hidden="true" />Bersama warga untuk Jakarta yang lebih baik.</p></div></div>
+      <div className="container-civix"><div className="civix-footer-bottom"><p>© {new Date().getFullYear()} CIVIX. Semua hak dilindungi.</p></div></div>
     </footer>
   );
   return (

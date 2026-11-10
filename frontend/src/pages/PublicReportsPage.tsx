@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import QueryError from '@/components/QueryError';
@@ -14,13 +14,14 @@ import { PublicReportCard, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
 import { AlertTriangle, MapPin, Clock } from 'lucide-react';
 
+const REPORTS_PER_PAGE = 12;
+
 export default function PublicReportsPage() {
   const [kategori, setKategori] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [periode, setPeriode] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [openingId, setOpeningId] = useState<string>();
   const [failedId, setFailedId] = useState<string>();
@@ -66,21 +67,29 @@ export default function PublicReportsPage() {
     }
   }
 
-  const { data: reports = [], isLoading, isError, refetch, isFetching } = useQuery<PublicReportCard[]>({
-    queryKey: ['public-reports', kategori, status, effectivePeriod, startDate, endDate, page],
+  const {
+    data, isLoading, isLoadingError, refetch, isFetching,
+    fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError,
+  } = useInfiniteQuery({
+    queryKey: ['public-reports', kategori, status, effectivePeriod, startDate, endDate],
+    initialPageParam: 1,
     retry: (failureCount, error) => failureCount < 1 && !(isAxiosError(error) && error.code === 'ECONNABORTED'),
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal, pageParam }): Promise<PublicReportCard[]> => {
       const params = new URLSearchParams({ view: 'cards' });
       if (kategori) params.append('kategori', kategori);
       if (status) params.append('status', status);
       if (effectivePeriod) params.append('periode', effectivePeriod);
       if (effectivePeriod === 'custom' && startDate) params.append('startDate', startDate);
       if (effectivePeriod === 'custom' && endDate) params.append('endDate', endDate);
-      params.append('page', page.toString());
-      params.append('limit', '12');
+      params.append('page', pageParam.toString());
+      params.append('limit', REPORTS_PER_PAGE.toString());
       return (await apiClient.get<PublicReportCard[]>('/reports', { params, signal, timeout: 12000 })).data;
     },
+    getNextPageParam: (lastPage, _pages, lastPageParam) => (
+      lastPage.length === REPORTS_PER_PAGE ? lastPageParam + 1 : undefined
+    ),
   });
+  const reports = data?.pages.flat() ?? [];
 
   return (
     <div className="app-page reports-page flex min-h-screen flex-col bg-civix-neutral">
@@ -109,7 +118,7 @@ export default function PublicReportsPage() {
             <div id="report-filters" className={`${filtersOpen ? 'grid border-t border-civix-border py-4' : 'hidden'} gap-4 md:grid md:grid-cols-3 md:border-0 md:py-0`}>
               <div className="min-w-0">
                 <label htmlFor="public-category" className="label">Kategori</label>
-                <select id="public-category" value={kategori} onChange={(e) => { setKategori(e.target.value); setPage(1); }} className="input min-h-11">
+                <select id="public-category" value={kategori} onChange={(e) => setKategori(e.target.value)} className="input min-h-11">
                   <option value="">Semua Kategori</option>
                   {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
@@ -119,7 +128,7 @@ export default function PublicReportsPage() {
 
               <div className="min-w-0">
                 <label htmlFor="public-status" className="label">Status</label>
-                <select id="public-status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="input min-h-11">
+                <select id="public-status" value={status} onChange={(e) => setStatus(e.target.value)} className="input min-h-11">
                   <option value="">Semua Status</option>
                   <option value="diterima">Menunggu Verifikasi</option>
                   <option value="diverifikasi">Terverifikasi</option>
@@ -131,7 +140,7 @@ export default function PublicReportsPage() {
 
               <div className="min-w-0">
                 <label htmlFor="public-period" className="label flex items-center gap-1.5"><Clock size={14} /> Waktu</label>
-                <select id="public-period" value={periode} onChange={(e) => { setPeriode(e.target.value); setPage(1); }} className="input min-h-11">
+                <select id="public-period" value={periode} onChange={(e) => setPeriode(e.target.value)} className="input min-h-11">
                   <option value="">Semua Waktu</option>
                   <option value="7d">7 Hari Terakhir</option>
                   <option value="30d">30 Hari Terakhir</option>
@@ -149,7 +158,7 @@ export default function PublicReportsPage() {
                       type="date"
                       value={startDate}
                       max={endDate || undefined}
-                      onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+                      onChange={(e) => setStartDate(e.target.value)}
                       className="input min-h-11 min-w-0"
                     />
                   </div>
@@ -160,7 +169,7 @@ export default function PublicReportsPage() {
                       type="date"
                       value={endDate}
                       min={startDate || undefined}
-                      onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+                      onChange={(e) => setEndDate(e.target.value)}
                       className="input min-h-11 min-w-0"
                     />
                   </div>
@@ -178,7 +187,7 @@ export default function PublicReportsPage() {
                 <div key={i} className="skeleton h-64" />
               ))}
             </div>
-          ) : isError ? (
+          ) : isLoadingError ? (
             <QueryError subject="Daftar laporan" retry={refetch} pending={isFetching} />
           ) : reports.length === 0 ? (
             <div className="card p-12 text-center">
@@ -235,6 +244,23 @@ export default function PublicReportsPage() {
             </div>
           )}
         </Reveal>
+        <p role="status" className="sr-only">{reports.length} laporan ditampilkan.</p>
+        {hasNextPage && (
+          <div className="mt-6 flex flex-col items-center gap-2 text-center">
+            {isFetchNextPageError && (
+              <p role="alert" className="text-sm text-red-700">Laporan berikutnya belum berhasil dimuat.</p>
+            )}
+            <button
+              type="button"
+              onClick={() => { void fetchNextPage(); }}
+              disabled={isFetching}
+              className="btn-outline min-h-11 w-full sm:w-auto"
+            >
+              {isFetchingNextPage ? 'Memuat laporan…' : isFetchNextPageError ? 'Coba muat lagi' : 'Muat laporan lainnya'}
+              <ChevronDown size={16} aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
 
       <Footer />
