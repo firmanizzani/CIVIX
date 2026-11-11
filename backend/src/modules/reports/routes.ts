@@ -5,7 +5,7 @@ import { z } from 'zod';
 import multer from 'multer';
 import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportEvidenceChecks, reportStatusLogs, comments, upvotes, users, regions } from '../../db/schema.js';
-import { asc, eq, desc, and, sql, notInArray, gte, lte } from 'drizzle-orm';
+import { asc, eq, desc, and, sql, notInArray, gte, lte, ilike } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { reportStatusHistory } from './status.js';
 import { reportCostSummary, reportCostDetail } from './costs.js';
@@ -60,10 +60,12 @@ router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response
 // GET /reports - Public feed (only non-rejected & non-duplicate)
 router.get('/', async (req, res: Response) => {
   try {
+    const search = z.string().trim().max(150, 'Pencarian judul maksimal 150 karakter.').parse(req.query.search ?? '');
     const { kategori, status, regionId, periode, startDate, endDate, sort, view, limit = 20, page = 1 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let conditions: any[] = [notInArray(reports.status, ['ditolak', 'duplikat'])];
+    if (search) conditions.push(ilike(reports.judul, `%${search.replace(/[\\%_]/g, '\\$&')}%`));
 
     if (kategori) conditions.push(eq(reports.kategori, kategori as any));
     if (status) conditions.push(eq(reports.status, status as any));
@@ -101,7 +103,7 @@ router.get('/', async (req, res: Response) => {
       where: and(...conditions),
       limit: Number(limit),
       offset,
-      orderBy: sort === 'oldest' ? [asc(reports.dibuatPada), asc(reports.id)] : [desc(reports.dibuatPada)],
+      orderBy: sort === 'oldest' ? [asc(reports.dibuatPada), asc(reports.id)] : [desc(reports.dibuatPada), asc(reports.id)],
     };
     const photoOrder = [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)];
 
@@ -127,6 +129,7 @@ router.get('/', async (req, res: Response) => {
 
     res.json(result);
   } catch (err) {
+    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors[0]?.message || 'Pencarian judul tidak valid.' });
     res.status(500).json({ error: 'Gagal memuat laporan' });
   }
 });

@@ -41,7 +41,7 @@ export default function CostOverview({ role = 'public', compact = false, landing
   useEffect(() => {
     setDetailsOpen(openFromCostLink);
   }, [navigationKey, openFromCostLink]);
-  const collapsible = (role === 'agency' || role === 'public') && !compact;
+  const collapsible = (role === 'agency' || role === 'public' || role === 'admin') && !compact;
   const showDetails = !collapsible || detailsOpen;
   const effectiveDays = days ?? period;
   const pageSize = compact || landing ? 3 : 8;

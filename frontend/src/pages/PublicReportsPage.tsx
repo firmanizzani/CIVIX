@@ -1,23 +1,26 @@
 import { CostAvailable } from '@/components/ReportCost';
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
 import PageHeading from '@/components/PageHeading';
-import { ArrowRight, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, ChevronDown, SlidersHorizontal, Search, X } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Reveal from '@/components/Reveal';
 import apiClient from '@/lib/api';
 import { publicReportDetailQuery } from '@/lib/reportQueries';
 import { PublicReportCard, STATUS_LABEL, KATEGORI_LABEL } from '@/types';
 import { formatDate, getStatusBadgeClasses } from '@/lib/utils';
-import { AlertTriangle, MapPin, Clock } from 'lucide-react';
+import { AlertTriangle, MapPin } from 'lucide-react';
 
 const REPORTS_PER_PAGE = 12;
 
 export default function PublicReportsPage() {
+  const [search, setSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInput = useRef<HTMLInputElement>(null);
   const [kategori, setKategori] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [periode, setPeriode] = useState<string>('');
@@ -32,6 +35,13 @@ export default function PublicReportsPage() {
   const navigate = useNavigate();
   const effectivePeriod = periode === 'custom' && !startDate && !endDate ? '' : periode;
   const activeFilters = [kategori, status, effectivePeriod].filter(Boolean).length;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearchTerm(search.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  const clearSearch = () => { setSearch(''); setSearchTerm(''); searchInput.current?.focus(); };
 
   useEffect(() => () => {
     window.clearTimeout(prefetchTimer.current);
@@ -70,13 +80,15 @@ export default function PublicReportsPage() {
 
   const {
     data, isLoading, isLoadingError, refetch, isFetching,
-    fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError,
+    fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError, isPlaceholderData,
   } = useInfiniteQuery({
-    queryKey: ['public-reports', kategori, status, effectivePeriod, startDate, endDate],
+    queryKey: ['public-reports', kategori, status, effectivePeriod, startDate, endDate, searchTerm],
+    placeholderData: keepPreviousData,
     initialPageParam: 1,
     retry: (failureCount, error) => failureCount < 1 && !(isAxiosError(error) && error.code === 'ECONNABORTED'),
     queryFn: async ({ signal, pageParam }): Promise<PublicReportCard[]> => {
       const params = new URLSearchParams({ view: 'cards' });
+      if (searchTerm) params.append('search', searchTerm);
       if (kategori) params.append('kategori', kategori);
       if (status) params.append('status', status);
       if (effectivePeriod) params.append('periode', effectivePeriod);
@@ -91,6 +103,7 @@ export default function PublicReportsPage() {
     ),
   });
   const reports = data?.pages.flat() ?? [];
+  const updatingResults = search.trim() !== searchTerm || isPlaceholderData || (isFetching && !isFetchingNextPage);
 
   return (
     <div className="app-page reports-page flex min-h-screen flex-col bg-civix-neutral">
@@ -103,22 +116,31 @@ export default function PublicReportsPage() {
 
         {/* Filter Bar */}
         <Reveal delay="delay-1">
-          <div className="card mb-6 px-4 md:mb-8 md:py-4">
+          <div className="card mb-6 p-3 md:mb-8">
+            <div className="flex flex-wrap items-center gap-2 md:grid md:grid-cols-5 md:gap-3">
+            <label className="sr-only" htmlFor="public-report-search">Cari judul laporan</label>
+            <div className="relative min-w-0 flex-1 md:col-span-2">
+              <Search size={18} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-civix-muted" />
+              <input id="public-report-search" ref={searchInput} type="text" role="searchbox" inputMode="search" autoComplete="off" maxLength={150}
+                className="input min-h-11 w-full pl-11 pr-12" placeholder="Cari judul laporan…" value={search}
+                aria-describedby="public-report-results" onChange={event => setSearch(event.target.value)}
+                onKeyDown={event => { if (event.key === 'Escape') clearSearch(); }} />
+              {search && <button type="button" aria-label="Hapus pencarian judul" className="absolute right-0.5 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-lg text-civix-muted hover:bg-civix-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-civix-primary" onClick={clearSearch}><X size={17} aria-hidden="true" /></button>}
+            </div>
             <button
               type="button"
               aria-expanded={filtersOpen}
               aria-controls="report-filters"
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className="flex min-h-12 w-full items-center gap-2 text-left text-sm font-semibold text-civix-navy md:hidden"
+              className={`relative grid h-11 w-11 shrink-0 place-items-center rounded-lg border text-civix-navy focus-visible:outline focus-visible:outline-2 focus-visible:outline-civix-primary md:hidden ${filtersOpen || activeFilters ? 'border-civix-primary bg-civix-soft' : 'border-civix-border bg-white'}`}
             >
-              <SlidersHorizontal size={16} aria-hidden="true" />
-              Filter laporan
-              {activeFilters > 0 && <span className="rounded-full bg-civix-soft px-2 py-1 text-xs">{activeFilters} aktif</span>}
-              <ChevronDown size={16} aria-hidden="true" className={`ml-auto ${filtersOpen ? 'rotate-180' : ''}`} />
+              <SlidersHorizontal size={18} aria-hidden="true" />
+              <span className="sr-only">Filter laporan{activeFilters ? `, ${activeFilters} aktif` : ''}</span>
+              {activeFilters > 0 && <span aria-hidden="true" className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-civix-primary text-[10px] font-bold text-white">{activeFilters}</span>}
             </button>
-            <div id="report-filters" className={`${filtersOpen ? 'grid border-t border-civix-border py-4' : 'hidden'} gap-4 md:grid md:grid-cols-3 md:border-0 md:py-0`}>
+            <div id="report-filters" className={`${filtersOpen ? 'grid' : 'hidden'} w-full basis-full gap-3 border-t border-civix-border pt-3 md:contents`}>
               <div className="min-w-0">
-                <label htmlFor="public-category" className="label">Kategori</label>
+                <label htmlFor="public-category" className="label md:sr-only">Kategori</label>
                 <select id="public-category" value={kategori} onChange={(e) => setKategori(e.target.value)} className="input min-h-11">
                   <option value="">Semua Kategori</option>
                   {Object.entries(KATEGORI_LABEL).map(([key, label]) => (
@@ -128,7 +150,7 @@ export default function PublicReportsPage() {
               </div>
 
               <div className="min-w-0">
-                <label htmlFor="public-status" className="label">Status</label>
+                <label htmlFor="public-status" className="label md:sr-only">Status</label>
                 <select id="public-status" value={status} onChange={(e) => setStatus(e.target.value)} className="input min-h-11">
                   <option value="">Semua Status</option>
                   <option value="diterima">Menunggu Verifikasi</option>
@@ -140,7 +162,7 @@ export default function PublicReportsPage() {
               </div>
 
               <div className="min-w-0">
-                <label htmlFor="public-period" className="label flex items-center gap-1.5"><Clock size={14} /> Waktu</label>
+                <label htmlFor="public-period" className="label md:sr-only">Waktu</label>
                 <select id="public-period" value={periode} onChange={(e) => setPeriode(e.target.value)} className="input min-h-11">
                   <option value="">Semua Waktu</option>
                   <option value="7d">7 Hari Terakhir</option>
@@ -151,7 +173,7 @@ export default function PublicReportsPage() {
               </div>
 
               {periode === 'custom' && (
-                <div className="grid gap-4 sm:grid-cols-2 md:col-span-3">
+                <div className="grid gap-3 sm:grid-cols-2 md:col-span-5">
                   <div className="min-w-0">
                     <label className="label" htmlFor="start-date">Tanggal Awal</label>
                     <input
@@ -177,9 +199,16 @@ export default function PublicReportsPage() {
                 </div>
               )}
             </div>
+            </div>
           </div>
         </Reveal>
 
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-bold text-civix-navy">Daftar Laporan</h2>
+          <p id="public-report-results" role="status" aria-live="polite" className="max-w-full break-words text-sm text-slate-500">
+            {updatingResults ? 'Memperbarui hasil…' : `${reports.length}${hasNextPage ? '+' : ''} laporan ditampilkan${searchTerm ? ` untuk “${searchTerm}”` : ''}.`}
+          </p>
+        </div>
         {/* Report List */}
         <Reveal delay="delay-2">
           {isLoading ? (
@@ -194,10 +223,11 @@ export default function PublicReportsPage() {
             <div className="card p-12 text-center">
               <AlertTriangle className="mx-auto mb-3 text-slate-400" size={36} />
               <p className="text-lg font-bold text-slate-800">Tidak ada laporan ditemukan</p>
-              <p className="mt-1 text-sm text-slate-500">Coba ubah filter kategori, status, atau waktu.</p>
+              <p className="mt-1 text-sm text-slate-500">{searchTerm ? 'Tidak ada judul yang cocok. Coba kata lain atau sesuaikan filter.' : 'Coba ubah filter kategori, status, atau waktu.'}</p>
+              {searchTerm && <button type="button" className="btn-outline mt-5" onClick={clearSearch}>Hapus pencarian</button>}
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div aria-busy={updatingResults} className={`grid gap-6 transition-opacity md:grid-cols-2 lg:grid-cols-3 ${isPlaceholderData ? 'opacity-60' : ''}`}>
               {reports.map((report) => (
                 <Link
                   key={report.id}
@@ -246,7 +276,6 @@ export default function PublicReportsPage() {
             </div>
           )}
         </Reveal>
-        <p role="status" className="sr-only">{reports.length} laporan ditampilkan.</p>
         {hasNextPage && (
           <div className="mt-6 flex flex-col items-center gap-2 text-center">
             {isFetchNextPageError && (
