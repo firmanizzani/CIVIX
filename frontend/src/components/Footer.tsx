@@ -5,8 +5,8 @@ import './Footer.css';
 
 // Presentation handles for the competition prototype.
 const socialLinks = [
-  { name: 'Instagram', handle: '@civix', url: 'https://www.instagram.com/civix/', icon: Instagram },
-  { name: 'X', handle: '@civix', url: 'https://x.com/civix', icon: XIcon },
+  { name: 'Instagram', handle: '@civixweb', url: 'https://www.instagram.com/civixweb/', icon: Instagram },
+  { name: 'X', handle: '@civixweb', url: 'https://x.com/civixweb', icon: XIcon },
 ];
 
 function XIcon({ size = 18 }: { size?: number }) {
@@ -20,7 +20,7 @@ export default function Footer({ compact = true }: { compact?: boolean }) {
         <div className="civix-footer-brand"><Link to="/" aria-label="CIVIX Beranda"><CivixLogo size="md" /></Link><p>Platform pelaporan publik untuk Jakarta yang lebih transparan, responsif, dan partisipatif.</p><span><MapPin size={14} aria-hidden="true" />Untuk warga DKI Jakarta</span></div>
         <nav aria-label="Navigasi footer"><h2>Navigasi</h2><Link to="/">Beranda</Link><Link to="/map">Peta Laporan</Link><Link to="/reports">Laporan Publik</Link><Link to="/stats">Statistik</Link></nav>
         <nav aria-label="Informasi footer"><h2>Informasi</h2><a href="/#cara-kerja">Cara Kerja</a><Link to="/citizen/create-report">Buat Laporan</Link><Link to="/citizen/reports">Riwayat Laporan</Link></nav>
-        <section className="civix-footer-contact" aria-label="Kontak CIVIX"><h2>Terhubung dengan CIVIX</h2><p>Bantuan dan masukan untuk platform CIVIX.</p><a className="civix-footer-email" href="mailto:civix@email.com"><Mail size={17} aria-hidden="true" /><span>civix@email.com</span></a><div className="civix-footer-socials" aria-label="Media sosial CIVIX">{socialLinks.map(({ name, handle, url, icon: Icon }) => <a key={name} href={url} target="_blank" rel="noopener noreferrer" aria-label={name + ' ' + handle + ' (tab baru)'} title={name + ' ' + handle}><Icon size={17} /><span>{handle}</span></a>)}</div></section>
+        <section className="civix-footer-contact" aria-label="Kontak CIVIX"><h2>Terhubung dengan CIVIX</h2><p>Bantuan dan masukan untuk platform CIVIX.</p><a className="civix-footer-email" href="mailto:webcivix@gmail.com"><Mail size={17} aria-hidden="true" /><span>webcivix@gmail.com</span></a><div className="civix-footer-socials" aria-label="Media sosial CIVIX">{socialLinks.map(({ name, handle, url, icon: Icon }) => <a key={name} href={url} target="_blank" rel="noopener noreferrer" aria-label={name + ' ' + handle + ' (tab baru)'} title={name + ' ' + handle}><Icon size={17} /><span>{handle}</span></a>)}</div></section>
       </div>
       <div className="container-civix"><div className="civix-footer-bottom"><p>© {new Date().getFullYear()} CIVIX. Semua hak dilindungi.</p></div></div>
     </footer>
@@ -84,10 +84,10 @@ export default function Footer({ compact = true }: { compact?: boolean }) {
           <div>
             <h4 className="mb-4 text-sm font-bold text-civix-forest">Kontak</h4>
             <a
-              href="mailto:civix@email.com"
+              href="mailto:webcivix@gmail.com"
               className="mb-2.5 inline-block text-sm font-semibold text-civix-primary transition-colors hover:underline"
             >
-              civix@email.com
+              webcivix@gmail.com
             </a>
             <p className="text-sm leading-relaxed text-civix-muted">
               Hubungi kami untuk bantuan dan masukan terkait CIVIX.

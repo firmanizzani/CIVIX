@@ -1,4 +1,5 @@
 import CostOverview from '@/components/CostOverview';
+import './StatsPage.css';
 import { useQuery } from '@tanstack/react-query';
 import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
@@ -12,7 +13,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
-import { FileText, CheckCircle2, Timer, Clock, Lightbulb, Trophy, TrendingUp, AlertTriangle } from 'lucide-react';
+import { FileText, CheckCircle2, Timer, Clock, Lightbulb, Trophy, TrendingUp, AlertTriangle, MoveHorizontal } from 'lucide-react';
 
 
 
@@ -82,15 +83,15 @@ export default function StatsPage() {
         {overviewError && <div className="mb-6"><QueryError subject="Ringkasan statistik" retry={overviewRetry} pending={overviewFetching} /></div>}
         {/* Summary Cards */}
         <Reveal delay="delay-1">
-          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {[
             { label: 'Total Laporan', value: overview?.totalLaporan ?? 0, suffix: '', icon: FileText, color: 'text-civix-navy bg-slate-100' },
             { label: 'Persentase Selesai', value: overview?.persentaseSelesai ?? 0, suffix: '%', icon: CheckCircle2, color: 'text-lime-700 bg-lime-100' },
             { label: 'Rata-rata Penyelesaian', value: overview?.rataRataHariSelesai ?? '—', suffix: overview?.rataRataHariSelesai != null ? ' hari' : '', icon: Timer, color: 'text-civix-forest bg-civix-mint' },
             { label: 'Menunggu Tindakan', value: overview?.menunggu ?? 0, suffix: '', icon: Clock, color: 'text-amber-700 bg-amber-100' },
           ].map((card, i) => (
-            <div key={i} className="card p-5">
-              <div className={`mb-4 inline-flex rounded-lg p-2.5 ${card.color}`}>
+            <div key={i} className="card min-w-0 p-4 sm:p-5">
+              <div className={`mb-3 inline-flex rounded-lg p-2.5 sm:mb-4 ${card.color}`}>
                 <card.icon size={20} />
               </div>
               <div className="text-2xl font-extrabold text-civix-navy">
@@ -219,14 +220,19 @@ export default function StatsPage() {
         <Reveal delay="delay-2">
           <div className="card overflow-hidden">
           <div className="border-b border-slate-100 p-6">
-            <h2 className="font-bold text-civix-navy flex items-center gap-2"><Trophy size={18} /> Perbandingan Wilayah</h2>
+            <h2 id="region-comparison-title" className="font-bold text-civix-navy flex items-center gap-2"><Trophy size={18} /> Perbandingan Wilayah</h2>
             <p className="mt-1 text-xs text-slate-500">Diurutkan berdasarkan jumlah laporan</p>
           </div>
           {regionsError ? <div className="p-6"><QueryError subject="Perbandingan wilayah" retry={regionsRetry} pending={regionsFetching} /></div> : regionsLoading ? (
             <div className="skeleton h-64 m-6" />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <>
+            <p id="region-scroll-hint" className="region-scroll-hint">
+              <MoveHorizontal size={16} aria-hidden="true" />
+              Geser untuk melihat semua kolom
+            </p>
+            <div className="region-comparison-scroll" role="region" aria-labelledby="region-comparison-title" aria-describedby="region-scroll-hint" tabIndex={0}>
+              <table className="region-comparison-table w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                     <th className="px-6 py-3 font-semibold">Wilayah</th>
@@ -250,6 +256,7 @@ export default function StatsPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
           </div>
         </Reveal>

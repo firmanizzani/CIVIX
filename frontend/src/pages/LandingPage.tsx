@@ -259,12 +259,12 @@ function LandingPage() {
                 {
                   question: 'Berapa lama laporan saya akan diproses?',
                   answer:
-                    'Setiap laporan masuk akan diverifikasi admin terlebih dahulu maksimal 1x24 jam kerja. Setelah status terverifikasi, laporan ditugaskan langsung ke instansi terkait untuk dijadwalkan dan ditindaklanjuti di lapangan.',
+                    'Setiap laporan masuk diperiksa oleh admin terlebih dahulu. Laporan yang telah diverifikasi kemudian ditugaskan ke instansi terkait. Waktu penanganan bergantung pada kondisi laporan dan kebutuhan pekerjaan di lapangan. Perkembangannya dapat dipantau melalui riwayat status laporan.',
                 },
                 {
                   question: 'Bagaimana cara memantau progres laporan yang sudah dikirim?',
                   answer:
-                    'Masuk ke akun Anda dan buka Dashboard Warga. Pada bagian "Laporan Saya", Anda bisa melihat seluruh riwayat tiket yang Anda buat lengkap dengan status penanganannya dari diterima hingga selesai.',
+                    'Masuk ke akun Anda dan buka Dashboard Warga, lalu pilih menu "Riwayat Laporan". Buka laporan yang ingin dipantau untuk melihat status, catatan penanganan, dan foto bukti penyelesaian jika sudah tersedia.',
                 },
                 {
                   question: 'Kategori apa saja yang dapat dilaporkan?',

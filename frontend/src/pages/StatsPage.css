@@ -1,0 +1,53 @@
+.region-scroll-hint {
+  display: none;
+}
+
+.region-comparison-scroll {
+  overflow-x: auto;
+}
+
+.region-comparison-scroll:focus-visible {
+  outline: 2px solid #008563;
+  outline-offset: -2px;
+}
+
+@media (max-width: 767px) {
+  .region-scroll-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 20px;
+    border-bottom: 1px solid #e4eee8;
+    background: #f5faf7;
+    color: #436157;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .region-comparison-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #94b9a9 #f2f8f5;
+  }
+
+  .region-comparison-table {
+    min-width: 640px;
+  }
+
+  .region-comparison-table th:first-child,
+  .region-comparison-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    width: 144px;
+    min-width: 144px;
+    padding-left: 20px;
+    padding-right: 16px;
+    background: #fff;
+    box-shadow: 1px 0 0 #e4eee8;
+  }
+
+  .region-comparison-table th:first-child {
+    background: #f2f8f5;
+  }
+}
