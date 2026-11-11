@@ -51,14 +51,16 @@ try {
   assert.equal((await request('/reports/me/reports?view=workspace&limit=3&page=3')).data.items.length, 1);
   assert.equal((await request('/reports/me/reports?view=workspace&kategori=sampah')).data.total, 0);
   assert.equal((await request('/reports/me/reports?view=workspace&search=' + encodeURIComponent(created.data.kodeTiket))).data.total, 1);
-  const ownMap = await request('/citizen/map'); assert.equal(ownMap.status, 200); assert.equal(ownMap.data.filter(row => row.owned).length, 7); assert.ok(ownMap.data.every(row => row.userId === undefined));
+  const ownMap = await request('/citizen/map'); assert.equal(ownMap.status, 200); assert.equal(ownMap.data.filter(row => row.owned).length, 7); assert.ok(ownMap.data.every(row => row.owned && row.userId === undefined));
   const publicMap = await request('/reports/map'); const ownedIds = ownMap.data.filter(row => row.owned).map(row => row.id); assert.equal(publicMap.data.filter(row => ownedIds.includes(row.id)).length, 4, 'Public map excludes closed and expired completed reports');
   const other = await register(); assert.equal((await request('/citizen/reports/' + id, 'GET', undefined, other.token)).status, 404); assert.equal((await request('/reports/me/reports?view=workspace', 'GET', undefined, other.token)).data.totalAll, 0);
   const completedFixture = ownMap.data.find(row => row.owned && row.status === 'selesai');
   await sql`UPDATE reports SET dibuat_pada = NOW() - INTERVAL '50 days' WHERE id = ${completedFixture.id} AND user_id = ${account.user.id}`;
   const allMap = await request('/citizen/map?period=all', 'GET', undefined, other.token);
   assert.equal(allMap.status, 200);
-  assert.ok(allMap.data.some(row => row.id === completedFixture.id), 'All-time view includes older completed public reports');
+  assert.equal(allMap.data.length, 0, 'Citizen map excludes reports owned by other citizens');
+  const ownedAllTime = await request('/citizen/map?period=all');
+  assert.ok(ownedAllTime.data.some(row => row.id === completedFixture.id), 'Own all-time view includes older completed reports');
   const privateIds = ownMap.data.filter(row => row.owned && ['ditolak', 'duplikat'].includes(row.status)).map(row => row.id);
   assert.ok(allMap.data.every(row => !privateIds.includes(row.id)), 'Time filters do not expose another citizen’s rejected or duplicate reports');
   assert.ok(allMap.data.every(row => row.userId === undefined), 'Map never exposes reporter IDs');

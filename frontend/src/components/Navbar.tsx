@@ -31,8 +31,8 @@ export default function Navbar() {
   }, [mobileOpen]);
   const navLinks = [
     { to: '/', label: 'Beranda' },
-    { to: '/map', label: 'Peta' },
-    { to: '/reports', label: 'Laporan' },
+    { to: '/map', label: 'Peta Laporan' },
+    { to: '/reports', label: 'Laporan Publik' },
     { to: '/stats', label: 'Statistik' },
   ];
 

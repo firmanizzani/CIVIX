@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import multer from 'multer';
-import { eq, desc, asc, and, or, notInArray, sql } from 'drizzle-orm';
+import { eq, desc, asc, and, sql } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { users, citizenProfiles, reports, reportPhotos, reportStatusLogs } from '../../db/schema.js';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
@@ -30,8 +30,7 @@ const fail = (res: Response, error: unknown) => {
 router.get('/map', async (req: AuthRequest, res) => {
   try {
     const period = z.enum(['7', '30', '90', 'all']).parse(req.query.period ?? 'all');
-    const publicReports = notInArray(reports.status, ['ditolak', 'duplikat']);
-    const scope = or(eq(reports.userId, req.user!.id), publicReports);
+    const scope = eq(reports.userId, req.user!.id);
     const dateRange = period === 'all'
       ? undefined : sql`${reports.dibuatPada} >= NOW() - (${Number(period)} * INTERVAL '1 day')`;
     const rows = await db.query.reports.findMany({ where: and(scope, dateRange), columns: { id: true, userId: true, judul: true, kodeTiket: true, status: true, kategori: true, namaJalan: true, regionId: true, latitude: true, longitude: true, dibuatPada: true }, with: { cost: reportCostSummary, region: true, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } } });
