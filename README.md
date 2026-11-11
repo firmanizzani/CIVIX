@@ -18,10 +18,16 @@ Proyek ini dikembangkan untuk **Web In Action 2026 — Multimedia In Action 2026
 [Buka demo CIVIX di Vercel](https://civix-report.vercel.app/)
 
 1. Buka [Peta Laporan](https://civix-report.vercel.app/map) dan pilih satu titik. Jika titik masih dikelompokkan, perbesar peta terlebih dahulu.
-2. Buka detail laporan untuk melihat lokasi, foto awal, dan riwayat status. Jika tersedia, lihat juga foto bukti penyelesaian.
+2. Buka detail laporan untuk melihat lokasi, foto awal, dan riwayat status. Jika tersedia, lihat juga foto bukti penyelesaian dan rincian biaya penanganan.
 3. Buka [Daftar Laporan](https://civix-report.vercel.app/reports) untuk mencoba filter kategori, status, dan waktu.
 
 Alur publik ini bisa dicoba tanpa login. Untuk mencoba alur warga, admin, dan instansi, ikuti [panduan instalasi lokal](#cara-menjalankan-secara-lokal) dan gunakan akun demo dari proses seed.
+
+## Transparansi Biaya Penanganan
+
+Saat menyelesaikan laporan, instansi mengisi catatan, mengunggah 1–3 foto bukti, dan mencatat biaya, sumber pendanaan, serta rincian penggunaannya. Biaya Rp0 berarti tidak ada biaya tambahan. Instansi dapat melengkapi laporan lama atau mengoreksi biaya dengan alasan yang tercatat dalam riwayat publik.
+
+Rincian terhubung ke detail laporan, dashboard ketiga role, landing page, peta, dan statistik publik. Ringkasan biaya dihitung berdasarkan tanggal penyelesaian dengan filter periode, wilayah, dan instansi; jumlah ini bukan keseluruhan anggaran tahunan instansi. Laporan selesai yang belum diisi biayanya tetap dibedakan dari laporan dengan biaya Rp0.
 
 ## Tech Stack
 
@@ -158,7 +164,7 @@ Uji `/health` dan `/api/v1/reports` pada backend, lalu periksa login, foto, dan 
 
 ## Progres Proyek
 
-**Pembaruan 9 November 2026.** Alur inti sudah tersedia dari pembuatan laporan hingga publikasi bukti penyelesaian. Untuk mencobanya secara lokal, masuk sebagai warga dan buat laporan di DKI Jakarta. Lanjutkan sebagai admin untuk verifikasi dan penugasan, lalu sebagai instansi untuk menyelesaikan laporan dan mengunggah foto bukti. Buka kembali detail laporan untuk memeriksa riwayat status dan foto.
+**Pembaruan 11 November 2026.** Alur inti sudah tersedia dari pembuatan laporan hingga publikasi bukti penyelesaian. Untuk mencobanya secara lokal, masuk sebagai warga dan buat laporan di DKI Jakarta. Lanjutkan sebagai admin untuk verifikasi dan penugasan, lalu sebagai instansi untuk menyelesaikan laporan dan mengunggah foto bukti. Buka kembali detail laporan untuk memeriksa riwayat status dan foto.
 
 | Bagian | Progress implementasi |
 | --- | --- |
@@ -166,11 +172,12 @@ Uji `/health` dan `/api/v1/reports` pada backend, lalu periksa login, foto, dan 
 | Autentikasi | Pendaftaran warga, login, dan pembatasan akses sesuai peran. |
 | Ruang Warga | Dashboard, formulir laporan empat tahap, riwayat dan detail laporan sendiri, peta, informasi, serta pengaturan profil dan foto akun. |
 | Ruang Admin | Dashboard, antrean verifikasi, seluruh laporan, penugasan instansi, peta, statistik terpisah, pengelolaan instansi dan pengguna, serta pengaturan platform. |
-| Ruang Instansi | Dashboard, daftar tugas dan laporan unit, detail tugas, penyelesaian dengan foto bukti, penolakan dengan alasan, peta, statistik, serta pengaturan unit. Setiap instansi memiliki satu akun yang dikelola admin. |
+| Ruang Instansi | Dashboard, daftar tugas dan laporan unit, detail tugas, penyelesaian dengan foto bukti dan rincian biaya, koreksi biaya dengan alasan, penolakan dengan alasan, peta, statistik, serta pengaturan unit. Setiap instansi memiliki satu akun yang dikelola admin. |
 | Pelaporan dan pemantauan | Tiket laporan, foto awal, lokasi, riwayat status, catatan penanganan, dan bukti perbaikan. |
 | Pengecekan laporan | Lokasi laporan divalidasi terhadap batas DKI Jakarta. Admin dapat meninjau hasil pengecekan foto dan kandidat laporan serupa saat verifikasi. |
 | Peta status | Penanda diterima berwarna merah, diverifikasi oranye, dalam penanganan kuning, dan selesai hijau. Masa tampil laporan selesai mengikuti pengaturan admin, dengan nilai awal tujuh hari. |
 | Partisipasi publik | Dukungan dan komentar melalui detail laporan publik setelah login. |
+| Transparansi biaya | Nominal rupiah, sumber pendanaan, rincian penggunaan, riwayat koreksi, dan ringkasan publik berdasarkan tanggal penyelesaian. |
 | Data dan statistik | Ringkasan penanganan, tren bulanan, distribusi kategori, perbandingan wilayah, dan insight berbasis data laporan. |
 
 **Masih dalam pengembangan.** Halaman Lupa Kata Sandi belum terhubung ke pengiriman email. Pengujian alur lintas peran dan perangkat masih berlangsung.

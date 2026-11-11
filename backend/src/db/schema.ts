@@ -92,6 +92,34 @@ export const reports = pgTable(
   })
 );
 
+export const reportCosts = pgTable('report_costs', {
+  reportId: varchar('report_id', { length: 40 }).primaryKey().references(() => reports.id, { onDelete: 'cascade' }),
+  amount: numeric('amount', { precision: 15, scale: 0 }).notNull(),
+  fundingSource: varchar('funding_source', { length: 20 }).notNull(),
+  fundingNote: varchar('funding_note', { length: 200 }),
+  breakdown: text('breakdown').notNull(),
+  agencyId: varchar('agency_id', { length: 40 }).notNull().references(() => agencies.id),
+  recordedBy: varchar('recorded_by', { length: 40 }).references(() => users.id, { onDelete: 'set null' }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, table => ({
+  amountRange: check('report_costs_amount_range', sql`${table.amount} >= 0 AND ${table.amount} <= 999999999999999`),
+  fundingSourceCheck: check('report_costs_funding_source', sql`${table.fundingSource} IN ('apbd', 'other')`),
+  fundingNoteCheck: check('report_costs_funding_note', sql`${table.fundingSource} != 'other' OR length(trim(${table.fundingNote})) > 0 AND ${table.fundingNote} IS NOT NULL`),
+  breakdownCheck: check('report_costs_breakdown', sql`length(trim(${table.breakdown})) BETWEEN 5 AND 2000`),
+})).enableRLS();
+
+export const reportCostRevisions = pgTable('report_cost_revisions', {
+  id: varchar('id', { length: 40 }).primaryKey().default(sql`'rcost_' || replace(gen_random_uuid()::text, '-', '')`),
+  reportId: varchar('report_id', { length: 40 }).notNull().references(() => reportCosts.reportId, { onDelete: 'cascade' }),
+  amount: numeric('amount', { precision: 15, scale: 0 }).notNull(),
+  fundingSource: varchar('funding_source', { length: 20 }).notNull(),
+  fundingNote: varchar('funding_note', { length: 200 }),
+  breakdown: text('breakdown').notNull(),
+  reason: text('reason').notNull(),
+  recordedBy: varchar('recorded_by', { length: 40 }).references(() => users.id, { onDelete: 'set null' }),
+  recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull().defaultNow(),
+}, table => ({ reportTimeIdx: index('idx_cost_revisions_report_time').on(table.reportId, table.recordedAt) })).enableRLS();
+
 export const reportEvidenceChecks = pgTable('report_evidence_checks', {
   reportId: varchar('report_id', { length: 40 }).primaryKey().references(() => reports.id, { onDelete: 'cascade' }),
   photos: jsonb('photos').$type<{
@@ -207,6 +235,7 @@ export const reportsRelations = relations(reports, ({ one, many }) => ({
   user: one(users, { fields: [reports.userId], references: [users.id] }),
   region: one(regions, { fields: [reports.regionId], references: [regions.id] }),
   assignedAgency: one(agencies, { fields: [reports.assignedAgencyId], references: [agencies.id] }),
+  cost: one(reportCosts),
   photos: many(reportPhotos),
   statusLogs: many(reportStatusLogs),
   comments: many(comments),
@@ -215,6 +244,16 @@ export const reportsRelations = relations(reports, ({ one, many }) => ({
 
 export const regionsRelations = relations(regions, ({ many }) => ({
   reports: many(reports),
+}));
+
+export const reportCostsRelations = relations(reportCosts, ({ one, many }) => ({
+  report: one(reports, { fields: [reportCosts.reportId], references: [reports.id] }),
+  agency: one(agencies, { fields: [reportCosts.agencyId], references: [agencies.id] }),
+  revisions: many(reportCostRevisions),
+}));
+
+export const reportCostRevisionsRelations = relations(reportCostRevisions, ({ one }) => ({
+  cost: one(reportCosts, { fields: [reportCostRevisions.reportId], references: [reportCosts.reportId] }),
 }));
 
 export const reportPhotosRelations = relations(reportPhotos, ({ one }) => ({

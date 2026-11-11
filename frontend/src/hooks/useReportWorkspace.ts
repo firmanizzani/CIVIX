@@ -59,7 +59,7 @@ export function useReportWorkspace(role: 'admin' | 'agency' | 'citizen', default
 }
 
 export const invalidateReportQueries = (queryClient: QueryClient) => queryClient.invalidateQueries({ predicate: (cached) => [
-    'citizen-overview', 'citizen-detail', 'citizen-map', 'citizen-updates', 'workspace', 'workspace-detail', 'admin-dashboard', 'agency-dashboard', 'admin-reports',
+    'report-costs', 'citizen-overview', 'citizen-detail', 'citizen-map', 'citizen-updates', 'workspace', 'workspace-detail', 'admin-dashboard', 'agency-dashboard', 'admin-reports',
     'agency-assignments', 'my-reports', 'report-detail', 'recent-reports', 'featured-report', 'public-reports',
     'stats-overview', 'stats-overview-full', 'stats-trend', 'stats-regions', 'stats-category',
     'map-points-full', 'map-points-preview', 'admin-map', 'admin-overview', 'admin-agencies', 'agency-overview', 'admin-operational-overview',

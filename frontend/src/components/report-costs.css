@@ -1,0 +1,467 @@
+.cost-eyebrow {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#007f5d;
+  font-size:12px;
+  font-weight:650;
+  margin-bottom:10px
+}
+.report-cost-panel,.cost-overview {
+  background:#fff;
+  border:1px solid #dce9e3;
+  border-radius:16px;
+  padding:28px;
+  margin:24px 0;
+  color:#163d3c;
+  min-width:0;
+  scroll-margin-top:130px
+}
+.report-cost-panel>header {
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+.report-cost-panel>header h2,.cost-overview-heading h2 {
+  font-size:20px;
+  font-weight:700;
+  line-height:1.35;
+  margin:0
+}
+.report-cost-panel .report-cost-amount {
+  font-size:clamp(26px,3vw,36px);
+  font-weight:750;
+  letter-spacing:-.04em;
+  margin:20px 0 8px;
+  overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums
+}
+.cost-funding {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:#007f5d;
+  font-size:13px
+}
+.report-cost-panel h3 {
+  font-size:14px;
+  font-weight:650;
+  margin:24px 0 8px
+}
+.cost-breakdown,.cost-history p {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  line-height:1.7
+}
+.cost-recorded {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  color:#718382;
+  font-size:12px;
+  border-top:1px solid #edf2ef;
+  padding-top:16px;
+  margin-top:20px
+}
+.cost-history {
+  border-top:1px solid #edf2ef;
+  margin:20px 0;
+  padding-top:16px;
+  font-size:13px
+}
+.cost-history summary {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  color:#007f5d
+}
+.cost-history ol {
+  padding:0;
+  list-style:none
+}
+.cost-history li {
+  display:grid;
+  gap:6px;
+  border-left:2px solid #dce9e3;
+  padding:0 0 16px 16px;
+  margin-top:20px
+}
+.cost-history time,.cost-reason,.cost-hint,.cost-unavailable {
+  color:#687e7c;
+  font-size:13px;
+  line-height:1.7
+}
+.cost-unavailable {
+  margin:18px 0
+}
+.report-cost-panel>.btn-outline {
+  margin-top:20px
+}
+.cost-available {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  color:#007f5d;
+  font-size:12px;
+  margin:8px 0
+}
+.cost-overview-heading {
+  display:flex;
+  justify-content:space-between;
+  gap:24px;
+  align-items:flex-start
+}
+.cost-overview-heading p {
+  font-size:13px;
+  line-height:1.7;
+  color:#687e7c;
+  max-width:680px;
+  margin:8px 0 0
+}
+.cost-filters {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
+  margin-top:24px
+}
+.cost-filters label {
+  font-size:12px;
+  display:grid;
+  gap:7px;
+  color:#526d6a
+}
+.cost-filters .input {
+  width:100%;
+  min-width:0
+}
+.cost-metrics {
+  display:grid;
+  grid-template-columns:1.35fr 1fr 1fr;
+  gap:16px;
+  margin:24px 0 10px
+}
+.cost-metrics>div {
+  padding:20px;
+  background:#f5faf7;
+  border:1px solid #e4eee8;
+  border-radius:12px;
+  min-width:0
+}
+.cost-metrics small,.cost-landing-total small {
+  display:block;
+  font-size:12px;
+  color:#687e7c;
+  margin-bottom:12px
+}
+.cost-metrics strong {
+  display:block;
+  font-size:clamp(22px,2vw,28px);
+  font-weight:700;
+  letter-spacing:-.035em;
+  overflow-wrap:anywhere
+}
+.cost-metrics strong span {
+  font-size:12px;
+  font-weight:400;
+  letter-spacing:0;
+  color:#687e7c
+}
+.cost-report-list {
+  margin-top:24px
+}
+.cost-report-list>a {
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:center;
+  padding:20px 0;
+  border-top:1px solid #edf2ef;
+  color:inherit;
+  text-decoration:none
+}
+.cost-report-list small,.cost-report-list p {
+  font-size:12px;
+  color:#687e7c
+}
+.cost-report-list h3 {
+  font-size:15px;
+  font-weight:650;
+  margin:5px 0;
+  overflow-wrap:anywhere
+}
+.cost-report-list>a>strong {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+  font-size:16px;
+  color:#007f5d
+}
+.cost-report-list>a:hover h3 {
+  text-decoration:underline
+}
+.cost-empty {
+  padding:28px 16px;
+  text-align:center;
+  border:1px dashed #dce9e3;
+  border-radius:12px;
+  margin-top:24px;
+  color:#687e7c
+}
+.cost-empty svg {
+  margin:0 auto 10px;
+  color:#70968a
+}
+.cost-empty h3 {
+  font-size:15px;
+  font-weight:650;
+  color:#234e45;
+  margin:0 0 6px
+}
+.cost-empty p {
+  font-size:13px
+}
+.cost-agency-summary {
+  margin-top:20px;
+  font-size:13px
+}
+.cost-agency-summary summary {
+  cursor:pointer;
+  color:#007f5d
+}
+.cost-agency-summary button {
+  display:flex;
+  justify-content:space-between;
+  text-align:left;
+  gap:16px;
+  width:100%;
+  padding:16px 0;
+  border-bottom:1px solid #edf2ef
+}
+.cost-agency-summary small {
+  display:block;
+  color:#687e7c;
+  margin-top:5px
+}
+.cost-pagination,.cost-dialog-actions {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:24px
+}
+.cost-pagination span {
+  font-size:13px
+}
+.cost-fields {
+  border:0;
+  border-top:1px solid #dce9e3;
+  margin:24px 0;
+  padding:20px 0 0;
+  min-width:0;
+  display:grid;
+  gap:10px
+}
+.cost-fields legend {
+  font-size:16px;
+  font-weight:700;
+  padding-right:12px
+}
+.cost-fields label,.cost-dialog label {
+  font-size:13px;
+  font-weight:600;
+  display:block;
+  margin-top:10px
+}
+.cost-fields small {
+  font-size:12px;
+  color:#687e7c
+}
+.cost-fields .input {
+  width:100%;
+  min-width:0
+}
+.cost-money-input {
+  display:flex;
+  border:1px solid #cbded5;
+  border-radius:9px;
+  overflow:hidden;
+  background:#fff;
+  align-items:center
+}
+.cost-money-input:focus-within {
+  outline:2px solid #00865f;
+  outline-offset:2px
+}
+.cost-money-input span {
+  padding:12px;
+  color:#687e7c;
+  background:#f5faf7
+}
+.cost-money-input input {
+  padding:12px;
+  width:100%;
+  min-width:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  font-variant-numeric:tabular-nums
+}
+.admin-dialog.cost-dialog {
+  width:min(620px,calc(100vw - 32px));
+  max-height:calc(100dvh - 32px);
+  padding:28px;
+  overflow:auto
+}
+.cost-dialog h2 {
+  font-size:22px;
+  font-weight:700;
+  margin:0 0 10px
+}
+.cost-dialog>p,.cost-dialog form>p {
+  font-size:13px;
+  line-height:1.7
+}
+.cost-review {
+  display:grid;
+  gap:16px;
+  margin:24px 0;
+  padding:20px;
+  background:#f5faf7;
+  border-radius:12px
+}
+.cost-review dt {
+  font-size:12px;
+  color:#687e7c;
+  margin-bottom:4px
+}
+.cost-review dd {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere
+}
+.cost-review-amount {
+  font-size:28px;
+  font-weight:700
+}
+.cost-landing {
+  display:grid;
+  grid-template-columns:1.2fr 1fr;
+  gap:48px;
+  margin:32px 0;
+  padding:32px;
+  background:#fff;
+  border:1px solid #dce9e3;
+  border-radius:20px;
+  align-items:center
+}
+.cost-landing h2 {
+  font-size:clamp(24px,3vw,32px);
+  font-weight:700;
+  letter-spacing:-.035em;
+  margin:0 0 10px
+}
+.cost-landing p {
+  color:#687e7c;
+  font-size:14px;
+  line-height:1.7
+}
+.cost-landing a {
+  margin-top:18px;
+  display:inline-flex;
+  gap:8px;
+  color:#007f5d
+}
+.cost-landing-total {
+  border-left:1px solid #dce9e3;
+  padding-left:32px;
+  min-width:0
+}
+.cost-landing-total strong {
+  font-size:clamp(28px,3vw,40px);
+  font-weight:700;
+  color:#007f5d;
+  overflow-wrap:anywhere
+}
+.cost-landing-total p {
+  font-size:12px;
+  margin-top:10px
+}
+@media(max-width:767px) {
+  .report-cost-panel,.cost-overview {
+    padding:20px;
+    border-radius:14px;
+    margin:20px 0
+  }
+  .cost-overview-heading {
+    flex-direction:column;
+    gap:12px
+  }
+  .cost-overview-heading h2,.report-cost-panel>header h2 {
+    font-size:18px
+  }
+  .cost-metrics {
+    grid-template-columns:1fr 1fr;
+    gap:10px
+  }
+  .cost-metrics>div:first-child {
+    grid-column:1/-1
+  }
+  .cost-metrics>div {
+    padding:16px
+  }
+  .cost-metrics strong {
+    font-size:24px
+  }
+  .cost-metrics strong span {
+    display:block;
+    margin-top:6px
+  }
+  .cost-report-list>a {
+    align-items:flex-start;
+    flex-direction:column;
+    gap:10px
+  }
+  .cost-report-list>a>strong {
+    max-width:100%;
+    overflow-wrap:anywhere;
+    font-size:17px;
+    flex-shrink:1
+  }
+  .cost-filters {
+    grid-template-columns:1fr
+  }
+  .cost-landing {
+    grid-template-columns:1fr;
+    gap:24px;
+    padding:24px;
+    margin:24px 0
+  }
+  .cost-landing-total {
+    border-left:0;
+    border-top:1px solid #dce9e3;
+    padding:24px 0 0
+  }
+  .admin-dialog.cost-dialog {
+    padding:20px
+  }
+  .cost-dialog-actions {
+    flex-wrap:wrap
+  }
+  .cost-dialog-actions button {
+    flex:1;
+    min-width:120px
+  }
+  .cost-agency-summary button {
+    flex-direction:column;
+    gap:8px
+  }
+  .cost-pagination {
+    justify-content:space-between;
+    gap:6px
+  }
+  .cost-pagination .btn-outline {
+    padding:10px;
+    font-size:12px
+  }
+}

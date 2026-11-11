@@ -1,3 +1,4 @@
+import { CostAvailable } from '@/components/ReportCost';
 import { Link } from 'react-router-dom';
 import { Search, FileText } from 'lucide-react';
 import { useReportWorkspace } from '@/hooks/useReportWorkspace';
@@ -7,7 +8,7 @@ import { formatDateTime } from '@/lib/utils';
 import { KATEGORI_LABEL, Report } from '@/types';
 
 export function CitizenReportRows({ reports }: { reports: Report[] }) {
-  return <div className="warga-report-rows">{reports.map(report => <Link className="warga-report-row" key={report.id} to={'/citizen/reports/' + report.id}>{reportCover(report) ? <img src={reportCover(report)} alt="" /> : <span className="warga-no-photo"><FileText size={21} /></span>}<div className="warga-row-title"><strong>{report.judul}</strong><small>{report.namaJalan || report.region?.nama || 'Alamat belum dicantumkan'}</small></div><time dateTime={report.dibuatPada}>{formatDateTime(report.dibuatPada).split(',')[0]}</time><StatusBadge status={report.status} /></Link>)}</div>;
+  return <div className="warga-report-rows">{reports.map(report => <Link className="warga-report-row" key={report.id} to={'/citizen/reports/' + report.id}>{reportCover(report) ? <img src={reportCover(report)} alt="" /> : <span className="warga-no-photo"><FileText size={21} /></span>}<div className="warga-row-title"><strong>{report.judul}</strong><small>{report.namaJalan || report.region?.nama || 'Alamat belum dicantumkan'}</small><CostAvailable report={report} /></div><time dateTime={report.dibuatPada}>{formatDateTime(report.dibuatPada).split(',')[0]}</time><StatusBadge status={report.status} /></Link>)}</div>;
 }
 
 export default function CitizenReportsPage() {

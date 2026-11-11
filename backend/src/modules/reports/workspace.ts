@@ -2,6 +2,7 @@ import { and, asc, count, desc, eq, ilike, inArray, or, SQL, gte, lte } from 'dr
 import { z } from 'zod';
 import { db } from '../../db/index.js';
 import { kategoriLaporanEnum, reportPhotos, reports, reportStatusLogs, statusLaporanEnum } from '../../db/schema.js';
+import { reportCostSummary } from './costs.js';
 
 const activeStatuses = ['diterima', 'diverifikasi', 'ditugaskan', 'dikerjakan'] as const;
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => {
@@ -47,6 +48,7 @@ export async function getReportWorkspace(input: unknown, scope?: SQL, allowedSta
       where, limit: query.limit, offset: (page - 1) * query.limit,
       orderBy: [query.sort === 'oldest' ? asc(reports.dibuatPada) : desc(reports.dibuatPada), asc(reports.id)],
       with: {
+        cost: reportCostSummary,
         photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] },
         region: true, assignedAgency: true,
         statusLogs: { orderBy: [desc(reportStatusLogs.waktu), desc(reportStatusLogs.id)], limit: 1 },

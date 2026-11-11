@@ -2,8 +2,18 @@ import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
 import { reports, regions, comments, upvotes } from '../../db/schema.js';
 import { eq, sql, desc, count, and, gte } from 'drizzle-orm';
+import { z } from 'zod';
+import { getCostOverview } from '../reports/costs.js';
 
 const router = Router();
+
+router.get('/costs', async (req, res) => {
+  try { res.json(await getCostOverview(req.query)); }
+  catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Filter biaya tidak valid.' });
+    res.status(500).json({ error: 'Ringkasan biaya belum berhasil dimuat.' });
+  }
+});
 
 // GET /stats/overview - Kartu ringkasan publik
 router.get('/overview', async (_req, res: Response) => {

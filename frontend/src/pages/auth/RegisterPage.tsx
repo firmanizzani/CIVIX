@@ -3,6 +3,8 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { getLoginDestination } from '@/lib/authRedirect';
 import AuthLayout from '@/components/AuthLayout';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
+import { useGoogleClientId } from '@/hooks/useGoogleClientId';
 import { AlertCircle, Loader2, Eye, EyeOff, User, Mail, Lock, UserPlus, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -10,7 +12,8 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect');
   const redirectQuery = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
-  const { register, isLoading } = useAuthStore();
+  const { register, loginWithGoogle, isLoading } = useAuthStore();
+  const googleClientId = useGoogleClientId();
   const [nama, setNama] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +23,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (useAuthStore.getState().isLoading) return;
     setError('');
 
     if (password !== confirmPassword) {
@@ -37,6 +41,17 @@ export default function RegisterPage() {
       navigate(getLoginDestination(redirect, 'warga'), { replace: true });
     } catch (err: unknown) {
       setError((err instanceof Error ? err.message : "") || 'Gagal mendaftar. Silakan coba lagi.');
+    }
+  };
+
+  const handleGoogleLogin = async (credential: string) => {
+    if (useAuthStore.getState().isLoading) return;
+    setError('');
+    try {
+      await loginWithGoogle(credential);
+      navigate(getLoginDestination(redirect, 'warga'), { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal mendaftar dengan Google. Coba lagi.');
     }
   };
 
@@ -152,6 +167,13 @@ export default function RegisterPage() {
                 )}
               </button>
             </form>
+
+            {googleClientId && <div className="mt-4 flex flex-col items-center gap-3">
+              <div className="flex w-full items-center gap-3 text-xs text-civix-muted">
+                <span className="h-px flex-1 bg-civix-border" />atau<span className="h-px flex-1 bg-civix-border" />
+              </div>
+              <GoogleSignInButton clientId={googleClientId} onCredential={handleGoogleLogin} text="signup_with" />
+            </div>}
 
             <div className="mt-6 border-t border-civix-border/70 pt-5 text-center text-xs">
               <span className="text-civix-muted">Sudah punya akun? </span>

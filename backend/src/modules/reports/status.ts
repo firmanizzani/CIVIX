@@ -1,6 +1,8 @@
 import { desc, eq } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { reports, reportStatusLogs } from '../../db/schema.js';
+import { costInput, saveReportCost } from './costs.js';
+import type { z } from 'zod';
 
 type Status = typeof reports.$inferSelect.status;
 
@@ -29,6 +31,7 @@ interface Transition {
   requiredAgencyId?: string;
   allowNoteUpdate?: boolean;
   completedAt?: Date | null;
+  cost?: z.output<typeof costInput>;
   beforeChange?: (tx: any, report: typeof reports.$inferSelect) => Promise<void>;
 }
 
@@ -57,6 +60,10 @@ export async function transitionReport(options: Transition) {
       throw new ReportTransitionError(409, 'Status laporan telah berubah. Muat ulang laporan sebelum melanjutkan.');
     }
     await options.beforeChange?.(tx, report);
+    if (options.cost) {
+      if (!report.assignedAgencyId || options.status !== 'selesai') throw new ReportTransitionError(409, 'Biaya memerlukan tugas penyelesaian instansi.');
+      await saveReportCost(tx, options.cost, report.id, report.assignedAgencyId, options.actorId, 'Dicatat saat penyelesaian laporan.');
+    }
     const patch: Record<string, unknown> = { status: options.status };
     if (options.agencyId !== undefined) patch.assignedAgencyId = options.agencyId;
     if (options.completedAt !== undefined) patch.selesaiPada = options.completedAt;

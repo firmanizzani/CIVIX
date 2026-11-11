@@ -1,3 +1,4 @@
+import CostOverview from '@/components/CostOverview';
 import { useQuery } from '@tanstack/react-query';
 import QueryError from '@/components/QueryError';
 import Navbar from '@/components/Navbar';
@@ -252,8 +253,8 @@ export default function StatsPage() {
           )}
           </div>
         </Reveal>
+        <CostOverview />
       </div>
-
       <Footer />
     </div>
   );

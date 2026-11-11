@@ -1,3 +1,4 @@
+import ReportCost from '@/components/ReportCost';
 import { ReactNode, useState } from 'react';
 import PhotoPreview from '@/components/PhotoPreview';
 import { Link } from 'react-router-dom';
@@ -6,8 +7,8 @@ import { Report, KATEGORI_LABEL, STATUS_LABEL } from '@/types';
 import { StatusBadge } from '@/components/ReportWorkspaceUI';
 import { formatDateTime, getStatusActorLabel, getStatusColor } from '@/lib/utils';
 
-export default function AgencyTaskDetail({ report, onBack, actions, evidence, admin = false, backLabel = 'Tugas Penanganan' }: {
-  report: Report; onBack: () => void; actions: ReactNode; evidence?: ReactNode; admin?: boolean; backLabel?: string;
+export default function AgencyTaskDetail({ report, onBack, actions, evidence, costAction, admin = false, backLabel = 'Tugas Penanganan' }: {
+  report: Report; onBack: () => void; actions: ReactNode; evidence?: ReactNode; costAction?: ReactNode; admin?: boolean; backLabel?: string;
 }) {
   const [photo, setPhoto] = useState(0);
   const photos = report.photos || [];
@@ -16,6 +17,7 @@ export default function AgencyTaskDetail({ report, onBack, actions, evidence, ad
     <div className="agency-task-grid"><article className="agency-task-main">
       {photos.length ? <><PhotoPreview key={(photos[photo] || photos[0]).id} imageClassName="agency-task-photo" src={(photos[photo] || photos[0]).url} alt={`Foto laporan ${report.judul}`} /><div className="admin-photo-thumbs">{photos.map((item, i) => <button key={item.id} aria-label={`Lihat foto ${i + 1}`} aria-pressed={photo === i} onClick={() => setPhoto(i)}><img src={item.url} alt="" />{item.jenis === 'bukti_perbaikan' && <span>Bukti selesai</span>}</button>)}</div></> : <div className="admin-no-photo agency-task-photo"><MapPin size={32} /><p>Belum ada foto laporan</p></div>}
       <h2>{report.judul}</h2><p className="agency-description">{report.deskripsi}</p><dl><div><dt>Kategori</dt><dd>{KATEGORI_LABEL[report.kategori]}</dd></div><div><dt>Lokasi</dt><dd>{report.namaJalan || 'Alamat belum tersedia'}<small>{report.region?.nama}</small>{admin && <Link className="admin-detail-map-link" to={'/admin/map?laporan=' + encodeURIComponent(report.id)}>Lihat di Peta →</Link>}</dd></div><div><dt>Instansi</dt><dd>{report.assignedAgency?.nama || '—'}</dd></div>{admin && <div><dt>Pelapor</dt><dd>{report.user?.nama || 'Warga'}{report.anonim && <small>Identitas disembunyikan pada halaman publik</small>}</dd></div>}<div><dt>Koordinat</dt><dd>{report.latitude}, {report.longitude}</dd></div></dl>
+      <ReportCost report={report}>{costAction}</ReportCost>
     </article><aside className="agency-task-side">
       <section className="admin-panel agency-timeline">
         <h2>Status Penanganan</h2>

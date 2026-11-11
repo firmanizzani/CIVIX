@@ -7,8 +7,9 @@ import multer from 'multer';
 import { db } from '../../db/index.js';
 import { reports, reportPhotos, reportStatusLogs, agencies, users, regions } from '../../db/schema.js';
 import { asc, eq, desc, count, inArray, and } from 'drizzle-orm';
+import { costInput, correctReportCost, getCostOverview, reportCostDetail, reportCostSummary } from '../reports/costs.js';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
-import { buildReportPhotoPath, uploadImageToStorage } from '../uploads/service.js';
+import { buildReportPhotoPath, uploadImageToStorage, removeReportPhotosFromStorage } from '../uploads/service.js';
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -39,6 +40,15 @@ const getAgencyScope = async (req: AuthRequest, res: Response): Promise<{ agency
 const scopeCondition = (agencyId: string) =>
   eq(reports.assignedAgencyId, agencyId);
 
+router.get('/costs', async (req: AuthRequest, res) => {
+  try {
+    const scope = await getAgencyScope(req, res);
+    if (scope) res.json(await getCostOverview(req.query, scopeCondition(scope.agencyId)));
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Filter biaya tidak valid.' });
+    res.status(500).json({ error: 'Ringkasan biaya belum berhasil dimuat.' });
+  }
+});
 
 // Every screen uses this same assignment scope, including completed/rejected work.
 router.get('/overview', async (req: AuthRequest, res: Response) => {
@@ -47,7 +57,7 @@ router.get('/overview', async (req: AuthRequest, res: Response) => {
     if (!scope) return;
     const items = await db.query.reports.findMany({
       where: scopeCondition(scope.agencyId), orderBy: [desc(reports.dibuatPada)],
-      with: { region: true, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } },
+      with: { cost: reportCostSummary, region: true, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } },
     });
     const wilayah = await db.select().from(regions).orderBy(asc(regions.nama));
     res.json({ items, regions: wilayah });
@@ -151,6 +161,7 @@ router.get('/assignments/:id', async (req: AuthRequest, res: Response) => {
     const task = await db.query.reports.findFirst({
       where: and(eq(reports.id, req.params.id), scopeCondition(scope.agencyId)),
       with: {
+        cost: reportCostDetail,
         photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true,
         assignedAgency: true,
@@ -203,25 +214,47 @@ router.post('/assignments/:id/reject', async (req: AuthRequest, res: Response) =
 });
 
 router.post('/assignments/:id/complete', upload.array('bukti', 3), async (req: AuthRequest, res: Response) => {
+  const uploaded: { path: string; url: string }[] = [];
   try {
     const scope = await getAgencyScope(req, res);
     if (!scope) return;
-    const { catatan } = z.object({ catatan: z.string().trim().max(2000).optional() }).parse(req.body || {});
+    const { catatan } = z.object({ catatan: z.string().trim().min(5, 'Isi catatan penyelesaian, minimal 5 karakter.').max(2000) }).parse(req.body || {});
+    const cost = costInput.parse(req.body);
     const files = (req.files || []) as Express.Multer.File[];
     const result = await transitionReport({
       reportId: req.params.id, actorId: req.user!.id, status: 'selesai', allowedFrom: ['ditugaskan', 'dikerjakan'],
       requiredAgencyId: scope.agencyId, completedAt: new Date(),
-      note: catatan || 'Pekerjaan selesai, bukti perbaikan telah diunggah',
+      note: catatan,
+      cost,
       beforeChange: async (tx, report) => {
         if (!files.length) throw new ReportTransitionError(400, 'Foto bukti perbaikan wajib diunggah minimal 1');
         for (const [index, file] of files.entries()) {
           const storagePath = buildReportPhotoPath(report.kodeTiket, 'bukti', index + 1, file.mimetype).replace(/(\.[^.]+)$/, `-${randomUUID()}$1`);
           const url = await uploadImageToStorage(file.buffer, storagePath, file.mimetype);
+          uploaded.push({ path: storagePath, url });
           await tx.insert(reportPhotos).values({ reportId: report.id, url, jenis: 'bukti_perbaikan' });
         }
       },
     });
     res.json({ success: true, changed: result.changed, message: 'Laporan selesai' });
+  } catch (error) {
+    if (uploaded.length) {
+      try {
+        const linked = await db.select({ url: reportPhotos.url }).from(reportPhotos)
+          .where(inArray(reportPhotos.url, uploaded.map(photo => photo.url)));
+        await removeReportPhotosFromStorage(uploaded.filter(photo => !linked.some(row => row.url === photo.url)).map(photo => photo.path));
+      } catch { console.error('Foto unggahan yang gagal belum dapat dibersihkan.'); }
+    }
+    sendTransitionError(res, error);
+  }
+});
+
+router.patch('/assignments/:id/cost', async (req: AuthRequest, res) => {
+  try {
+    const scope = await getAgencyScope(req, res);
+    if (!scope) return;
+    const result = await correctReportCost(req.params.id, scope.agencyId, req.user!.id, req.body);
+    res.json({ success: true, changed: result.changed, message: 'Rincian biaya berhasil disimpan.' });
   } catch (error) { sendTransitionError(res, error); }
 });
 

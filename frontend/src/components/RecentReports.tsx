@@ -1,3 +1,4 @@
+import { CostAvailable } from './ReportCost';
 import { Link } from 'react-router-dom';
 import { ArrowRight, FileText, MapPin } from 'lucide-react';
 import type { Report } from '@/types';
@@ -28,7 +29,7 @@ export default function RecentReports({ reports, loading, error, refreshing, onR
           : !reports.length ? <div className="landing-recent-empty"><FileText size={28} aria-hidden="true" /><h3>Belum ada laporan publik</h3><p>Laporan terbaru dari warga akan tampil di sini.</p><Link to="/citizen/create-report" className="btn-outline">Buat Laporan</Link></div>
             : <ul className="landing-recent-grid" aria-label="Laporan terbaru dari warga">{reports.map(report => <li key={report.id}><Link className="landing-recent-card" to={'/reports/' + report.id}>
               {reportCover(report) ? <img className="landing-recent-photo" src={reportCover(report)} alt="" loading="lazy" /> : <div className="landing-recent-photo landing-recent-no-photo"><MapPin size={28} aria-hidden="true" /><span>Foto belum tersedia</span></div>}
-              <div className="landing-recent-card-body"><span className="landing-recent-category">{KATEGORI_LABEL[report.kategori]}</span><h3>{report.judul}</h3><ReportMetadata report={report} /><div className="landing-recent-status"><span className={`rounded-full px-2.5 py-1 font-semibold ${getStatusBadgeClasses(report.status)}`}>{STATUS_LABEL[report.status]}</span></div></div>
+              <div className="landing-recent-card-body"><span className="landing-recent-category">{KATEGORI_LABEL[report.kategori]}</span><h3>{report.judul}</h3><ReportMetadata report={report} /><CostAvailable report={report} /><div className="landing-recent-status"><span className={`rounded-full px-2.5 py-1 font-semibold ${getStatusBadgeClasses(report.status)}`}>{STATUS_LABEL[report.status]}</span></div></div>
             </Link></li>)}</ul>}
     </div></div>
   </section>;

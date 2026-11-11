@@ -8,6 +8,7 @@ import { reports, reportPhotos, reportEvidenceChecks, reportStatusLogs, comments
 import { asc, eq, desc, and, sql, notInArray, gte, lte } from 'drizzle-orm';
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { reportStatusHistory } from './status.js';
+import { reportCostSummary, reportCostDetail } from './costs.js';
 import generateTicket from '../../utils/ticket.js';
 import { jakartaRegionsAt } from '../../utils/geo.js';
 import { buildReportPhotoPath, removeReportPhotosFromStorage, uploadImageToStorage } from '../uploads/service.js';
@@ -40,6 +41,7 @@ router.get('/me/reports', authMiddleware, async (req: AuthRequest, res: Response
       orderBy: [desc(reports.dibuatPada)],
       limit: 100,
       with: {
+        cost: reportCostSummary,
         photos: {
           orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)],
           columns: { id: true, url: true, jenis: true },
@@ -107,7 +109,7 @@ router.get('/', async (req, res: Response) => {
       const cards = await db.query.reports.findMany({
         ...listQuery,
         columns: { id: true, judul: true, kategori: true, kodeTiket: true, namaJalan: true, dibuatPada: true, status: true },
-        with: { photos: { columns: { url: true }, orderBy: photoOrder, limit: 1 } },
+        with: { cost: reportCostSummary, photos: { columns: { url: true }, orderBy: photoOrder, limit: 1 } },
       });
       return res.json(cards);
     }
@@ -118,6 +120,7 @@ router.get('/', async (req, res: Response) => {
         photos: { orderBy: photoOrder },
         region: true,
         upvotes: true,
+        cost: reportCostSummary,
         comments: { with: { user: { columns: { nama: true } } } },
       },
     });
@@ -155,6 +158,7 @@ router.get('/map', async (_req, res: Response) => {
         dibuatPada: true,
       },
       with: {
+        cost: reportCostSummary,
         photos: { limit: 1, orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true,
       },
@@ -288,6 +292,7 @@ router.get('/:id', async (req, res: Response) => {
         user: { columns: { nama: true } },
         photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         statusLogs: reportStatusHistory,
+        cost: reportCostDetail,
         region: true,
         assignedAgency: { columns: { id: true, nama: true } },
         upvotes: true,

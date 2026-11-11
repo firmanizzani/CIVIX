@@ -1,3 +1,4 @@
+import CostOverview from '@/components/CostOverview';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -107,6 +108,7 @@ function LandingPage() {
               { label: 'Laporan Selesai', value: stats?.selesai, icon: ShieldCheck },
             ].map(item => <Link to="/stats" key={item.label}><span className="landing-stat-icon"><item.icon size={24} /></span><div><strong>{item.value === undefined ? '—' : <AnimatedCounter value={item.value} />}</strong><span>{item.label}</span></div></Link>)}
         </div></section>
+        <div className="container-civix"><CostOverview landing /></div>
         <Reveal><section className="landing-map-section"><div className="container-civix landing-map-grid">
               <div className="landing-map-frame"><LandingMap interactive points={mapPoints} loading={mapLoading} error={mapError} retry={retryMap} fetching={mapFetching} />
                 <div className="landing-map-legend"><strong>Status laporan</strong>{(['diterima', 'diverifikasi', 'dikerjakan', 'selesai'] as const).map(status => <span key={status}><i style={{ background: getStatusColor(status) }} />{STATUS_LABEL[status]}</span>)}</div>
@@ -121,7 +123,7 @@ function LandingPage() {
                   { title: 'Laporkan masalah', desc: 'Sampaikan masalah di sekitar Anda dengan foto dan lokasi yang jelas.', icon: PencilLine },
                   { title: 'Laporan diverifikasi', desc: 'Laporan akan diperiksa untuk memastikan keabsahan informasi.', icon: FileText },
                   { title: 'Instansi menangani', desc: 'Laporan diteruskan ke instansi terkait untuk ditindaklanjuti.', icon: Settings },
-                  { title: 'Pantau hingga selesai', desc: 'Ikuti perkembangan laporan secara real-time dalam satu platform.', icon: CheckCircle2 },
+                  { title: 'Pantau hingga selesai', desc: 'Lihat hasil perbaikan, foto bukti, dan rincian biaya penanganan.', icon: CheckCircle2 },
                 ].map((step, index) => <div key={step.title} data-reveal-item className="landing-step"><span className="landing-step-icon"><step.icon size={27} /></span><h3>{step.title}</h3><p>{step.desc}</p>{index < 3 && <ChevronRight className="landing-step-arrow" size={23} aria-hidden="true" />}</div>)}
               </div>
         </div></section></Reveal>
@@ -272,7 +274,7 @@ function LandingPage() {
                 {
                   question: 'Apakah ada biaya untuk menggunakan layanan CIVIX?',
                   answer:
-                    'CIVIX dapat digunakan 100% gratis oleh seluruh masyarakat tanpa pungutan biaya apa pun.',
+                    'CIVIX gratis untuk warga. Rincian biaya pada laporan adalah biaya penanganan yang dicatat instansi, bukan tagihan kepada pelapor.',
                 },
               ].map((faq, index) => {
                 const isOpen = openFaq === index;

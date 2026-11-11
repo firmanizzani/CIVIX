@@ -123,8 +123,8 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {googleClientId && <div className="mt-5 space-y-2 text-center">
-              <div className="flex items-center gap-3 text-xs text-civix-muted">
+            {googleClientId && <div className="mt-4 flex flex-col items-center gap-3">
+              <div className="flex w-full items-center gap-3 text-xs text-civix-muted">
                 <span className="h-px flex-1 bg-civix-border" />atau<span className="h-px flex-1 bg-civix-border" />
               </div>
               <GoogleSignInButton clientId={googleClientId} onCredential={handleGoogleLogin} />

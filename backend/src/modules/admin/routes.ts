@@ -1,4 +1,5 @@
 import { getReportWorkspace } from '../reports/workspace.js';
+import { getCostOverview, reportCostDetail, reportCostSummary } from '../reports/costs.js';
 import { transitionReport, ReportTransitionError, reportStatusHistory } from '../reports/status.js';
 import { Router, Response } from 'express';
 import { db } from '../../db/index.js';
@@ -12,6 +13,14 @@ import { z } from 'zod';
 const router = Router();
 router.use(authMiddleware);
 router.use(requireRole(['admin']));
+
+router.get('/costs', async (req, res) => {
+  try { res.json(await getCostOverview(req.query)); }
+  catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Filter biaya tidak valid.' });
+    res.status(500).json({ error: 'Ringkasan biaya belum berhasil dimuat.' });
+  }
+});
 
 router.get('/settings', async (_req, res: Response) => {
   try { res.json(await readPlatformSettings()); }
@@ -38,7 +47,7 @@ router.get('/map', async (_req, res: Response) => {
 router.get('/overview', async (_req, res: Response) => {
   try {
     const items = await db.query.reports.findMany({ orderBy: [desc(reports.dibuatPada)],
-      with: { region: true, assignedAgency: { columns: { id: true, nama: true } }, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } } });
+      with: { cost: reportCostSummary, region: true, assignedAgency: { columns: { id: true, nama: true } }, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } } });
     const wilayah = await db.select().from(regions).orderBy(asc(regions.nama));
     res.json({ items, regions: wilayah });
   } catch { res.status(500).json({ error: 'Gagal memuat ringkasan operasional admin' }); }
@@ -112,7 +121,7 @@ router.get('/reports/:id', async (req, res: Response) => {
   try {
     const report = await db.query.reports.findFirst({
       where: eq(reports.id, req.params.id),
-      with: { photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
+      with: { cost: reportCostDetail, photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] },
         region: true, assignedAgency: true,
         statusLogs: reportStatusHistory, user: { columns: { id: true, nama: true, email: true } } },
     });

@@ -8,9 +8,17 @@ import { users, citizenProfiles, reports, reportPhotos, reportStatusLogs } from 
 import { authMiddleware, requireRole, AuthRequest } from '../../middleware/auth.js';
 import { removeProfilePhotoFromStorage, uploadImageToStorage } from '../uploads/service.js';
 import { reportStatusHistory } from '../reports/status.js';
+import { getCostOverview, reportCostDetail, reportCostSummary } from '../reports/costs.js';
 
 const router = Router();
 router.use(authMiddleware, requireRole(['warga']));
+router.get('/costs', async (req: AuthRequest, res) => {
+  try { res.json(await getCostOverview(req.query, eq(reports.userId, req.user!.id))); }
+  catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Filter biaya tidak valid.' });
+    res.status(500).json({ error: 'Ringkasan biaya belum berhasil dimuat.' });
+  }
+});
 const avatarUpload = multer({ limits: { fileSize: 2 * 1024 * 1024 }, fileFilter: (_req, file, cb) => {
   if (['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) cb(null, true);
   else cb(Object.assign(new Error('Gunakan foto JPG, PNG, atau WebP.'), { statusCode: 400 }));
@@ -26,7 +34,7 @@ router.get('/map', async (req: AuthRequest, res) => {
     const scope = or(eq(reports.userId, req.user!.id), publicReports);
     const dateRange = period === 'all'
       ? undefined : sql`${reports.dibuatPada} >= NOW() - (${Number(period)} * INTERVAL '1 day')`;
-    const rows = await db.query.reports.findMany({ where: and(scope, dateRange), columns: { id: true, userId: true, judul: true, kodeTiket: true, status: true, kategori: true, namaJalan: true, regionId: true, latitude: true, longitude: true, dibuatPada: true }, with: { region: true, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } } });
+    const rows = await db.query.reports.findMany({ where: and(scope, dateRange), columns: { id: true, userId: true, judul: true, kodeTiket: true, status: true, kategori: true, namaJalan: true, regionId: true, latitude: true, longitude: true, dibuatPada: true }, with: { cost: reportCostSummary, region: true, photos: { where: eq(reportPhotos.jenis, 'awal'), limit: 1, orderBy: [asc(reportPhotos.dibuatPada)] } } });
     res.json(rows.map(({ userId, ...row }) => ({ ...row, owned: userId === req.user!.id })));
   } catch (error) {
     if (error instanceof z.ZodError) return res.status(400).json({ error: 'Periode peta tidak valid' });
@@ -98,7 +106,7 @@ router.get('/updates', async (req: AuthRequest, res) => {
 });
 router.get('/reports/:id', async (req: AuthRequest, res) => {
   try {
-    const report = await db.query.reports.findFirst({ where: (row, { and }) => and(eq(row.id, req.params.id), eq(row.userId, req.user!.id)), with: { region: true, assignedAgency: true, photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] }, statusLogs: reportStatusHistory } });
+    const report = await db.query.reports.findFirst({ where: (row, { and }) => and(eq(row.id, req.params.id), eq(row.userId, req.user!.id)), with: { cost: reportCostDetail, region: true, assignedAgency: true, photos: { orderBy: [asc(reportPhotos.jenis), asc(reportPhotos.dibuatPada)] }, statusLogs: reportStatusHistory } });
     if (!report) return res.status(404).json({ error: 'Laporan Anda tidak ditemukan' });
     res.json(report);
   } catch { res.status(500).json({ error: 'Gagal memuat detail laporan' }); }

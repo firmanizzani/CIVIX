@@ -1,3 +1,7 @@
+import AdminModal from '@/components/AdminModal';
+import EditReportCost from '@/components/EditReportCost';
+import { CostFields } from '@/components/ReportCost';
+import { emptyCostFields, validCostFields, formatRupiah, fundingLabel } from '@/lib/costs';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { CheckCircle2, ClipboardCheck, Search, Upload, X } from 'lucide-react';
@@ -19,6 +23,8 @@ export default function AgencyAssignmentsPage({ all = false }: { all?: boolean }
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedId = w.params.get('laporan');
   const [note, setNote] = useState('');
+  const [cost, setCost] = useState(emptyCostFields);
+  const [confirming, setConfirming] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [fileError, setFileError] = useState('');
@@ -44,6 +50,7 @@ export default function AgencyAssignmentsPage({ all = false }: { all?: boolean }
       if (action === 'complete') {
         const form = new FormData();
         form.append('catatan', note);
+        Object.entries(cost).forEach(([key, value]) => form.append(key, value));
         files.forEach((file) => form.append('bukti', file));
         return (await apiClient.post('/agency/assignments/' + selectedId + '/complete', form, { headers: { 'Content-Type': 'multipart/form-data' } })).data;
       }
@@ -51,13 +58,14 @@ export default function AgencyAssignmentsPage({ all = false }: { all?: boolean }
     },
     onSuccess: async (result) => {
       setSuccess(result.message || 'Perubahan berhasil disimpan.');
+      setConfirming(false); setCost(emptyCostFields());
       setNote(''); setFiles([]); setFileError(''); setRejecting(false);
       if (inputRef.current) inputRef.current.value = '';
       await w.refreshReports();
     },
     onError: async () => { await w.refreshReports(); },
   });
-  useEffect(() => { setNote(''); setFiles([]); setFileError(''); setSuccess(''); setRejecting(false); mutation.reset(); }, [selectedId]);
+  useEffect(() => { setCost(emptyCostFields()); setConfirming(false); setNote(''); setFiles([]); setFileError(''); setSuccess(''); setRejecting(false); mutation.reset(); }, [selectedId]);
   const addFiles = (incoming: File[]) => {
     if (mutation.isPending) return;
     setFileError('');
@@ -81,9 +89,9 @@ export default function AgencyAssignmentsPage({ all = false }: { all?: boolean }
             <p className="workspace-muted">Catatan ini akan tampil di riwayat laporan.</p>
             <button type="submit" className="btn-primary w-full" disabled={mutation.isPending || !note.trim()}><ClipboardCheck size={16} />{mutation.isPending ? 'Menyimpan…' : 'Mulai Penanganan'}</button>
           </form>}
-          {report.status === 'dikerjakan' && !rejecting ? <form className="workspace-task-form" onSubmit={(event) => { event.preventDefault(); if (files.length) mutation.mutate('complete'); }}>
-            <label className="label" htmlFor="agency-progress-note">Catatan Penanganan (opsional)</label>
-            <textarea id="agency-progress-note" className="input" rows={3} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Tulis perkembangan atau hasil penanganan di lokasi…" disabled={mutation.isPending} />
+          {report.status === 'dikerjakan' && !rejecting ? <form className="workspace-task-form" onSubmit={(event) => { event.preventDefault(); if (files.length && validCostFields(cost) && note.trim().length >= 5) setConfirming(true); }}>
+            <label className="label" htmlFor="agency-progress-note">Catatan Penyelesaian</label>
+            <textarea id="agency-progress-note" className="input" rows={3} required minLength={5} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Jelaskan pekerjaan perbaikan yang telah diselesaikan di lokasi…" disabled={mutation.isPending} />
               <div className="workspace-upload-section">
                 <label className="label" htmlFor="agency-proof-files">Foto Bukti Penyelesaian</label>
                 <input id="agency-proof-files" ref={inputRef} type="file" multiple accept={imageTypes.join(',')} className="sr-only" disabled={mutation.isPending || files.length >= 3} onChange={(event) => { addFiles(Array.from(event.target.files || [])); event.target.value = ''; }} />
@@ -92,14 +100,15 @@ export default function AgencyAssignmentsPage({ all = false }: { all?: boolean }
                 </div>
                 <p className="workspace-muted">Minimal 1 foto, maksimal 3. JPG, PNG, WebP, atau GIF hingga 5 MB per foto.</p>
                 {fileError && <p className="workspace-error" role="alert">{fileError}</p>}
-                <button type="submit" className="btn-primary mt-4 w-full" disabled={mutation.isPending || !files.length}><CheckCircle2 size={16} />{mutation.isPending ? 'Menyimpan…' : 'Tandai Selesai'}</button>
+                <CostFields value={cost} onChange={setCost} disabled={mutation.isPending} />
+                <button type="submit" className="btn-primary mt-4 w-full" disabled={mutation.isPending || !files.length || !validCostFields(cost) || note.trim().length < 5}><CheckCircle2 size={16} />Tinjau Penyelesaian</button>
               </div>
           </form> : report.status === 'selesai' ? <section className="workspace-completion"><h3>Bukti Penyelesaian</h3>{proofs.length ? <div className="workspace-proof-grid">{proofs.map((photo) => <PhotoPreview key={photo.id} src={photo.url} alt="Foto bukti penyelesaian laporan" />)}</div> : <p className="workspace-muted">Belum ada foto bukti penyelesaian yang tersimpan.</p>}</section> : null}
 
     {['ditugaskan', 'dikerjakan'].includes(report.status) && (rejecting ? <form className="workspace-task-form" onSubmit={event => { event.preventDefault(); mutation.mutate('reject'); }}><label className="label" htmlFor="agency-reject-reason">Alasan penolakan</label><textarea id="agency-reject-reason" required maxLength={2000} className="input" rows={3} value={note} disabled={mutation.isPending} onChange={event => setNote(event.target.value)} /><p className="workspace-muted">Alasan akan terlihat pada riwayat laporan.</p><div className="agency-action-pair"><button type="button" className="btn-outline" disabled={mutation.isPending} onClick={() => { setRejecting(false); setNote(''); }}>Batal</button><button className="admin-button-danger" disabled={mutation.isPending || !note.trim()}>Tolak Laporan</button></div></form> : <button className="admin-button-danger agency-reject" disabled={mutation.isPending} onClick={() => { setRejecting(true); setNote(''); mutation.reset(); }}>Tolak Laporan</button>)}
     {!['ditugaskan', 'dikerjakan', 'selesai'].includes(report.status) && <p className="workspace-muted">Laporan ini tidak memiliki tindakan penanganan aktif.</p>}
   </>;
-  if (selectedId) return detail.isLoading ? <p className="admin-loading">Memuat detail tugas…</p> : detail.isError ? <><button className="admin-back" onClick={back}>← Kembali ke daftar</button><QueryError subject="Detail tugas" retry={detail.refetch} /></> : report && <AgencyTaskDetail key={report.id} report={report} onBack={back} actions={actions} />;
+  if (selectedId) return detail.isLoading ? <p className="admin-loading">Memuat detail tugas…</p> : detail.isError ? <><button className="admin-back" onClick={back}>← Kembali ke daftar</button><QueryError subject="Detail tugas" retry={detail.refetch} /></> : report && <><AgencyTaskDetail key={report.id} report={report} onBack={back} actions={actions} costAction={<EditReportCost report={report} />} />{confirming && <AdminModal title="Tinjau penyelesaian laporan" pending={mutation.isPending} onClose={() => setConfirming(false)} className="cost-dialog"><h2>Tinjau Penyelesaian</h2><p>{report.kodeTiket} — {report.judul}</p><dl className="cost-review"><div><dt>Biaya penanganan</dt><dd className="cost-review-amount">{formatRupiah(cost.amount)}</dd></div><div><dt>Sumber pendanaan</dt><dd>{fundingLabel(cost.fundingSource as 'apbd' | 'other', cost.fundingNote)}</dd></div><div><dt>Rincian penggunaan biaya</dt><dd>{cost.breakdown}</dd></div><div><dt>Catatan penyelesaian</dt><dd>{note}</dd></div><div><dt>Foto bukti penyelesaian</dt><dd>{files.length} foto terlampir</dd></div></dl><p className="cost-hint">Status selesai, catatan, foto bukti, dan rincian biaya akan dipublikasikan bersama.</p>{mutation.isError && <p className="workspace-error" role="alert">{getActionError(mutation.error)}</p>}<div className="cost-dialog-actions"><button className="btn-outline" disabled={mutation.isPending} onClick={() => setConfirming(false)}>Kembali</button><button className="btn-primary" disabled={mutation.isPending} onClick={() => mutation.mutate('complete')}>{mutation.isPending ? 'Menyimpan…' : 'Selesaikan & Publikasikan Laporan'}</button></div></AdminModal>}</>;
   return <>
     <header className="admin-page-header"><div><h1>{all ? 'Semua Laporan' : 'Tugas Penanganan'}</h1><p>{all ? 'Kelola seluruh laporan yang ditugaskan ke instansi Anda.' : 'Kelola tugas penanganan yang menjadi tanggung jawab instansi Anda.'}</p></div><WorkspaceRefresh refreshing={w.isFetching} onClick={() => w.refetch()} /></header>
     {!all && <FilterTabs value={w.status} onChange={status => w.update({ status })} tabs={[{ value: 'aktif', label: 'Aktif', count: active }, { value: 'ditugaskan', label: 'Menunggu Ditangani', count: counts?.ditugaskan || 0 }, { value: 'dikerjakan', label: 'Dikerjakan', count: counts?.dikerjakan || 0 }, { value: 'selesai', label: 'Selesai', count: counts?.selesai || 0 }, { value: 'ditolak', label: 'Ditolak', count: counts?.ditolak || 0 }]} />}

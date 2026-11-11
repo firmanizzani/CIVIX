@@ -6,7 +6,7 @@ type GoogleIdentity = {
     type: 'standard';
     theme: 'outline';
     size: 'large';
-    text: 'signin_with' | 'continue_with';
+    text: 'signin_with' | 'signup_with' | 'continue_with';
     locale: string;
     width: number;
   }): void;
@@ -44,10 +44,11 @@ function loadGoogleIdentity() {
   return scriptRequest;
 }
 
-export default function GoogleSignInButton({ clientId, onCredential, linking = false }: {
+export default function GoogleSignInButton({ clientId, onCredential, linking = false, text }: {
   clientId: string;
   onCredential: (credential: string) => void;
   linking?: boolean;
+  text?: 'signin_with' | 'signup_with' | 'continue_with';
 }) {
   const container = useRef<HTMLDivElement>(null);
   const callback = useRef(onCredential);
@@ -76,7 +77,7 @@ export default function GoogleSignInButton({ clientId, onCredential, linking = f
         element.replaceChildren();
         identity.renderButton(element, {
           type: 'standard', theme: 'outline', size: 'large',
-          text: linking ? 'continue_with' : 'signin_with', locale: 'id', width,
+          text: text ?? (linking ? 'continue_with' : 'signin_with'), locale: 'id', width,
         });
       };
       observer = new ResizeObserver(render);
@@ -90,7 +91,7 @@ export default function GoogleSignInButton({ clientId, onCredential, linking = f
       observer?.disconnect();
       element.replaceChildren();
     };
-  }, [clientId, linking, attempt]);
+  }, [clientId, linking, text, attempt]);
 
   return <>
     <div ref={container} className="flex w-full justify-center" />

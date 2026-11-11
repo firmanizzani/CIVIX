@@ -1,3 +1,4 @@
+import { CostAvailable } from '@/components/ReportCost';
 import { useMemo, useState } from 'react';
 import { divIcon } from 'leaflet';
 import { CircleMarker, Marker, Popup, useMap, useMapEvent } from 'react-leaflet';
@@ -26,6 +27,8 @@ function ReportMarker({ report, position }: { report: MapPoint; position: [numbe
           </p>}
           <p className="text-xs text-civix-primary mt-1 font-medium">{KATEGORI_LABEL[report.kategori]}</p>
           <p className="text-xs font-semibold text-slate-700 mt-0.5">{STATUS_LABEL[report.status]}</p>
+          <CostAvailable report={report} />
+          {report.status === 'selesai' && report.cost && <Link to={`/reports/${report.id}#biaya-penanganan`} className="block text-xs mt-2">Lihat rincian biaya →</Link>}
           <Link to={`/reports/${report.id}`} className="mt-3 block rounded-lg bg-civix-primary px-3 py-1.5 text-center text-xs font-semibold !text-white transition hover:bg-civix-deep">
             Buka Laporan
           </Link>

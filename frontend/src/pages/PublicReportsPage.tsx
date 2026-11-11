@@ -1,3 +1,4 @@
+import { CostAvailable } from '@/components/ReportCost';
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
@@ -233,6 +234,7 @@ export default function PublicReportsPage() {
                         <span className="line-clamp-1">{report.namaJalan}</span>
                       </p>
                     )}
+                    <CostAvailable report={report} />
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
                       <span>{formatDate(report.dibuatPada)}</span>
                       <span className={`rounded-full px-2.5 py-1 font-semibold ${getStatusBadgeClasses(report.status)}`}>{STATUS_LABEL[report.status]}</span>

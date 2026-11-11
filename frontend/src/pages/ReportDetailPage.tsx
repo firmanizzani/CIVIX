@@ -1,3 +1,4 @@
+import ReportCost from '@/components/ReportCost';
 import { useLayoutEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import QueryError from '@/components/QueryError';
@@ -16,7 +17,7 @@ import { ThumbsUp, MessageSquare, ArrowLeft, CheckCircle2, Clock, MapPin, AlertC
 
 export default function ReportDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { key: navigationKey } = useLocation();
+  const { key: navigationKey, hash } = useLocation();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
@@ -24,8 +25,10 @@ export default function ReportDetailPage() {
   const { data: report, isLoading, error, refetch, isFetching } = useQuery(publicReportDetailQuery(id));
 
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [navigationKey, isLoading]);
+    const target = hash === '#biaya-penanganan' && document.getElementById('biaya-penanganan');
+    if (target) target.scrollIntoView({ block: 'start', behavior: 'instant' });
+    else window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [navigationKey, isLoading, hash]);
 
   const upvoteMutation = useMutation({
     mutationFn: async () => (await apiClient.post(`/reports/${id}/upvote`)).data,
@@ -168,6 +171,7 @@ export default function ReportDetailPage() {
                 </div>
               </Reveal>
             )}
+            <ReportCost report={report} />
           </div>
 
           <aside className="min-w-0 break-words lg:col-start-3 lg:row-span-3 lg:row-start-1 lg:self-stretch">

@@ -76,6 +76,44 @@ export interface Upvote {
   waktu: string;
 }
 
+export type FundingSource = 'apbd' | 'other';
+
+export interface ReportCostRevision {
+  id: string;
+  amount: string;
+  fundingSource: FundingSource;
+  fundingNote: string | null;
+  breakdown: string;
+  reason: string;
+  recordedAt: string;
+}
+
+export interface ReportCost {
+  reportId: string;
+  amount: string;
+  fundingSource: FundingSource;
+  fundingNote: string | null;
+  breakdown: string;
+  agencyId: string;
+  updatedAt: string;
+  agency?: { id: string; nama: string };
+  revisions?: ReportCostRevision[];
+}
+
+export interface CostOverviewData {
+  totalAmount: string;
+  completed: number;
+  recorded: number;
+  missing: number;
+  rows: { id: string; kodeTiket: string; judul: string; selesaiPada: string | null; cost: ReportCost; region: Region | null }[];
+  byAgency: { id: string; name: string; reports: number; amount: string }[];
+  regions: Region[];
+  agencies: { id: string; nama: string }[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
 export interface Report {
   id: string;
   kodeTiket: string;
@@ -97,6 +135,7 @@ export interface Report {
   upvotes?: Upvote[];
   region?: Region | null;
   assignedAgency?: { id: string; nama: string } | null;
+  cost?: ReportCost | null;
   user?: { nama: string; email?: string } | null;
 }
 
@@ -111,10 +150,12 @@ export interface MapPoint {
   longitude: string;
   dibuatPada: string;
   photos?: { url: string }[];
+  cost?: ReportCost | null;
 }
 
 export type PublicReportCard = Pick<Report, 'id' | 'judul' | 'kategori' | 'kodeTiket' | 'namaJalan' | 'dibuatPada' | 'status'> & {
   photos: Pick<ReportPhoto, 'url'>[];
+  cost?: ReportCost | null;
 };
 
 export interface ReportWorkspace {
