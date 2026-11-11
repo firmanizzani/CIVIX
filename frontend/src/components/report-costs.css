@@ -28,11 +28,15 @@
   line-height:1.35;
   margin:0
 }
+.report-cost-panel>header h2 {
+  font-size:18px
+}
 .report-cost-panel .report-cost-amount {
-  font-size:clamp(26px,3vw,36px);
-  font-weight:750;
-  letter-spacing:-.04em;
-  margin:20px 0 8px;
+  font-size:24px;
+  font-weight:700;
+  line-height:1.3;
+  letter-spacing:-.025em;
+  margin:16px 0 8px;
   overflow-wrap:anywhere;
   font-variant-numeric:tabular-nums
 }
@@ -52,6 +56,9 @@
   white-space:pre-wrap;
   overflow-wrap:anywhere;
   line-height:1.7
+}
+.report-cost-panel>.cost-breakdown {
+  font-size:14px
 }
 .cost-recorded {
   display:flex;
@@ -112,6 +119,18 @@
   gap:24px;
   align-items:flex-start
 }
+.cost-details-toggle {
+  flex-shrink:0;
+  min-height:40px;
+  padding:8px 14px;
+  font-size:13px
+}
+.cost-details-toggle>svg {
+  transition:transform 180ms var(--ease-out)
+}
+.cost-details-toggle[aria-expanded="true"]>svg {
+  transform:rotate(180deg)
+}
 .cost-overview-heading p {
   font-size:13px;
   line-height:1.7;
@@ -168,7 +187,19 @@
   color:#687e7c
 }
 .cost-report-list {
-  margin-top:24px
+  margin-top:24px;
+  transition:opacity 150ms ease-out
+}
+.cost-report-list[data-pending="true"] {
+  opacity:.55
+}
+.cost-loading-status {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-height:20px;
+  color:#007f5d;
+  font-size:12px
 }
 .cost-report-list>a {
   display:flex;
@@ -356,9 +387,10 @@
   align-items:center
 }
 .cost-landing h2 {
-  font-size:clamp(24px,3vw,32px);
+  font-size:26px;
   font-weight:700;
-  letter-spacing:-.035em;
+  line-height:1.35;
+  letter-spacing:-.025em;
   margin:0 0 10px
 }
 .cost-landing p {
@@ -378,8 +410,11 @@
   min-width:0
 }
 .cost-landing-total strong {
-  font-size:clamp(28px,3vw,40px);
+  font-size:30px;
   font-weight:700;
+  line-height:1.35;
+  letter-spacing:-.025em;
+  font-variant-numeric:tabular-nums;
   color:#007f5d;
   overflow-wrap:anywhere
 }
@@ -388,6 +423,12 @@
   margin-top:10px
 }
 @media(max-width:767px) {
+  .cost-landing h2 {
+    font-size:22px
+  }
+  .cost-landing-total strong {
+    font-size:26px
+  }
   .report-cost-panel,.cost-overview {
     padding:20px;
     border-radius:14px;

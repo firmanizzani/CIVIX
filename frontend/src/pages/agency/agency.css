@@ -60,3 +60,128 @@
 @media (max-width: 1250px) { .agency-summary { gap: 10px; }.agency-summary > a { padding: 15px 12px; gap: 9px; }.agency-summary span { font-size: 11px; }.agency-task-grid { grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; }.agency-map-grid { grid-template-columns: minmax(0, 1fr) 265px; }.agency-ring { grid-template-columns: 1fr; }.agency-ring ul { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 1100px) { .agency-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }.agency-task-photo { height: 300px; }.agency-map-grid { grid-template-columns: 1fr; }.agency-map-grid > aside { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; }.agency-map-list { margin-top: 0; max-height: 420px; }.agency-map-canvas { height: 500px; } }
 @media (max-width: 650px) { .agency-summary > a { min-height: 100px; padding: 13px 10px; }.agency-summary > a > span { width: 32px; height: 32px; }.agency-summary > a > span svg { width: 18px; height: 18px; }.agency-summary span { font-size: 10px; }.agency-summary strong { font-size: 26px; }.agency-charts, .agency-task-grid, .agency-settings-grid { grid-template-columns: 1fr; gap: 15px; }.agency-task-photo { height: 290px; }.agency-task-side { margin-top: 8px; }.agency-map-grid > aside { display: block; }.agency-map-list { margin-top: 15px; }.agency-map-canvas { height: 450px; }.agency-map-canvas > .leaflet-container { height: calc(100% - 95px); }.agency-map-legend { gap: 7px 10px; }.agency-map-legend > span { font-size: 9px; }.agency-ring { grid-template-columns: minmax(120px, 1fr) 1fr; }.agency-ring ul { grid-template-columns: 1fr; }.agency-settings-grid > nav { grid-template-columns: 1fr 1fr; }.agency-settings-grid > section { padding: 20px 17px; }.agency-shell .workspace-tabs { max-width: 100%; overflow-x: auto; }.agency-shell .admin-header-actions { width: 100%; justify-content: space-between; }.agency-shell .admin-header-actions select { width: auto; } }
+
+.agency-shell .cost-overview {
+  padding: 20px;
+  margin: 18px 0;
+}
+.agency-shell .cost-overview .cost-eyebrow {
+  display: none;
+}
+.agency-shell .cost-overview-heading h2 {
+  font-size: 16px;
+}
+.agency-shell .cost-overview-heading p {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.agency-shell .cost-details-toggle {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.agency-shell .cost-details-toggle[aria-expanded="true"] > svg {
+  transform: rotate(180deg);
+}
+.agency-shell .cost-filters {
+  max-width: 280px;
+  margin-top: 16px;
+}
+.agency-shell .cost-filters .input {
+  min-height: 38px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.agency-shell .cost-metrics {
+  gap: 12px;
+  margin-top: 16px;
+}
+.agency-shell .cost-metrics > div {
+  padding: 14px 16px;
+}
+.agency-shell .cost-metrics small {
+  margin-bottom: 8px;
+}
+.agency-shell .cost-metrics strong {
+  font-size: 24px;
+  line-height: 1.3;
+}
+.agency-shell .cost-hint {
+  font-size: 12px;
+}
+.agency-shell .cost-report-list {
+  margin-top: 16px;
+}
+.agency-shell .cost-report-list > a {
+  padding: 14px 0;
+  gap: 12px;
+}
+.agency-shell .cost-report-list h3 {
+  margin: 4px 0;
+  font-size: 14px;
+}
+.agency-shell .cost-report-list > a > strong {
+  font-size: 14px;
+}
+
+/* Keep task actions compact; the completion form has its own focused dialog. */
+.agency-task-grid--agency { grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); gap: 24px; }
+.agency-task-grid--agency .agency-task-photo { height: clamp(220px, 30vh, 320px); }
+.agency-task-grid--agency .agency-timeline ol { max-height: 240px; }
+.agency-completion-invitation { display: grid; gap: 16px; margin-top: 16px; }
+.agency-completion-invitation p { color: #526c61; font-size: 13px; line-height: 1.7; }
+.agency-completion-invitation small { font-size: 12px; line-height: 1.6; color: #64796f; }
+body:has(.agency-completion-dialog[open]) { overflow: hidden; }
+.admin-dialog.agency-completion-dialog { width: min(960px, calc(100vw - 40px)); max-width: none; max-height: calc(100dvh - 40px); padding: 0; overflow: hidden; }
+.agency-completion-dialog .agency-completion-form { display: flex; flex-direction: column; max-height: calc(100dvh - 40px); margin: 0; padding: 0; }
+.agency-completion-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 24px 32px; border-bottom: 1px solid #e1ebe5; flex-shrink: 0; }
+.agency-completion-header h2 { font-size: 24px; font-weight: 750; line-height: 1.3; letter-spacing: -.025em; color: #183f32; }
+.agency-completion-header p { font-size: 13px; color: #536e60; line-height: 1.6; margin-top: 8px; overflow-wrap: anywhere; }
+.agency-completion-header p span { font-variant-numeric: tabular-nums; }
+.agency-completion-close { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0; color: #536e60; }
+.agency-completion-close:hover { background: #eff6f2; }
+.agency-completion-close:focus-visible { outline: 2px solid #008358; outline-offset: 2px; }
+.agency-completion-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 28px 32px; scrollbar-color: #a8bfb2 #f5f9f6; scrollbar-width: thin; }
+.agency-completion-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.agency-completion-evidence { min-width: 0; }
+.agency-completion-evidence h3, .agency-completion-review h3 { font-size: 16px; font-weight: 700; line-height: 1.5; color: #234c38; margin-bottom: 20px; }
+.agency-completion-evidence .label { font-size: 13px; font-weight: 600; color: #345642; margin: 0 0 8px; }
+.agency-completion-evidence .input { width: 100%; }
+.agency-completion-evidence > .cost-hint { margin-top: 8px; }
+.agency-completion-evidence .workspace-upload-section { margin-top: 24px; }
+.agency-completion-dialog .workspace-proof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.agency-completion-dialog .workspace-upload-button { width: 100%; min-height: 112px; font-size: 12px; }
+.agency-completion-dialog .workspace-proof-grid:has(> button:only-child) { grid-template-columns: 1fr; }
+.agency-completion-dialog .workspace-proof img { height: 112px; width: 100%; object-fit: cover; }
+.agency-completion-fields > .cost-fields { margin: 0; padding: 0 0 0 28px; border: 0; border-left: 1px solid #e1ebe5; }
+.agency-completion-fields .cost-fields legend { padding: 0; margin-bottom: 8px; font-size: 16px; }
+.agency-completion-fields .cost-fields > .cost-hint { margin-bottom: 0; }
+.agency-completion-footer { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 20px 32px; border-top: 1px solid #e1ebe5; flex-shrink: 0; background: #fff; }
+.agency-completion-footer > p { max-width: 34ch; font-size: 12px; line-height: 1.6; color: #536e60; }
+.agency-completion-footer > div { display: flex; gap: 12px; flex-shrink: 0; }
+.admin-dialog.agency-completion-dialog .agency-completion-footer button { min-height: 44px; font-size: 13px; }
+.agency-completion-scroll > .workspace-error { margin-top: 20px; }
+.agency-completion-review .cost-review { margin: 0 0 24px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; padding: 24px; }
+.agency-completion-review .cost-review > div:first-child { grid-column: 1 / -1; }
+.agency-completion-review .cost-review dd { line-height: 1.7; }
+.agency-completion-review-photos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.agency-completion-review-photos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; }
+@media (min-width: 1024px) and (min-height: 760px) { .agency-task-grid--agency > .agency-task-side { position: sticky; top: 24px; } }
+@media (max-width: 850px) { .agency-task-grid--agency { grid-template-columns: 1fr; }.agency-task-grid--agency .agency-task-photo { height: 280px; } }
+@media (max-width: 700px) {
+  .admin-dialog.agency-completion-dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .agency-completion-dialog .agency-completion-form { max-height: calc(100dvh - 16px); }
+  .agency-completion-header { padding: 20px; gap: 12px; }
+  .agency-completion-header h2 { font-size: 21px; }
+  .agency-completion-header p { font-size: 12px; }
+  .agency-completion-scroll { padding: 24px 20px; }
+  .agency-completion-fields { grid-template-columns: 1fr; gap: 24px; }
+  .agency-completion-fields > .cost-fields { padding: 24px 0 0; border-left: 0; border-top: 1px solid #e1ebe5; }
+  .agency-completion-footer { padding: 16px 20px max(16px, env(safe-area-inset-bottom)); flex-direction: column; align-items: stretch; gap: 12px; }
+  .agency-completion-footer > p { max-width: none; }
+  .agency-completion-footer > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); min-width: 0; gap: 8px; }
+  .admin-dialog.agency-completion-dialog .agency-completion-footer button { padding: 10px; min-width: 0; max-width: 100%; white-space: normal; font-size: 12px; line-height: 1.4; justify-content: center; }
+  .agency-completion-review .cost-review { padding: 18px; grid-template-columns: 1fr; gap: 20px; }
+  .agency-completion-review-photos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
